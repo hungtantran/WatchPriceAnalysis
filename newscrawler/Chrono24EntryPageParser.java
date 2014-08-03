@@ -239,7 +239,7 @@ public class Chrono24EntryPageParser extends BaseParser {
 
 	// Parse the topics of the watch entry page
 	private void parseTopics() {
-		Set<String> topicsOfName = BaseParser.identifyTopicOfName(
+		Set<String> topicsOfName = Helper.identifyTopicOfName(
 				this.watchName, Globals.HOROLOGYTOPICS);
 
 		if (topicsOfName != null) {

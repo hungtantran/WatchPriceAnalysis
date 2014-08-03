@@ -187,6 +187,60 @@ public class Helper {
 		return formattedDate;
 	}
 
+	// Given a name like an article name or an entry name, etc... and a set of
+	// topic words. Try to identify the topic of the name
+	public static Set<String> identifyTopicOfName(String name, String[] topics) {
+		if (name == null || topics == null)
+			return null;
+
+		// Try to identify topic with exact match
+		Set<String> topicsOfName = new HashSet<String>();
+		for (String topic : topics) {
+			if (name.indexOf(topic) != -1) {
+				topicsOfName.add(topic);
+				name = name.replace(topic, "");
+			}
+		}
+
+		// Split the name into a list of words
+		String[] delimiters = { " ", "-" };
+		Set<String> articleNameWordsSet = Helper.splitString(name, delimiters);
+
+		// TODO make generic
+		// Break topic into words and try to find those word in the name
+		for (String topic : topics) {
+			if (!topicsOfName.contains(topic)) {
+				String[] topicWords = topic.split(" ");
+				for (String topicWord : topicWords) {
+					topicWord = topicWord.trim().toLowerCase();
+					if (topicWord.length() > 3
+							&& articleNameWordsSet.contains(topicWord)) {
+						topicsOfName.add(topic);
+						break;
+					}
+				}
+			}
+		}
+
+		// Combine a topic'words into 1 word and try to find that word in the
+		// name
+		for (String topic : topics) {
+			if (!topicsOfName.contains(topic)) {
+				String topicWord = topic.replace(" ", "");
+				topicWord = topicWord.trim().toLowerCase();
+				if (topicWord.length() > 3
+						&& articleNameWordsSet.contains(topicWord)) {
+					topicsOfName.add(topic);
+				}
+			}
+		}
+
+		if (Globals.DEBUG)
+			System.out.println("Topics = " + topicsOfName);
+
+		return topicsOfName;
+	}
+
 	// Comparator class to sort TreeMap
 	protected class ValueComparator implements Comparator<String> {
 

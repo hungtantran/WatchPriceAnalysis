@@ -143,7 +143,7 @@ public class HodinkeeArticleParser extends BaseParser {
 
 	// Parse the topics of the article
 	private void parseTopics() {
-		Set<String> topicsOfName = BaseParser.identifyTopicOfName(
+		Set<String> topicsOfName = Helper.identifyTopicOfName(
 				this.articleName, Globals.HOROLOGYTOPICS);
 
 		if (topicsOfName != null) {

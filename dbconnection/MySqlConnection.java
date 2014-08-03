@@ -30,7 +30,11 @@ public class MySqlConnection {
 			e.printStackTrace();
 		}
 	}
-
+	
+	public Map<String, Integer> getIdTopicMap() {
+		return this.idTopicMap;
+	}
+	
 	// Populate information of type, domain and topic information from existing
 	// database
 	private void getDatabaseExistingInfo() {
@@ -98,7 +102,7 @@ public class MySqlConnection {
 				String topic = resultSet.getString(3).trim();
 				this.idTopicMap.put(topic, id);
 				if (Globals.DEBUG)
-					System.out.println(id + " : " + topic);
+					System.out.println(id + " : " + topic+ " "+this.idTopicMap.get(topic));
 			}
 		} catch (SQLException e) {
 			System.out.println("Get topic_table information fails");
@@ -391,7 +395,7 @@ public class MySqlConnection {
 		}
 	}
 
-	private Integer[] convertDomainToDomainId(Globals.Domain[] domains) {
+	public Integer[] convertDomainToDomainId(Globals.Domain[] domains) {
 		Integer[] domainsId = new Integer[3];
 
 		// Get the id of domains
@@ -404,7 +408,7 @@ public class MySqlConnection {
 		return domainsId;
 	}
 
-	private Integer[] convertTypeToTypeId(Globals.Type[] types) {
+	public Integer[] convertTypeToTypeId(Globals.Type[] types) {
 		Integer[] typesId = new Integer[3];
 
 		// Get the id of types
@@ -417,7 +421,7 @@ public class MySqlConnection {
 		return typesId;
 	}
 
-	private Integer[] convertTopicToTopicId(String[] topics) {
+	public Integer[] convertTopicToTopicId(String[] topics) {
 		Integer[] topicsId = new Integer[topics.length];
 
 		// Get the id of topics
@@ -428,7 +432,44 @@ public class MySqlConnection {
 
 		return topicsId;
 	}
-
+	
+	// Add new article-topic relationship
+	public void addArticleTopicRelationship(int articleId, int topicId) {
+		PreparedStatement stmt = null;
+		
+		try {
+			stmt = this.con
+					.prepareStatement("INSERT INTO article_topic_table (article_table_id, topic_table_id) values (?, ?)");
+			stmt.setInt(1, articleId);
+			stmt.setInt(2, topicId);
+			stmt.executeUpdate();
+		} catch (Exception e) {
+			System.out
+					.println("Fail to insert into article_topic_table");
+			//e.printStackTrace();
+		}
+	}
+	
+	// Add content for article into article_content_table
+	public void addArticleContent(int articleId, String content) {
+		PreparedStatement stmt = null;
+		
+		try {
+			// Insert into article_content_table table
+			stmt = this.con
+					.prepareStatement("INSERT INTO article_content_table (article_table_id, content) values (?, ?)");
+			stmt.setInt(1, articleId);
+			InputStream is = new ByteArrayInputStream(
+					content.getBytes());
+			stmt.setBlob(2, is);
+			stmt.executeUpdate();
+		} catch (Exception e) {
+			System.out
+					.println("Fail to insert into article_content_table");
+			e.printStackTrace();
+		}
+	}
+	
 	// Add new article into the database
 	public void addArticle(String link, Globals.Domain[] domains,
 			String articleName, Globals.Type[] types, String[] keywords,
@@ -495,36 +536,14 @@ public class MySqlConnection {
 			ResultSet generatedKeys = stmt.getGeneratedKeys();
 
 			if (generatedKeys.next()) {
-				int aricleId = generatedKeys.getInt(1);
-
-				try {
-					// Insert into article_content_table table
-					stmt = this.con
-							.prepareStatement("INSERT INTO article_content_table (article_table_id, content) values (?, ?)");
-					stmt.setInt(1, aricleId);
-					InputStream is = new ByteArrayInputStream(
-							content.getBytes());
-					stmt.setBlob(2, is);
-					stmt.executeUpdate();
-				} catch (Exception e) {
-					System.out
-							.println("Fail to insert into article_content_table");
-					e.printStackTrace();
-				}
+				int articleId = generatedKeys.getInt(1);
+				
+				// Add into article_content_table
+				this.addArticleContent(articleId, content);
 
 				// Insert into article_topic_table table
 				for (int topicId : topicsId) {
-					try {
-						stmt = this.con
-								.prepareStatement("INSERT INTO article_topic_table (article_table_id, topic_table_id) values (?, ?)");
-						stmt.setInt(1, aricleId);
-						stmt.setInt(2, topicId);
-						stmt.executeUpdate();
-					} catch (Exception e) {
-						System.out
-								.println("Fail to insert into article_topic_table");
-						e.printStackTrace();
-					}
+					this.addArticleTopicRelationship(articleId, topicId);
 				}
 			}
 		} catch (Exception e) {
@@ -746,6 +765,30 @@ public class MySqlConnection {
 			System.out.println("Fail to insert into watch_table");
 			e.printStackTrace();
 		}
+	}
+	
+	// Get information from article_table
+	public ResultSet getArticleInfo() {
+		return getArticleInfo(-1, -1);
+	}
+	
+	public ResultSet getArticleInfo(int lowerBound, int maxNumResult) {
+		try {
+			Statement st = this.con.createStatement();
+			st.executeQuery("USE " + this.database);
+			
+			String query = "SELECT * FROM article_table";
+			
+			if (lowerBound > 0 || maxNumResult > 0)
+				query += " LIMIT "+lowerBound+","+maxNumResult;
+			
+			return st.executeQuery(query);
+		} catch (SQLException e) {
+			System.out.println("Get article_table information fails");
+			e.printStackTrace();
+		}
+		
+		return null;
 	}
 
 	public static void main(String[] args) {
