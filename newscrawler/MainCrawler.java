@@ -2,26 +2,29 @@ package newscrawler;
 
 public class MainCrawler {
 	public static void main(String[] args) {
-		HodinkeeCrawler hodinkeeCrawler = new HodinkeeCrawler(
+		BaseCrawler[] crawlers = new BaseCrawler[4];
+		
+		crawlers[0] = new HodinkeeCrawler(
 				"http://www.hodinkee.com");
 
-		ABlogToWatchCrawler aBlogToWatchCrawler = new ABlogToWatchCrawler(
+		crawlers[1] = new ABlogToWatchCrawler(
 				"http://www.ablogtowatch.com/");
 
-		Chrono24Crawler chrono24Crawler = new Chrono24Crawler(
-				"http://www.chrono24.com/en/rolex/gmt-master-ii-green-index-dial--id2122361.htm");
+		crawlers[2] = new Chrono24Crawler(
+				"http://www.chrono24.com/");
+		
+		crawlers[3] = new WatchReportCrawler(
+				"http://www.watchreport.com");
 
 		// Each crawler has 1 thread. Start them all
-		hodinkeeCrawler.start();
-		aBlogToWatchCrawler.start();
-		chrono24Crawler.start();
+		for (int i = 0; i < 4; i++)
+			crawlers[i].start();
 
 		System.out.println("Start Crawling");
 
 		try {
-			hodinkeeCrawler.join();
-			aBlogToWatchCrawler.join();
-			chrono24Crawler.join();
+			for (int i = 0; i < 4; i++)
+				crawlers[i].join();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

@@ -2,16 +2,16 @@ package newscrawler;
 
 import java.util.*;
 
-public class ABlogToWatchCrawler extends BaseCrawler {
-	public static final String domain = "http://www.ablogtowatch.com/";
-	public static final String crawlerId = "ablogtowatch";
+public class WatchReportCrawler extends BaseCrawler {
+	public static final String domain = "http://www.watchreport.com/";
+	public static final String crawlerId = "watchreport";
 
 	private final int lowerBoundWaitTimeSec = 5;
 	private final int upperBoundWaitTimeSec = 10;
 
-	public ABlogToWatchCrawler(String startURL) {
-		super(startURL, ABlogToWatchCrawler.domain,
-				ABlogToWatchCrawler.crawlerId);
+	public WatchReportCrawler(String startURL) {
+		super(startURL, WatchReportCrawler.domain,
+				WatchReportCrawler.crawlerId);
 	}
 
 	// Process link (e.g. trim, truncate bad part, etc..)
@@ -29,7 +29,7 @@ public class ABlogToWatchCrawler extends BaseCrawler {
 		if (url == null)
 			return false;
 
-		if (url.indexOf("?attachment_id") != -1)
+		if (url.indexOf("?") != -1)
 			return false;
 
 		// If the link is a file, not a web page, skip it and continue to
@@ -41,7 +41,7 @@ public class ABlogToWatchCrawler extends BaseCrawler {
 	}
 
 	protected void checkDocumentUrl(String url) {
-		ABlogToWatchArticleParser parser = new ABlogToWatchArticleParser(url);
+		WatchReportArticleParser parser = new WatchReportArticleParser(url);
 
 		String htmlContent = null;
 		// If the page is an article page, parse it
@@ -73,7 +73,7 @@ public class ABlogToWatchCrawler extends BaseCrawler {
 
 		// Parse out all the links from hodinkee from the current page
 		Set<String> linksInPage = BaseParser.parseUrls(htmlContent,
-				ABlogToWatchCrawler.domain);
+				WatchReportCrawler.domain);
 
 		// Add more urls to the queue
 		if (linksInPage != null) {
@@ -87,7 +87,7 @@ public class ABlogToWatchCrawler extends BaseCrawler {
 					continue;
 
 				if (!this.urlsCrawled.contains(linkInPage)
-						&& linkInPage.contains(ABlogToWatchCrawler.domain)
+						&& linkInPage.contains(WatchReportCrawler.domain)
 						&& !Helper.linkIsFile(linkInPage)
 						&& !this.urlsQueue.contains(linkInPage)) {
 					this.urlsQueue.add(linkInPage);
@@ -101,21 +101,17 @@ public class ABlogToWatchCrawler extends BaseCrawler {
 		System.out.println("Queue has " + this.urlsQueue.size());
 
 		// Try to serialize existing data to disk
-		this.serializeDataToDisk(ABlogToWatchCrawler.crawlerId);
+		this.serializeDataToDisk(WatchReportCrawler.crawlerId);
 	}
 
 	// Execute method for thread
 	public void run() {
-		// ABlogToWatchCrawler crawler = new ABlogToWatchCrawler(
-		// "http://www.ablogtowatch.com/");
-		// crawler.startCrawl(false, 0);
 		this.startCrawl(false, 0, this.lowerBoundWaitTimeSec,
 				this.upperBoundWaitTimeSec);
 	}
 
 	public static void main(String[] args) {
-		// ABlogToWatchCrawler crawler = new ABlogToWatchCrawler(
-		// "http://www.ablogtowatch.com/");
-		// crawler.startCrawl(false, 0);
+//		 WatchReportCrawler crawler = new WatchReportCrawler("http://www.watchreport.com/");
+//		 crawler.startCrawl(false, 0, 5, 10);
 	}
 }

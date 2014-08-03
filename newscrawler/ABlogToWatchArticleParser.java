@@ -23,16 +23,13 @@ public class ABlogToWatchArticleParser extends BaseParser {
 	private final String domain = "http://www.ablogtowatch.com/";
 	private final int numRetryDownloadPage = 2;
 
-	private String articleUrl = null;
 	private String articleName = null;
 	private Set<String> keywords = null;
 	private Set<Globals.Type> types = null;
 	private Set<String> topics = null;
-	private String timeCreated = null;
-	private String dateCreated = null;
 
 	public ABlogToWatchArticleParser(String articleUrl) {
-		this.articleUrl = articleUrl;
+		this.link = articleUrl;
 		this.keywords = new HashSet<String>();
 		this.types = new HashSet<Globals.Type>();
 		this.types.add(Type.HOROLOGY);
@@ -40,16 +37,11 @@ public class ABlogToWatchArticleParser extends BaseParser {
 		this.timeCreated = "00:00:00";
 	}
 
-	// Return true if the articleUrl is a valid article page of Hodinkee, false
+	// Return true if the articleUrl is a valid article page of ABlogToWatch, false
 	// if not
 	public boolean isArticlePage() {
 		return (this.content != null && this.content
 				.indexOf("article:published_time") != -1);
-	}
-
-	// Get link to the article
-	public String getLink() {
-		return this.articleUrl;
 	}
 
 	// Get domains of the article
@@ -108,24 +100,9 @@ public class ABlogToWatchArticleParser extends BaseParser {
 		return topicsArray;
 	}
 
-	// Get the content of the article
-	public String getContent() {
-		return this.content;
-	}
-
-	// Get time created
-	public String getTimeCreated() {
-		return this.timeCreated;
-	}
-
-	// Get date created
-	public String getDateCreated() {
-		return this.dateCreated;
-	}
-
 	public void parseDoc() {
 		// Download the html content into a private variable
-		this.downloadHtmlContent(this.articleUrl, this.numRetryDownloadPage);
+		this.downloadHtmlContent(this.link, this.numRetryDownloadPage);
 
 		// If the download content fails, return
 		if (this.doc == null)
@@ -197,12 +174,12 @@ public class ABlogToWatchArticleParser extends BaseParser {
 	}
 
 	public static void main(String[] args) {
-//		ABlogToWatchArticleParser parser = new ABlogToWatchArticleParser(
-//				"http://www.ablogtowatch.com/charlie-sheen-father-debut-in-patek-philippe-watch-ad/");
+		// ABlogToWatchArticleParser parser = new ABlogToWatchArticleParser(
+		// "http://www.ablogtowatch.com/charlie-sheen-father-debut-in-patek-philippe-watch-ad/");
 		ABlogToWatchArticleParser parser = new ABlogToWatchArticleParser(
 				"http://www.ablogtowatch.com/jeanrichard-terrascope-watch-review/");
-//		ABlogToWatchArticleParser parser = new ABlogToWatchArticleParser(
-//				"http://www.ablogtowatch.com/jaeger-lecoultre-geophysic-watches-hands/");
+		// ABlogToWatchArticleParser parser = new ABlogToWatchArticleParser(
+		// "http://www.ablogtowatch.com/jaeger-lecoultre-geophysic-watches-hands/");
 		parser.parseDoc();
 	}
 }

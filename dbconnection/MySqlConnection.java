@@ -53,7 +53,7 @@ public class MySqlConnection {
 			// Iterate through the result set to populate the information
 			while (resultSet.next()) {
 				int id = resultSet.getInt(1);
-				String type = resultSet.getString(2);
+				String type = resultSet.getString(2).trim();
 				this.idTypeMap.put(id, type);
 				if (Globals.DEBUG)
 					System.out.println(id + " : " + type);
@@ -74,7 +74,7 @@ public class MySqlConnection {
 			// Iterate through the result set to populate the information
 			while (resultSet.next()) {
 				int id = resultSet.getInt(1);
-				String domain = resultSet.getString(2);
+				String domain = resultSet.getString(2).trim();
 				this.idDomainMap.put(id, domain);
 				if (Globals.DEBUG)
 					System.out.println(id + " : " + domain);
@@ -95,7 +95,7 @@ public class MySqlConnection {
 			// Iterate through the result set to populate the information
 			while (resultSet.next()) {
 				int id = resultSet.getInt(1);
-				String topic = resultSet.getString(3);
+				String topic = resultSet.getString(3).trim();
 				this.idTopicMap.put(topic, id);
 				if (Globals.DEBUG)
 					System.out.println(id + " : " + topic);

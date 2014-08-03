@@ -8,59 +8,46 @@ public class Chrono24Crawler extends BaseCrawler {
 	public static final String domain = "http://www.chrono24.com/";
 	public static final String crawlerId = "chrono24";
 
-	private final int lowerBoundWaitTimeSec = 10;
-	private final int upperBoundWaitTimeSec = 20;
+	private final int lowerBoundWaitTimeSec = 5;
+	private final int upperBoundWaitTimeSec = 10;
 
 	public Chrono24Crawler(String startURL) {
 		super(startURL, Chrono24Crawler.domain, Chrono24Crawler.crawlerId);
 	}
 
-	@Override
-	public void startCrawl(boolean timeOut, long duration) {
-		// If for some reason startUrl is null stop right away
-		if (this.startURL == null)
-			return;
+	// Process link (e.g. trim, truncate bad part, etc..)
+	protected String processLink(String url) {
+		if (url == null)
+			return url;
 
-		// Continuously pop the queue to parse the page content
-		while (true) {
-			if (this.urlsQueue.isEmpty())
-				break;
+		url = url.trim();
 
-			// Get the next link from the queue
-			String curUrl = this.urlsQueue.remove();
-
-			if (curUrl == null)
-				continue;
-
-			curUrl = curUrl.trim();
-			curUrl = this.truncateToMainEntryWatchPage(curUrl);
-
-			// If the link is a file, not a web page, skip it and continue to
-			// the next link in the queue
-			if (BaseCrawler.linkIsFile(curUrl))
-				continue;
-
-			System.out.println("Process url " + curUrl);
-
-			// Process the new link
-			this.processUrl(curUrl);
-
-			// Wait for 5 to 10 sec before crawling the next page
-			waitSec(this.lowerBoundWaitTimeSec, this.upperBoundWaitTimeSec);
+		// Trim everything after "?"
+		// Truncate a complementary pages of a watch entry page
+		// (picture page, spec page, etc...) to the main page
+		// Do nothing if the link is not watch entry page
+		String surfixLink = "?";
+		if (url != null && url.indexOf(surfixLink) != -1) {
+			url = url.substring(0, url.indexOf(surfixLink));
 		}
+
+		return url;
 	}
 
-	// Truncate a complementary pages of a watch entry page
-	// (picture page, spec page, etc...) to the main page
-	// Do nothing if the link is not watch entry page
-	private String truncateToMainEntryWatchPage(String link) {
-		String surfixLink = "?";
+	// Check if current url is valid or not
+	protected boolean isValidLink(String url) {
+		if (url == null)
+			return false;
 
-		if (link != null && link.indexOf(surfixLink) != -1) {
-			link = link.substring(0, link.indexOf(surfixLink));
-		}
+		if (url.indexOf("?") != -1)
+			return false;
 
-		return link;
+		// If the link is a file, not a web page, skip it and continue to
+		// the next link in the queue
+		if (Helper.linkIsFile(url))
+			return false;
+
+		return true;
 	}
 
 	protected void checkDocumentUrl(String url) {
@@ -84,8 +71,8 @@ public class Chrono24Crawler extends BaseCrawler {
 			String dateCreated = parser.getDateCreated();
 
 			// Calculated the time the article is crawled
-			String timeCrawled = BaseCrawler.getCurrentTime();
-			String dateCrawled = BaseCrawler.getCurrentDate();
+			String timeCrawled = Helper.getCurrentTime();
+			String dateCrawled = Helper.getCurrentDate();
 
 			// Get spec of the watch
 			String refNo = parser.getRefNo();
@@ -128,13 +115,13 @@ public class Chrono24Crawler extends BaseCrawler {
 
 			for (String linkInPage : linksInPage) {
 				linkInPage = linkInPage.trim();
-				linkInPage = this.truncateToMainEntryWatchPage(linkInPage);
+				linkInPage = this.processLink(linkInPage);
 				if (linkInPage.length() < 1)
 					continue;
 
 				if (!this.urlsCrawled.contains(linkInPage)
 						&& linkInPage.contains(Chrono24Crawler.domain)
-						&& !BaseCrawler.linkIsFile(linkInPage)
+						&& !Helper.linkIsFile(linkInPage)
 						&& !this.urlsQueue.contains(linkInPage)) {
 					this.urlsQueue.add(linkInPage);
 					if (Globals.DEBUG)
@@ -156,7 +143,8 @@ public class Chrono24Crawler extends BaseCrawler {
 		// "http://www.chrono24.com/en/rolex/gmt-master-ii-green-index-dial--id2122361.htm");
 		// crawler.startCrawl(false, 0);
 
-		this.startCrawl(false, 0);
+		this.startCrawl(false, 0, this.lowerBoundWaitTimeSec,
+				this.upperBoundWaitTimeSec);
 	}
 
 	public static void main(String[] args) {

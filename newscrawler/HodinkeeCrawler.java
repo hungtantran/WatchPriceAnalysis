@@ -8,41 +8,25 @@ public class HodinkeeCrawler extends BaseCrawler {
 	public static final String domain = "http://www.hodinkee.com";
 	public static final String crawlerId = "hodinkee";
 
-	private final int lowerBoundWaitTimeSec = 15;
-	private final int upperBoundWaitTimeSec = 20;
+	private final int lowerBoundWaitTimeSec = 5;
+	private final int upperBoundWaitTimeSec = 10;
 
 	public HodinkeeCrawler(String startURL) {
 		super(startURL, HodinkeeCrawler.domain, HodinkeeCrawler.crawlerId);
 	}
 
-	@Override
-	public void startCrawl(boolean timeOut, long duration) {
-		// If for some reason startUrl is null stop right away
-		if (this.startURL == null)
-			return;
+	// Process link (e.g. trim, truncate bad part, etc..)
+	protected String processLink(String url) {
+		if (url == null)
+			return url;
 
-		// Continuously pop the queue to parse the page content
-		while (true) {
-			if (this.urlsQueue.isEmpty())
-				break;
+		url = url.trim();
 
-			// Get the next link from the queue
-			String curUrl = this.urlsQueue.remove();
-
-			if (!this.isValidLink(curUrl))
-				continue;
-
-			System.out.println("Process url " + curUrl);
-
-			// Process the new link
-			this.processUrl(curUrl);
-
-			// Wait for 5 to 10 sec before crawling the next page
-			waitSec(this.lowerBoundWaitTimeSec, this.upperBoundWaitTimeSec);
-		}
+		return url;
 	}
 
-	private boolean isValidLink(String url) {
+	// Check if current url is valid or not
+	protected boolean isValidLink(String url) {
 		if (url == null)
 			return false;
 
@@ -54,7 +38,7 @@ public class HodinkeeCrawler extends BaseCrawler {
 
 		// If the link is a file, not a web page, skip it and continue to
 		// the next link in the queue
-		if (BaseCrawler.linkIsFile(url))
+		if (Helper.linkIsFile(url))
 			return false;
 
 		return true;
@@ -80,8 +64,8 @@ public class HodinkeeCrawler extends BaseCrawler {
 			String dateCreated = parser.getDateCreated();
 
 			// Calculated the time the article is crawled
-			String timeCrawled = BaseCrawler.getCurrentTime();
-			String dateCrawled = BaseCrawler.getCurrentDate();
+			String timeCrawled = Helper.getCurrentTime();
+			String dateCrawled = Helper.getCurrentDate();
 
 			this.mysqlConnection.addArticle(link, domains, articleName, types,
 					keywords, topics, timeCreated, dateCreated, timeCrawled,
@@ -138,7 +122,8 @@ public class HodinkeeCrawler extends BaseCrawler {
 		// HodinkeeCrawler("http://www.hodinkee.com");
 		// crawler.startCrawl(false, 0);
 
-		this.startCrawl(false, 0);
+		this.startCrawl(false, 0, this.lowerBoundWaitTimeSec,
+				this.upperBoundWaitTimeSec);
 	}
 
 	public static void main(String[] args) {

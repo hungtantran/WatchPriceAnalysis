@@ -11,14 +11,11 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Set;
-import javax.xml.bind.annotation.adapters.HexBinaryAdapter;
+
 import dbconnection.MySqlConnection;
 
 public abstract class BaseCrawler extends Thread {
@@ -31,7 +28,9 @@ public abstract class BaseCrawler extends Thread {
 	// All subclass of basecrawler needs to implement these methods
 	abstract void checkDocumentUrl(String url);
 
-	abstract void startCrawl(boolean timeOut, long duration);
+	abstract String processLink(String url);
+
+	abstract boolean isValidLink(String url);
 
 	// Base constructor
 	@SuppressWarnings("unchecked")
@@ -64,7 +63,7 @@ public abstract class BaseCrawler extends Thread {
 
 			System.out.println("Urls in " + crawlerId + " Queue : "
 					+ this.urlsQueue.size());
-			
+
 			// TODO make it generic
 			if (Globals.DEBUG)
 				// display its data
@@ -82,6 +81,37 @@ public abstract class BaseCrawler extends Thread {
 			this.urlsCrawled = (Set<String>) input.readObject();
 		} catch (Exception ex) {
 			ex.printStackTrace();
+		}
+	}
+
+	// Function that start the crawling process
+	public void startCrawl(boolean timeOut, long duration,
+			int lowerBoundWaitTimeSec, int upperBoundWaitTimeSec) {
+		// If for some reason startUrl is null stop right away
+		if (this.startURL == null)
+			return;
+
+		// Continuously pop the queue to parse the page content
+		while (true) {
+			if (this.urlsQueue.isEmpty())
+				break;
+
+			// Get the next link from the queue
+			String curUrl = this.urlsQueue.remove();
+
+			// Process link (e.g. trim, truncate bad part, etc..)
+			// Check if link is still valid or not
+			curUrl = this.processLink(curUrl);
+			if (!this.isValidLink(curUrl))
+				continue;
+
+			System.out.println("Process url " + curUrl);
+
+			// Process the new link
+			this.processUrl(curUrl);
+
+			// Wait for 5 to 10 sec before crawling the next page
+			waitSec(lowerBoundWaitTimeSec, upperBoundWaitTimeSec);
 		}
 	}
 
@@ -109,8 +139,8 @@ public abstract class BaseCrawler extends Thread {
 	// Serialize urls already crawled and urls in the queue to disk
 	protected void serializeDataToDisk(String crawlerId) {
 		if (this.urlsCrawled.size() > 0) {
-			try (OutputStream file = new FileOutputStream(
-					crawlerId + "_urlsCrawled.ser");
+			try (OutputStream file = new FileOutputStream(crawlerId
+					+ "_urlsCrawled.ser");
 					OutputStream buffer = new BufferedOutputStream(file);
 					ObjectOutput output = new ObjectOutputStream(buffer);) {
 				output.writeObject(this.urlsCrawled);
@@ -120,8 +150,8 @@ public abstract class BaseCrawler extends Thread {
 		}
 
 		if (this.urlsQueue.size() > 0) {
-			try (OutputStream file = new FileOutputStream(
-					crawlerId + "_urlsQueue.ser");
+			try (OutputStream file = new FileOutputStream(crawlerId
+					+ "_urlsQueue.ser");
 					OutputStream buffer = new BufferedOutputStream(file);
 					ObjectOutput output = new ObjectOutputStream(buffer);) {
 				output.writeObject(this.urlsQueue);
@@ -129,57 +159,5 @@ public abstract class BaseCrawler extends Thread {
 				ex.printStackTrace();
 			}
 		}
-	}
-
-	// Hash a plain string text
-	protected String hash(String plainText) {
-		MessageDigest messageDigest = null;
-
-		try {
-			messageDigest = MessageDigest.getInstance("MD5");
-		} catch (NoSuchAlgorithmException e1) {
-			e1.printStackTrace();
-		}
-
-		return (new HexBinaryAdapter()).marshal(messageDigest.digest(plainText
-				.getBytes()));
-	}
-
-	// Return the current date, e.g: 2014-05-23
-	@SuppressWarnings("deprecation")
-	public static String getCurrentDate() {
-		Date currentDate = new Date();
-		String year = new String("" + (1900 + currentDate.getYear()));
-		String month = new String("" + currentDate.getMonth());
-		String date = new String("" + currentDate.getDate());
-
-		String dateCrawled = year + "-" + month + "-" + date;
-
-		return dateCrawled;
-	}
-
-	// Return the current time 22:11:30
-	@SuppressWarnings("deprecation")
-	public static String getCurrentTime() {
-		Date currentDate = new Date();
-		String hour = new String("" + currentDate.getHours());
-		String minute = new String("" + currentDate.getMinutes());
-		String second = new String("" + currentDate.getSeconds());
-
-		String timeCrawled = hour + ":" + minute + ":" + second;
-
-		return timeCrawled;
-	}
-
-	public static boolean linkIsFile(String url) {
-		if (url == null)
-			return false;
-
-		for (String exts : Globals.fileExtenstions) {
-			if (url.indexOf(exts) == (url.length() - exts.length()))
-				return true;
-		}
-
-		return false;
 	}
 }

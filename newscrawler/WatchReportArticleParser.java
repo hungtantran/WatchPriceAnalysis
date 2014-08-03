@@ -19,17 +19,17 @@ import org.jsoup.select.Elements;
  import edu.stanford.nlp.trees.*;
  import edu.stanford.nlp.parser.lexparser.LexicalizedParser;*/
 
-public class HodinkeeArticleParser extends BaseParser {
-	private final String domain = "http://www.hodinkee.com/";
+public class WatchReportArticleParser extends BaseParser {
+	private final String domain = "http://www.watchreport.com/";
 	private final int numRetryDownloadPage = 2;
-	
+
 	private String articleName = null;
 	private Set<String> keywords = null;
 	private Set<Globals.Type> types = null;
 	private Set<String> topics = null;
 
-	public HodinkeeArticleParser(String articleUrl) {
-		if (articleUrl.indexOf(this.domain +"blog/") == 0) {
+	public WatchReportArticleParser(String articleUrl) {
+		if (articleUrl.indexOf(this.domain) == 0) {
 			this.link = articleUrl;
 			this.keywords = new HashSet<String>();
 			this.types = new HashSet<Globals.Type>();
@@ -39,15 +39,20 @@ public class HodinkeeArticleParser extends BaseParser {
 		}
 	}
 
-	// Return true if the articleUrl is a valid article page of Hodinkee, false
+	// Return true if the articleUrl is a valid article page of WatchReport,
+	// false
 	// if not
 	public boolean isArticlePage() {
-		return this.link != null;
+		return (this.content != null
+				&& this.content
+						.indexOf("property=\"og:type\" content=\"article\"") != -1
+				&& this.content.indexOf("<h1") != -1 && this.content
+					.indexOf("<p class=\"post-meta\">") != -1);
 	}
 
 	// Get domains of the article
 	public Globals.Domain[] getDomains() {
-		Globals.Domain[] domains = { Domain.HODINKEE };
+		Globals.Domain[] domains = { Domain.WATCHREPORT };
 		return domains;
 	}
 
@@ -124,7 +129,7 @@ public class HodinkeeArticleParser extends BaseParser {
 
 	// Parse the name of the article
 	private void parseArticleName() {
-		Elements artcileNameElems = doc.select("h2");
+		Elements artcileNameElems = doc.select("h1");
 		if (artcileNameElems.size() == 1) {
 			String articleNameText = new String(artcileNameElems.get(0).text());
 			articleNameText = articleNameText.trim();
@@ -152,25 +157,27 @@ public class HodinkeeArticleParser extends BaseParser {
 			}
 		}
 	}
-
+	
 	// Parse the date created the article
 	private void parseDateCreated() {
-		Elements dateCreatedElems = doc
-				.select("meta[property=st:published_at]");
-		if (dateCreatedElems.size() == 1) {
-			String dateCreatedText = new String(dateCreatedElems.get(0)
-					.attr("content").toString());
-			dateCreatedText = dateCreatedText.trim();
-			this.dateCreated = dateCreatedText;
-
-			if (Globals.DEBUG)
-				System.out.println("Date Created = " + this.dateCreated);
+		Elements postMetaElems = doc.select("p[class=post-meta]");
+		if (postMetaElems.size() == 1) {
+			Elements metaElems = postMetaElems.get(0).select("span");
+			
+			if (metaElems.size() >= 2) {
+				String dateCreatedText = new String(metaElems.get(1).text());
+				dateCreatedText = dateCreatedText.trim();
+				this.dateCreated = Helper.formatDate(dateCreatedText);
+	
+				if (Globals.DEBUG)
+					System.out.println("Date Created = " + this.dateCreated);
+			}
 		}
 	}
 
 	public static void main(String[] args) {
-		HodinkeeArticleParser parser = new HodinkeeArticleParser(
-				"http://www.hodinkee.com/blog/a-look-at-jb-champions-unique-observatory-chronometer-wristwatch-the-other-patek-with-a-chance-to-become-the-most-expensive-watch-in-the-world");
+		WatchReportArticleParser parser = new WatchReportArticleParser(
+				"http://www.watchreport.com/citizen-eco-drive-promaster-aqualand-depth-meter-bn2024-05e-2/");
 		parser.parseDoc();
 	}
 }

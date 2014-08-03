@@ -23,13 +23,10 @@ public class Chrono24EntryPageParser extends BaseParser {
 	private final String domain = "http://www.chrono24.com/";
 	private final int numRetryDownloadPage = 3;
 
-	private String entryUrl = null;
 	private String watchName = null;
 	private int[] prices = null;
 	private Set<String> keywords = null;
 	private Set<String> topics = null;
-	private String timeCreated = null;
-	private String dateCreated = null;
 	private String refNo = null;
 	private String movement = null;
 	private String caliber = null;
@@ -41,9 +38,9 @@ public class Chrono24EntryPageParser extends BaseParser {
 	private String location = null;
 
 	public Chrono24EntryPageParser(String articleUrl) {
-		if (articleUrl.indexOf("http://www.chrono24.com/") == 0
+		if (articleUrl.indexOf(this.domain) == 0
 				&& articleUrl.indexOf("--id") != -1) {
-			this.entryUrl = articleUrl;
+			this.link = articleUrl;
 			this.prices = new int[2];
 			this.prices[0] = -1;
 			this.prices[1] = -1;
@@ -56,12 +53,7 @@ public class Chrono24EntryPageParser extends BaseParser {
 	// Return true if the articleUrl is a valid watch entry page of chrono24,
 	// false if not
 	public boolean isWatchEntryPage() {
-		return this.entryUrl != null;
-	}
-
-	// Get link to the article
-	public String getLink() {
-		return this.entryUrl;
+		return this.link != null;
 	}
 
 	// Get domains of the article
@@ -125,21 +117,6 @@ public class Chrono24EntryPageParser extends BaseParser {
 		return keywordsArray;
 	}
 
-	// Get the content of the article
-	public String getContent() {
-		return this.content;
-	}
-
-	// Get time created
-	public String getTimeCreated() {
-		return this.timeCreated;
-	}
-
-	// Get date created
-	public String getDateCreated() {
-		return this.dateCreated;
-	}
-
 	// Get the reference number of the watch
 	public String getRefNo() {
 		return this.refNo;
@@ -187,7 +164,7 @@ public class Chrono24EntryPageParser extends BaseParser {
 
 	public void parseDoc() {
 		// Download the html content into a private variable
-		this.downloadHtmlContent(this.entryUrl, this.numRetryDownloadPage);
+		this.downloadHtmlContent(this.link, this.numRetryDownloadPage);
 
 		// If the download content fails, return
 		if (this.doc == null)
@@ -276,8 +253,8 @@ public class Chrono24EntryPageParser extends BaseParser {
 	private void parseDateCreated() {
 		// There is none for chrono24 so I sub the current time as a rough
 		// estimate
-		this.timeCreated = BaseCrawler.getCurrentTime();
-		this.dateCreated = BaseCrawler.getCurrentDate();
+		this.timeCreated = Helper.getCurrentTime();
+		this.dateCreated = Helper.getCurrentDate();
 	}
 
 	// Parse the spec of the watch
