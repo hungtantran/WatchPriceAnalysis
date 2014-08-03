@@ -54,10 +54,10 @@ public class Globals {
 			"A.Manzoni & Fils", "Armin Strom", "Arnold & Son",
 			"Audemars Piguet", "Ball", "Balmain", "Baume & Mercier",
 			"Bell & Ross", "Blanpain", "Breguet", "Breitling", "Bremont",
-			"Bulgari", "Bulova", "Bvlgari", "Calvin Klein", "Cartier",
-			"Casio", "Certina", "Chanel", "Chopard", "Christophe Claret",
-			"Citizen", "Concord", "Corum", "De Bethune", "DeWitt", "Flik Flak",
-			"Fossil", "FP Journe", "Frank Muller", "Frederique Constant",
+			"Bulgari", "Bulova", "Bvlgari", "Calvin Klein", "Cartier", "Casio",
+			"Certina", "Chanel", "Chopard", "Christophe Claret", "Citizen",
+			"Concord", "Corum", "De Bethune", "DeWitt", "Flik Flak", "Fossil",
+			"FP Journe", "Frank Muller", "Frederique Constant",
 			"George Daniels", "Girard Perregaux", "Glashutte Original",
 			"Greubel Forsey", "Gucci", "H Moser", "Hamilton", "Harry Winston",
 			"HD3", "Hermes", "Hublot", "Invicta", "IWC", "Jacob & Co",
@@ -73,7 +73,9 @@ public class Globals {
 			"Shinola", "Sinn", "Tag Heuer", "TechnoMarine", "Thomas Prescher",
 			"Timex", "Tissot", "Tudor", "Ulysse Nardin", "Union Glashütte",
 			"Universal Geneve", "Urwerk", "Vacheron Constantin", "Victorinox",
-			"Vulcain", "Xeric", "Zeitwinkel", "Zenith (LVMH)" };
+			"Vulcain", "Xeric", "Zeitwinkel", "Zenith (LVMH)", "Bovet",
+			"Buccellati", "Christopher Ward", "Ebel", "Fortis", "Graham",
+			"Lemania", "Samsung", "Stowa" };
 
 	static {
 		Map<Type, String[]> tempMap = new HashMap<Type, String[]>();
