@@ -14,13 +14,17 @@ public abstract class BaseParser {
 			"]", ".", ";", ",", "/", "\\" };
 	protected final String invalidWords[] = { "paper", "article", "this",
 			"that", "with" };
-	
+
 	protected String link = null;
 	protected Document doc = null;
 	protected String content = null;
 	protected String timeCreated = null;
 	protected String dateCreated = null;
-	
+
+	public abstract boolean isArticlePage();
+
+	public abstract boolean parseDoc();
+
 	// public abstract String getLink();
 	// public abstract Globals.Domain[] getDomains();
 	// public abstract String getArticleName();
@@ -30,17 +34,17 @@ public abstract class BaseParser {
 	// public abstract String getContent();
 	// public abstract String getTimeCreated();
 	// public abstract String getDateCreated();
-	
+
 	// Get link to the page
 	public String getLink() {
 		return this.link;
 	}
-	
+
 	// Get the content of the article
 	public String getContent() {
 		return this.content;
 	}
-	
+
 	// Get time created
 	public String getTimeCreated() {
 		return this.timeCreated;
@@ -49,6 +53,11 @@ public abstract class BaseParser {
 	// Get date created
 	public String getDateCreated() {
 		return this.dateCreated;
+	}
+
+	// Set html content of parser
+	public void setContent(String content) {
+		this.content = content;
 	}
 
 	protected void downloadHtmlContent(String url, int numRetryDownloadPage) {

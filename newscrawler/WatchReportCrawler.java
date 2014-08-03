@@ -28,7 +28,10 @@ public class WatchReportCrawler extends BaseCrawler {
 	protected boolean isValidLink(String url) {
 		if (url == null)
 			return false;
-
+		
+		if (url.indexOf(WatchReportCrawler.domain) != 0)
+			return false;
+		
 		if (url.indexOf("?") != -1)
 			return false;
 

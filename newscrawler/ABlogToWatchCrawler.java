@@ -28,7 +28,10 @@ public class ABlogToWatchCrawler extends BaseCrawler {
 	protected boolean isValidLink(String url) {
 		if (url == null)
 			return false;
-
+		
+		if (url.indexOf(ABlogToWatchCrawler.domain) != 0)
+			return false;
+		
 		if (url.indexOf("?attachment_id") != -1)
 			return false;
 

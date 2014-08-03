@@ -22,27 +22,25 @@ import org.jsoup.select.Elements;
 public class HodinkeeArticleParser extends BaseParser {
 	private final String domain = "http://www.hodinkee.com/";
 	private final int numRetryDownloadPage = 2;
-	
+
 	private String articleName = null;
 	private Set<String> keywords = null;
 	private Set<Globals.Type> types = null;
 	private Set<String> topics = null;
 
 	public HodinkeeArticleParser(String articleUrl) {
-		if (articleUrl.indexOf(this.domain +"blog/") == 0) {
-			this.link = articleUrl;
-			this.keywords = new HashSet<String>();
-			this.types = new HashSet<Globals.Type>();
-			this.types.add(Type.HOROLOGY);
-			this.topics = new HashSet<String>();
-			this.timeCreated = "00:00:00";
-		}
+		this.link = articleUrl;
+		this.keywords = new HashSet<String>();
+		this.types = new HashSet<Globals.Type>();
+		this.types.add(Type.HOROLOGY);
+		this.topics = new HashSet<String>();
+		this.timeCreated = "00:00:00";
 	}
 
 	// Return true if the articleUrl is a valid article page of Hodinkee, false
 	// if not
 	public boolean isArticlePage() {
-		return this.link != null;
+		return (this.link.indexOf(this.domain + "blog/") == 0);
 	}
 
 	// Get domains of the article
@@ -101,13 +99,13 @@ public class HodinkeeArticleParser extends BaseParser {
 		return topicsArray;
 	}
 
-	public void parseDoc() {
+	public boolean parseDoc() {
 		// Download the html content into a private variable
 		this.downloadHtmlContent(this.link, this.numRetryDownloadPage);
 
 		// If the download content fails, return
 		if (this.doc == null)
-			return;
+			return false;
 
 		// Parse the name of the article
 		this.parseArticleName();
@@ -120,6 +118,8 @@ public class HodinkeeArticleParser extends BaseParser {
 
 		// Parse the date created the article
 		this.parseDateCreated();
+		
+		return true;
 	}
 
 	// Parse the name of the article
@@ -143,8 +143,8 @@ public class HodinkeeArticleParser extends BaseParser {
 
 	// Parse the topics of the article
 	private void parseTopics() {
-		Set<String> topicsOfName = Helper.identifyTopicOfName(
-				this.articleName, Globals.HOROLOGYTOPICS);
+		Set<String> topicsOfName = Helper.identifyTopicOfName(this.articleName,
+				Globals.HOROLOGYTOPICS);
 
 		if (topicsOfName != null) {
 			for (String topic : topicsOfName) {

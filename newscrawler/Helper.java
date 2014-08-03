@@ -241,6 +241,21 @@ public class Helper {
 		return topicsOfName;
 	}
 
+	// Make the current thread wait for a random amount of time between
+	// lowerBound and upperBound number of seconds
+	public static void waitSec(int lowerBound, int upperBound) {
+		try {
+			int waitTime = lowerBound
+					* 1000
+					+ (int) (Math.random() * ((upperBound * 1000 - lowerBound * 1000) + 1));
+			System.out.println("Wait for " + waitTime);
+			Thread.currentThread();
+			Thread.sleep(waitTime);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
+
 	// Comparator class to sort TreeMap
 	protected class ValueComparator implements Comparator<String> {
 

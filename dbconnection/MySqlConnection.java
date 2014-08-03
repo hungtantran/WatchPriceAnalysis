@@ -30,11 +30,11 @@ public class MySqlConnection {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public Map<String, Integer> getIdTopicMap() {
 		return this.idTopicMap;
 	}
-	
+
 	// Populate information of type, domain and topic information from existing
 	// database
 	private void getDatabaseExistingInfo() {
@@ -102,7 +102,8 @@ public class MySqlConnection {
 				String topic = resultSet.getString(3).trim();
 				this.idTopicMap.put(topic, id);
 				if (Globals.DEBUG)
-					System.out.println(id + " : " + topic+ " "+this.idTopicMap.get(topic));
+					System.out.println(id + " : " + topic + " "
+							+ this.idTopicMap.get(topic));
 			}
 		} catch (SQLException e) {
 			System.out.println("Get topic_table information fails");
@@ -328,16 +329,17 @@ public class MySqlConnection {
 		for (Map.Entry<Globals.Domain, String> entry : Globals.domainNameMap
 				.entrySet()) {
 			Globals.Domain type = entry.getKey();
-			String typeName = entry.getValue();
+			String domainName = entry.getValue().trim();
 			try {
 				PreparedStatement stmt = null;
 				stmt = this.con
 						.prepareStatement("INSERT INTO domain_table (id, domain) values (?, ?)");
 				stmt.setInt(1, type.value);
-				stmt.setString(2, typeName);
+				stmt.setString(2, domainName);
 				stmt.executeUpdate();
 			} catch (SQLException e) {
-				System.out.println("Fail to initialize domain table");
+				System.out.println("Fail to insert domain '" + domainName
+						+ "' into domain_table");
 				e.printStackTrace();
 			}
 		}
@@ -348,21 +350,26 @@ public class MySqlConnection {
 		try {
 			Statement st = this.con.createStatement();
 			st.executeQuery("USE " + this.database);
+		} catch (SQLException e) {
+			System.out.println("Fail to initialize type table");
+			e.printStackTrace();
+		}
 
-			for (Map.Entry<Type, String> entry : Globals.typeNameMap.entrySet()) {
-				Type type = entry.getKey();
-				String typeName = entry.getValue();
+		for (Map.Entry<Type, String> entry : Globals.typeNameMap.entrySet()) {
+			Type type = entry.getKey();
+			String typeName = entry.getValue().trim();
 
+			try {
 				PreparedStatement stmt = null;
 				stmt = this.con
 						.prepareStatement("INSERT INTO type_table (id, type) values (?, ?)");
 				stmt.setInt(1, type.value);
 				stmt.setString(2, typeName);
 				stmt.executeUpdate();
+			} catch (SQLException e) {
+				System.out.println("Fail to insert type '" + type.value
+						+ "' into type_table");
 			}
-		} catch (SQLException e) {
-			System.out.println("Fail to initialize type table");
-			e.printStackTrace();
 		}
 	}
 
@@ -371,27 +378,30 @@ public class MySqlConnection {
 		try {
 			Statement st = this.con.createStatement();
 			st.executeQuery("USE " + this.database);
+		} catch (SQLException e) {
+			System.out.println("Fail to initialize topic table");
+			e.printStackTrace();
+		}
 
-			// Iteratate through each type to get the list of topics of that
-			// type
-			for (Map.Entry<Type, String[]> entry : Globals.typeTopicMap
-					.entrySet()) {
-				Type type = entry.getKey();
-				String[] topics = entry.getValue();
+		// Iteratate through each type to get the list of topics of that type
+		for (Map.Entry<Type, String[]> entry : Globals.typeTopicMap.entrySet()) {
+			Type type = entry.getKey();
+			String[] topics = entry.getValue();
 
-				// Iteratate through each topic in the list of topics
-				for (String topic : topics) {
+			// Iteratate through each topic in the list of topics
+			for (String topic : topics) {
+				try {
 					PreparedStatement stmt = null;
 					stmt = this.con
 							.prepareStatement("INSERT INTO topic_table (type_table_id, topic) values (?, ?)");
 					stmt.setInt(1, type.value);
-					stmt.setString(2, topic);
+					stmt.setString(2, topic.trim());
 					stmt.executeUpdate();
+				} catch (SQLException e) {
+					System.out.println("Fail to insert topic '" + topic
+							+ "' into topic_table");
 				}
 			}
-		} catch (SQLException e) {
-			System.out.println("Fail to initialize topic table");
-			e.printStackTrace();
 		}
 	}
 
@@ -432,11 +442,11 @@ public class MySqlConnection {
 
 		return topicsId;
 	}
-	
+
 	// Add new article-topic relationship
 	public void addArticleTopicRelationship(int articleId, int topicId) {
 		PreparedStatement stmt = null;
-		
+
 		try {
 			stmt = this.con
 					.prepareStatement("INSERT INTO article_topic_table (article_table_id, topic_table_id) values (?, ?)");
@@ -444,32 +454,29 @@ public class MySqlConnection {
 			stmt.setInt(2, topicId);
 			stmt.executeUpdate();
 		} catch (Exception e) {
-			System.out
-					.println("Fail to insert into article_topic_table");
-			//e.printStackTrace();
+			System.out.println("Fail to insert into article_topic_table");
+			// e.printStackTrace();
 		}
 	}
-	
+
 	// Add content for article into article_content_table
 	public void addArticleContent(int articleId, String content) {
 		PreparedStatement stmt = null;
-		
+
 		try {
 			// Insert into article_content_table table
 			stmt = this.con
 					.prepareStatement("INSERT INTO article_content_table (article_table_id, content) values (?, ?)");
 			stmt.setInt(1, articleId);
-			InputStream is = new ByteArrayInputStream(
-					content.getBytes());
+			InputStream is = new ByteArrayInputStream(content.getBytes());
 			stmt.setBlob(2, is);
 			stmt.executeUpdate();
 		} catch (Exception e) {
-			System.out
-					.println("Fail to insert into article_content_table");
+			System.out.println("Fail to insert into article_content_table");
 			e.printStackTrace();
 		}
 	}
-	
+
 	// Add new article into the database
 	public void addArticle(String link, Globals.Domain[] domains,
 			String articleName, Globals.Type[] types, String[] keywords,
@@ -537,7 +544,7 @@ public class MySqlConnection {
 
 			if (generatedKeys.next()) {
 				int articleId = generatedKeys.getInt(1);
-				
+
 				// Add into article_content_table
 				this.addArticleContent(articleId, content);
 
@@ -551,7 +558,7 @@ public class MySqlConnection {
 			e.printStackTrace();
 		}
 	}
-	
+
 	// Insert into watch_table table
 	private int insertIntoWatchTable(String link, Globals.Domain[] domains,
 			String watchName, int[] prices, String[] keywords, String[] topics,
@@ -622,7 +629,7 @@ public class MySqlConnection {
 
 		return -1;
 	}
-	
+
 	// Insert into watch_spec_table table
 	private void insertIntoWatchSpecTable(int watchId, String refNo,
 			Integer[] topicsId, String movement, String caliber,
@@ -633,14 +640,14 @@ public class MySqlConnection {
 		PreparedStatement stmt = null;
 
 		// Insert into watch_spec_table table
-		stmt = this.con.prepareStatement("INSERT INTO watch_spec_table (" + "watch_table_id, "
-				+ "ref_no, " + "topic_table_id_1, "
+		stmt = this.con.prepareStatement("INSERT INTO watch_spec_table ("
+				+ "watch_table_id, " + "ref_no, " + "topic_table_id_1, "
 				+ "topic_table_id_2, " + "movement, " + "caliber, "
 				+ "watch_condition, " + "watch_year, " + "case_material, "
 				+ "dial_color, " + "gender, " + "location) "
 				+ "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 		stmt.setInt(1, watchId);
-		
+
 		if (refNo != null) {
 			stmt.setString(2, refNo);
 		} else {
@@ -682,25 +689,25 @@ public class MySqlConnection {
 		} else {
 			stmt.setNull(8, java.sql.Types.INTEGER);
 		}
-		
+
 		if (caseMaterial != null) {
 			stmt.setString(9, caseMaterial);
 		} else {
 			stmt.setNull(9, java.sql.Types.CHAR);
 		}
-		
+
 		if (dialColor != null) {
 			stmt.setString(10, dialColor);
 		} else {
 			stmt.setNull(10, java.sql.Types.CHAR);
 		}
-		
+
 		if (gender != null) {
 			stmt.setString(11, gender);
 		} else {
 			stmt.setNull(11, java.sql.Types.CHAR);
 		}
-		
+
 		if (location != null) {
 			stmt.setString(12, location);
 		} else {
@@ -766,29 +773,75 @@ public class MySqlConnection {
 			e.printStackTrace();
 		}
 	}
-	
+
 	// Get information from article_table
 	public ResultSet getArticleInfo() {
 		return getArticleInfo(-1, -1);
 	}
-	
+
 	public ResultSet getArticleInfo(int lowerBound, int maxNumResult) {
 		try {
 			Statement st = this.con.createStatement();
 			st.executeQuery("USE " + this.database);
-			
+
 			String query = "SELECT * FROM article_table";
-			
+
 			if (lowerBound > 0 || maxNumResult > 0)
-				query += " LIMIT "+lowerBound+","+maxNumResult;
-			
+				query += " LIMIT " + lowerBound + "," + maxNumResult;
+
 			return st.executeQuery(query);
 		} catch (SQLException e) {
 			System.out.println("Get article_table information fails");
 			e.printStackTrace();
 		}
-		
+
 		return null;
+	}
+
+	// Get content of article with given id
+	public String getArticleContent(int articleId) {
+		String content = null;
+		
+		try {
+			Statement st = this.con.createStatement();
+			st.executeQuery("USE " + this.database);
+
+			String query = "SELECT * FROM article_content_table WHERE article_table_id = "
+					+ articleId;
+
+			ResultSet resultSet = st.executeQuery(query);
+			
+			int count = 0;
+			while (resultSet.next()) {
+				count++;
+				content = resultSet.getString(2);
+			}
+			
+			if (count != 1) return null;
+		} catch (SQLException e) {
+			System.out.println("Get article_table information fails");
+			e.printStackTrace();
+		}
+
+		return content;
+	}
+
+	// Remove article from article_table and associated table
+	public void removeArticle(int articleId) {
+		try {
+			Statement st = this.con.createStatement();
+			st.executeQuery("USE " + this.database);
+
+			st.executeUpdate("DELETE FROM article_content_table WHERE article_table_id = "
+					+ articleId);
+			st.executeUpdate("DELETE FROM article_topic_table WHERE article_table_id = "
+					+ articleId);
+			st.executeUpdate("DELETE FROM article_table WHERE id = "
+					+ articleId);
+		} catch (SQLException e) {
+			System.out.println("Fail to delete article with ID " + articleId);
+			e.printStackTrace();
+		}
 	}
 
 	public static void main(String[] args) {

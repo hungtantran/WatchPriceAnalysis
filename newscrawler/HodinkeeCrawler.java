@@ -29,7 +29,10 @@ public class HodinkeeCrawler extends BaseCrawler {
 	protected boolean isValidLink(String url) {
 		if (url == null)
 			return false;
-
+		
+		if (url.indexOf(HodinkeeCrawler.domain) != 0)
+			return false;
+		
 		if (url.indexOf("?tag=") != -1)
 			return false;
 

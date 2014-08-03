@@ -38,22 +38,20 @@ public class Chrono24EntryPageParser extends BaseParser {
 	private String location = null;
 
 	public Chrono24EntryPageParser(String articleUrl) {
-		if (articleUrl.indexOf(this.domain) == 0
-				&& articleUrl.indexOf("--id") != -1) {
-			this.link = articleUrl;
-			this.prices = new int[2];
-			this.prices[0] = -1;
-			this.prices[1] = -1;
-			this.keywords = new HashSet<String>();
-			this.topics = new HashSet<String>();
-			this.timeCreated = "00:00:00";
-		}
+		this.link = articleUrl;
+		this.prices = new int[2];
+		this.prices[0] = -1;
+		this.prices[1] = -1;
+		this.keywords = new HashSet<String>();
+		this.topics = new HashSet<String>();
+		this.timeCreated = "00:00:00";
 	}
 
 	// Return true if the articleUrl is a valid watch entry page of chrono24,
 	// false if not
-	public boolean isWatchEntryPage() {
-		return this.link != null;
+	public boolean isArticlePage() {
+		return (this.link.indexOf(this.domain) == 0 && this.link
+				.indexOf("--id") != -1);
 	}
 
 	// Get domains of the article
@@ -162,13 +160,13 @@ public class Chrono24EntryPageParser extends BaseParser {
 		return this.location;
 	}
 
-	public void parseDoc() {
+	public boolean parseDoc() {
 		// Download the html content into a private variable
 		this.downloadHtmlContent(this.link, this.numRetryDownloadPage);
 
 		// If the download content fails, return
 		if (this.doc == null)
-			return;
+			return false;
 
 		// Parse the name of the watch
 		this.parseWatchName();
@@ -187,6 +185,8 @@ public class Chrono24EntryPageParser extends BaseParser {
 
 		// Parse the spec of watch (ref no, movement, caliber, color, etc...)
 		this.parseSpec();
+		
+		return true;
 	}
 
 	// Parse the name of the watch
@@ -239,8 +239,8 @@ public class Chrono24EntryPageParser extends BaseParser {
 
 	// Parse the topics of the watch entry page
 	private void parseTopics() {
-		Set<String> topicsOfName = Helper.identifyTopicOfName(
-				this.watchName, Globals.HOROLOGYTOPICS);
+		Set<String> topicsOfName = Helper.identifyTopicOfName(this.watchName,
+				Globals.HOROLOGYTOPICS);
 
 		if (topicsOfName != null) {
 			for (String topic : topicsOfName) {

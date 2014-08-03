@@ -38,7 +38,10 @@ public class Chrono24Crawler extends BaseCrawler {
 	protected boolean isValidLink(String url) {
 		if (url == null)
 			return false;
-
+		
+		if (url.indexOf(Chrono24Crawler.domain) != 0)
+			return false;
+		
 		if (url.indexOf("?") != -1)
 			return false;
 
@@ -56,7 +59,7 @@ public class Chrono24Crawler extends BaseCrawler {
 		String htmlContent = null;
 
 		// If the page is an watch entry page, parse it
-		if (parser.isWatchEntryPage()) {
+		if (parser.isArticlePage()) {
 			parser.parseDoc();
 			htmlContent = parser.getContent();
 

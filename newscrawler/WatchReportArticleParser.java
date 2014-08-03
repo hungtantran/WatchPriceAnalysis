@@ -29,25 +29,24 @@ public class WatchReportArticleParser extends BaseParser {
 	private Set<String> topics = null;
 
 	public WatchReportArticleParser(String articleUrl) {
-		if (articleUrl.indexOf(this.domain) == 0) {
-			this.link = articleUrl;
-			this.keywords = new HashSet<String>();
-			this.types = new HashSet<Globals.Type>();
-			this.types.add(Type.HOROLOGY);
-			this.topics = new HashSet<String>();
-			this.timeCreated = "00:00:00";
-		}
+		this.link = articleUrl;
+		this.keywords = new HashSet<String>();
+		this.types = new HashSet<Globals.Type>();
+		this.types.add(Type.HOROLOGY);
+		this.topics = new HashSet<String>();
+		this.timeCreated = "00:00:00";
 	}
 
 	// Return true if the articleUrl is a valid article page of WatchReport,
-	// false
-	// if not
+	// false if not
 	public boolean isArticlePage() {
-		return (this.content != null
+		return (this.link.indexOf(this.domain) == 0
+				&& this.content != null
 				&& this.content
 						.indexOf("property=\"og:type\" content=\"article\"") != -1
-				&& this.content.indexOf("<h1") != -1 && this.content
-					.indexOf("<p class=\"post-meta\">") != -1);
+				&& this.content.indexOf("<h1") != -1
+				&& this.content.indexOf("<p class=\"post-meta\">") != -1 && Helper
+					.numOccurance(this.link, "/") == 4);
 	}
 
 	// Get domains of the article
@@ -106,13 +105,13 @@ public class WatchReportArticleParser extends BaseParser {
 		return topicsArray;
 	}
 
-	public void parseDoc() {
+	public boolean parseDoc() {
 		// Download the html content into a private variable
 		this.downloadHtmlContent(this.link, this.numRetryDownloadPage);
 
 		// If the download content fails, return
 		if (this.doc == null)
-			return;
+			return false;
 
 		// Parse the name of the article
 		this.parseArticleName();
@@ -125,6 +124,8 @@ public class WatchReportArticleParser extends BaseParser {
 
 		// Parse the date created the article
 		this.parseDateCreated();
+		
+		return true;
 	}
 
 	// Parse the name of the article
@@ -148,8 +149,8 @@ public class WatchReportArticleParser extends BaseParser {
 
 	// Parse the topics of the article
 	private void parseTopics() {
-		Set<String> topicsOfName = Helper.identifyTopicOfName(
-				this.articleName, Globals.HOROLOGYTOPICS);
+		Set<String> topicsOfName = Helper.identifyTopicOfName(this.articleName,
+				Globals.HOROLOGYTOPICS);
 
 		if (topicsOfName != null) {
 			for (String topic : topicsOfName) {
@@ -157,18 +158,18 @@ public class WatchReportArticleParser extends BaseParser {
 			}
 		}
 	}
-	
+
 	// Parse the date created the article
 	private void parseDateCreated() {
 		Elements postMetaElems = doc.select("p[class=post-meta]");
 		if (postMetaElems.size() == 1) {
 			Elements metaElems = postMetaElems.get(0).select("span");
-			
+
 			if (metaElems.size() >= 2) {
 				String dateCreatedText = new String(metaElems.get(1).text());
 				dateCreatedText = dateCreatedText.trim();
 				this.dateCreated = Helper.formatDate(dateCreatedText);
-	
+
 				if (Globals.DEBUG)
 					System.out.println("Date Created = " + this.dateCreated);
 			}

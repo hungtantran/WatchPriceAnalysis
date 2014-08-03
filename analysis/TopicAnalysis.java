@@ -12,7 +12,6 @@ public class TopicAnalysis {
 
 	public TopicAnalysis() {
 		this.mysqlConnection = new MySqlConnection();
-		this.mysqlConnection.getIdTopicMap();
 	}
 
 	// Go through existings article, try to identify topic of them
@@ -76,7 +75,7 @@ public class TopicAnalysis {
 	}
 
 	public static void main(String[] args) {
-//		TopicAnalysis topicAnalysis = new TopicAnalysis();
-//		topicAnalysis.populateArticleTopic();
+		TopicAnalysis topicAnalysis = new TopicAnalysis();
+		topicAnalysis.populateArticleTopic();
 	}
 }

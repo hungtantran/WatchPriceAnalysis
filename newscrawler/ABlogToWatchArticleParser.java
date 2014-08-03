@@ -37,8 +37,8 @@ public class ABlogToWatchArticleParser extends BaseParser {
 		this.timeCreated = "00:00:00";
 	}
 
-	// Return true if the articleUrl is a valid article page of ABlogToWatch, false
-	// if not
+	// Return true if the articleUrl is a valid article page of ABlogToWatch,
+	// false if not
 	public boolean isArticlePage() {
 		return (this.content != null && this.content
 				.indexOf("article:published_time") != -1);
@@ -100,17 +100,17 @@ public class ABlogToWatchArticleParser extends BaseParser {
 		return topicsArray;
 	}
 
-	public void parseDoc() {
+	public boolean parseDoc() {
 		// Download the html content into a private variable
 		this.downloadHtmlContent(this.link, this.numRetryDownloadPage);
 
 		// If the download content fails, return
 		if (this.doc == null)
-			return;
+			return false;
 
 		// If the page is not an article page
 		if (!this.isArticlePage())
-			return;
+			return false;
 
 		// Parse the name of the article
 		this.parseArticleName();
@@ -123,6 +123,8 @@ public class ABlogToWatchArticleParser extends BaseParser {
 
 		// Parse the date created the article
 		this.parseDateCreated();
+		
+		return true;
 	}
 
 	// Parse the name of the article
@@ -146,8 +148,8 @@ public class ABlogToWatchArticleParser extends BaseParser {
 
 	// Parse the topics of the article
 	private void parseTopics() {
-		Set<String> topicsOfName = Helper.identifyTopicOfName(
-				this.articleName, Globals.HOROLOGYTOPICS);
+		Set<String> topicsOfName = Helper.identifyTopicOfName(this.articleName,
+				Globals.HOROLOGYTOPICS);
 
 		if (topicsOfName != null) {
 			for (String topic : topicsOfName) {
