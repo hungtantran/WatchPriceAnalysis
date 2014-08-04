@@ -1,11 +1,18 @@
 package dbconnection;
 
-import java.io.*;
-import java.sql.*;
-import java.util.*;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 import newscrawler.Globals;
-import newscrawler.Globals.Type;
 
 public class MySqlConnection {
 	private Connection con = null;
@@ -111,298 +118,7 @@ public class MySqlConnection {
 		}
 	}
 
-	public void createDB() {
-		this.createDomainTable();
-		this.createTypeTable();
-		this.createTopicTable();
-		this.createArticleTable();
-		this.createArticleContentTable();
-		this.createArticleTopicTable();
-		this.createWatchPriceTable();
-		this.createWatchSpecTable();
-		this.createWatchContentTable();
-	}
-
-	private void createArticleTable() {
-		try {
-			Statement st = this.con.createStatement();
-			st.executeQuery("USE " + this.database);
-			st.executeUpdate("CREATE TABLE article_table ("
-					+ "id int unsigned AUTO_INCREMENT not null, "
-					+ "link char(255) not null, "
-					+ "domain_table_id_1 int unsigned not null, "
-					+ "domain_table_id_2 int unsigned, "
-					+ "domain_table_id_3 int unsigned, "
-					+ "article_name char(255) not null, "
-					+ "type_table_1 int unsigned not null, "
-					+ "type_table_2 int unsigned, "
-					+ "keywords char(255) not null, "
-					+ "time_created char(128) not null, "
-					+ "date_created char(128) not null, "
-					+ "time_crawled char(128) not null, "
-					+ "date_crawled char(128) not null, "
-					+ "PRIMARY KEY(id), "
-					+ "UNIQUE (id), "
-					+ "UNIQUE (link), "
-					+ "FOREIGN KEY (domain_table_id_1) REFERENCES domain_table(id), "
-					+ "FOREIGN KEY (domain_table_id_2) REFERENCES domain_table(id), "
-					+ "FOREIGN KEY (domain_table_id_3) REFERENCES domain_table(id), "
-					+ "FOREIGN KEY (type_table_1) REFERENCES type_table(id),"
-					+ "FOREIGN KEY (type_table_2) REFERENCES type_table(id))");
-		} catch (SQLException e) {
-			System.out.println("CREATE TABLE article_table fails");
-			e.printStackTrace();
-		}
-	}
-
-	private void createArticleContentTable() {
-		try {
-			Statement st = this.con.createStatement();
-			st.executeQuery("USE " + this.database);
-			st.executeUpdate("CREATE TABLE article_content_table ("
-					+ "article_table_id int unsigned not null, "
-					+ "content LONGBLOB not null, "
-					+ "UNIQUE(article_table_id), "
-					+ "FOREIGN KEY (article_table_id) REFERENCES article_table(id))");
-		} catch (SQLException e) {
-			System.out.println("CREATE TABLE article_content_table fails");
-			e.printStackTrace();
-		}
-	}
-
-	private void createDomainTable() {
-		try {
-			Statement st = this.con.createStatement();
-			st.executeQuery("USE " + this.database);
-			st.executeUpdate("CREATE TABLE domain_table ("
-					+ "id int unsigned AUTO_INCREMENT not null, "
-					+ "domain char(255) not null, " + "PRIMARY KEY(id), "
-					+ "UNIQUE (id), " + "UNIQUE (domain))");
-		} catch (SQLException e) {
-			System.out.println("CREATE TABLE domain_table fails");
-			e.printStackTrace();
-		}
-	}
-
-	private void createTypeTable() {
-		try {
-			Statement st = this.con.createStatement();
-			st.executeQuery("USE " + this.database);
-			st.executeUpdate("CREATE TABLE type_table ("
-					+ "id int unsigned AUTO_INCREMENT not null, "
-					+ "type char(255) not null, " + "PRIMARY KEY(id), "
-					+ "UNIQUE (id), " + "UNIQUE (type))");
-		} catch (SQLException e) {
-			System.out.println("CREATE TABLE type_table fails");
-			e.printStackTrace();
-		}
-	}
-
-	private void createTopicTable() {
-		try {
-			Statement st = this.con.createStatement();
-			st.executeQuery("USE " + this.database);
-			st.executeUpdate("CREATE TABLE topic_table ("
-					+ "id int unsigned AUTO_INCREMENT not null, "
-					+ "type_table_id int unsigned not null, "
-					+ "topic char(255) not null, " + "PRIMARY KEY(id), "
-					+ "FOREIGN KEY (type_table_id) REFERENCES type_table(id), "
-					+ "UNIQUE (id), " + "UNIQUE (topic))");
-		} catch (SQLException e) {
-			System.out.println("CREATE TABLE topic_table fails");
-			e.printStackTrace();
-		}
-	}
-
-	private void createArticleTopicTable() {
-		try {
-			Statement st = this.con.createStatement();
-			st.executeQuery("USE " + this.database);
-			st.executeUpdate("CREATE TABLE article_topic_table ("
-					+ "id int unsigned AUTO_INCREMENT not null, "
-					+ "article_table_id int unsigned not null, "
-					+ "topic_table_id int unsigned not null, "
-					+ "PRIMARY KEY(id), "
-					+ "UNIQUE (id), "
-					+ "UNIQUE (article_table_id, topic_table_id), "
-					+ "FOREIGN KEY (article_table_id) REFERENCES article_table(id), "
-					+ "FOREIGN KEY (topic_table_id) REFERENCES topic_table(id))");
-		} catch (SQLException e) {
-			System.out.println("CREATE TABLE article_topic_table fails");
-			e.printStackTrace();
-		}
-	}
-
-	private void createWatchPriceTable() {
-		try {
-			Statement st = this.con.createStatement();
-			st.executeQuery("USE " + this.database);
-			st.executeUpdate("CREATE TABLE watch_table ("
-					+ "id int unsigned AUTO_INCREMENT not null, "
-					+ "link char(255) not null, "
-					+ "domain_table_id_1 int unsigned not null, "
-					+ "topic_table_id_1 int unsigned, "
-					+ "topic_table_id_2 int unsigned, "
-					+ "watch_name char(255) not null, "
-					+ "price_1 int unsigned not null, "
-					+ "price_2 int unsigned, "
-					+ "keywords char(255), "
-					+ "time_created char(128) not null, "
-					+ "date_created char(128) not null, "
-					+ "time_crawled char(128) not null, "
-					+ "date_crawled char(128) not null, "
-					+ "PRIMARY KEY(id), "
-					+ "UNIQUE (id), "
-					+ "UNIQUE (link, price_1), "
-					+ "FOREIGN KEY (domain_table_id_1) REFERENCES domain_table(id), "
-					+ "FOREIGN KEY (topic_table_id_1) REFERENCES topic_table(id), "
-					+ "FOREIGN KEY (topic_table_id_2) REFERENCES topic_table(id))");
-		} catch (SQLException e) {
-			System.out.println("CREATE TABLE watch_table fails");
-			e.printStackTrace();
-		}
-	}
-
-	private void createWatchSpecTable() {
-		try {
-			Statement st = this.con.createStatement();
-			st.executeQuery("USE " + this.database);
-			st.executeUpdate("CREATE TABLE watch_spec_table ("
-					+ "watch_table_id int unsigned not null, "
-					+ "ref_no char(64), "
-					+ "topic_table_id_1 int unsigned, "
-					+ "topic_table_id_2 int unsigned, "
-					+ "movement char(64), "
-					+ "caliber char(64), "
-					+ "watch_condition char(64), "
-					+ "watch_year int unsigned, "
-					+ "case_material char(64), "
-					+ "dial_color char(64), "
-					+ "gender char(64), "
-					+ "location char(128), "
-					+ "FOREIGN KEY (watch_table_id) REFERENCES watch_table(id), "
-					+ "UNIQUE (watch_table_id), "
-					+ "FOREIGN KEY (topic_table_id_1) REFERENCES topic_table(id), "
-					+ "FOREIGN KEY (topic_table_id_2) REFERENCES topic_table(id))");
-		} catch (SQLException e) {
-			System.out.println("CREATE TABLE watch_spec_table fails");
-			e.printStackTrace();
-		}
-	}
-
-	private void createWatchContentTable() {
-		try {
-			Statement st = this.con.createStatement();
-			st.executeQuery("USE " + this.database);
-			st.executeUpdate("CREATE TABLE watch_content_table ("
-					+ "watch_table_id int unsigned not null, "
-					+ "content LONGBLOB not null, "
-					+ "UNIQUE(watch_table_id), "
-					+ "FOREIGN KEY (watch_table_id) REFERENCES watch_table(id))");
-		} catch (SQLException e) {
-			System.out.println("CREATE TABLE article_content_table fails");
-			e.printStackTrace();
-		}
-	}
-
 	public void deleteDB() {
-
-	}
-
-	public void initializeDB() {
-		this.initializeDomainTable();
-		this.initializeTypeTable();
-		this.initializeTopicTable();
-	}
-
-	// Insert all the domains into the type tables
-	private void initializeDomainTable() {
-		// TODO try catch less generic
-		try {
-			Statement st = this.con.createStatement();
-			st.executeQuery("USE " + this.database);
-		} catch (SQLException e) {
-			System.out.println("Fail to initialize domain table");
-			e.printStackTrace();
-		}
-
-		for (Map.Entry<Globals.Domain, String> entry : Globals.domainNameMap
-				.entrySet()) {
-			Globals.Domain type = entry.getKey();
-			String domainName = entry.getValue().trim();
-			try {
-				PreparedStatement stmt = null;
-				stmt = this.con
-						.prepareStatement("INSERT INTO domain_table (id, domain) values (?, ?)");
-				stmt.setInt(1, type.value);
-				stmt.setString(2, domainName);
-				stmt.executeUpdate();
-			} catch (SQLException e) {
-				System.out.println("Fail to insert domain '" + domainName
-						+ "' into domain_table");
-				e.printStackTrace();
-			}
-		}
-	}
-
-	// Insert all the types into the type tables
-	private void initializeTypeTable() {
-		try {
-			Statement st = this.con.createStatement();
-			st.executeQuery("USE " + this.database);
-		} catch (SQLException e) {
-			System.out.println("Fail to initialize type table");
-			e.printStackTrace();
-		}
-
-		for (Map.Entry<Type, String> entry : Globals.typeNameMap.entrySet()) {
-			Type type = entry.getKey();
-			String typeName = entry.getValue().trim();
-
-			try {
-				PreparedStatement stmt = null;
-				stmt = this.con
-						.prepareStatement("INSERT INTO type_table (id, type) values (?, ?)");
-				stmt.setInt(1, type.value);
-				stmt.setString(2, typeName);
-				stmt.executeUpdate();
-			} catch (SQLException e) {
-				System.out.println("Fail to insert type '" + type.value
-						+ "' into type_table");
-			}
-		}
-	}
-
-	// Insert all the types into the type tables
-	private void initializeTopicTable() {
-		try {
-			Statement st = this.con.createStatement();
-			st.executeQuery("USE " + this.database);
-		} catch (SQLException e) {
-			System.out.println("Fail to initialize topic table");
-			e.printStackTrace();
-		}
-
-		// Iteratate through each type to get the list of topics of that type
-		for (Map.Entry<Type, String[]> entry : Globals.typeTopicMap.entrySet()) {
-			Type type = entry.getKey();
-			String[] topics = entry.getValue();
-
-			// Iteratate through each topic in the list of topics
-			for (String topic : topics) {
-				try {
-					PreparedStatement stmt = null;
-					stmt = this.con
-							.prepareStatement("INSERT INTO topic_table (type_table_id, topic) values (?, ?)");
-					stmt.setInt(1, type.value);
-					stmt.setString(2, topic.trim());
-					stmt.executeUpdate();
-				} catch (SQLException e) {
-					System.out.println("Fail to insert topic '" + topic
-							+ "' into topic_table");
-				}
-			}
-		}
 	}
 
 	public Integer[] convertDomainToDomainId(Globals.Domain[] domains) {
@@ -801,7 +517,7 @@ public class MySqlConnection {
 	// Get content of article with given id
 	public String getArticleContent(int articleId) {
 		String content = null;
-		
+
 		try {
 			Statement st = this.con.createStatement();
 			st.executeQuery("USE " + this.database);
@@ -810,14 +526,15 @@ public class MySqlConnection {
 					+ articleId;
 
 			ResultSet resultSet = st.executeQuery(query);
-			
+
 			int count = 0;
 			while (resultSet.next()) {
 				count++;
 				content = resultSet.getString(2);
 			}
-			
-			if (count != 1) return null;
+
+			if (count != 1)
+				return null;
 		} catch (SQLException e) {
 			System.out.println("Get article_table information fails");
 			e.printStackTrace();
@@ -845,8 +562,5 @@ public class MySqlConnection {
 	}
 
 	public static void main(String[] args) {
-		MySqlConnection con = new MySqlConnection();
-		con.createDB();
-		con.initializeDB();
 	}
 }

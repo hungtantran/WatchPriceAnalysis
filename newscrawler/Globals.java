@@ -75,7 +75,7 @@ public class Globals {
 			"Universal Geneve", "Urwerk", "Vacheron Constantin", "Victorinox",
 			"Vulcain", "Xeric", "Zeitwinkel", "Zenith (LVMH)", "Bovet",
 			"Buccellati", "Christopher Ward", "Ebel", "Fortis", "Graham",
-			"Lemania", "Samsung", "Stowa" };
+			"Lemania", "Samsung", "Stowa", "Pebble" };
 
 	static {
 		Map<Type, String[]> tempMap = new HashMap<Type, String[]>();
