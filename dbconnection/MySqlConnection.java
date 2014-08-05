@@ -543,6 +543,60 @@ public class MySqlConnection {
 		return content;
 	}
 
+	// Get information from article_table
+	public ResultSet getWatchInfo() {
+		return getWatchInfo(0, -1, -1);
+	}
+
+	// If topicId is null, return all watch without topic
+	// If topicId is non-positive, return all watch
+	// If topicId is positive, return watches with topic_table_id_1 OR
+	// topic_table_id_2 = topicId
+	public ResultSet getWatchInfo(Integer topicId, int lowerBound,
+			int maxNumResult) {
+		try {
+			Statement st = this.con.createStatement();
+			st.executeQuery("USE " + this.database);
+
+			String query = "SELECT * FROM watch_table";
+
+			if (topicId == null) {
+				query += " WHERE topic_table_id_1 IS NULL";
+			} else {
+				if (topicId > 0)
+					query += " WHERE topic_table_id_1 = " + topicId
+							+ " OR topic_table_id_2 = " + topicId;
+			}
+
+			if (lowerBound > 0 || maxNumResult > 0)
+				query += " LIMIT " + lowerBound + "," + maxNumResult;
+
+			return st.executeQuery(query);
+		} catch (SQLException e) {
+			System.out.println("Get article_table information fails");
+			e.printStackTrace();
+		}
+
+		return null;
+	}
+
+	// Update the topic_table_id_1 of watch_table to topicId
+	public boolean updateWatchTopic(int watchId, int topicId) {
+		try {
+			Statement st = this.con.createStatement();
+			st.executeQuery("USE " + this.database);
+
+			st.executeUpdate("UPDATE watch_table SET topic_table_id_1 = "
+					+ topicId + " WHERE id = " + watchId);
+		} catch (SQLException e) {
+			System.out.println("Update watch_table topic information fails");
+			e.printStackTrace();
+			return false;
+		}
+		
+		return true;
+	}
+
 	// Remove article from article_table and associated table
 	public void removeArticle(int articleId) {
 		try {
