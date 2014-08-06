@@ -250,7 +250,7 @@ public class InitializeDB {
 
 			String query = "CREATE TABLE watch_price_stat_table ("
 					+ "topic_table_id int unsigned not null, "
-					+ "number_of_artcles int unsigned not null, "
+					+ "number_of_articles int unsigned not null, "
 					+ "number_of_watches int unsigned not null, "
 					+ "lowest_price int unsigned not null, "
 					+ "highest_price int unsigned not null, "

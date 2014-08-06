@@ -20,7 +20,7 @@ public class WatchPriceStatAnalysis {
 
 		for (int i = 0; i < horologyTopics.length; i++) {
 			System.out.println("Topic " + Globals.HOROLOGYTOPICS[i]);
-			this.calculateWatchPriceStat(i+1);
+			this.calculateWatchPriceStat(i + 1);
 		}
 	}
 
@@ -50,21 +50,30 @@ public class WatchPriceStatAnalysis {
 
 	// Find the 20 points of 1/20 distribution of a sorted array
 	public static void findDistributionOfSortedArray(Integer[] arr,
-			int[] values, int[] numbers) {
+			int[] values, int[] numbers, float mean, float median, float std) {
 		if (arr.length == 0 || values.length < 20 || numbers.length < 20)
 			return;
 
-		int distance = Math.round((float) arr.length / 20);
-
-		int prevIndex = -1;
-		for (int i = 0; i < 19; i++) {
-			int curIndex = Math.min(Math.round(distance * (i + 1)),
-					arr.length - 1);
-			values[i] = arr[curIndex];
-			numbers[i] = curIndex - prevIndex;
-			prevIndex = curIndex;
+		float distance = std/10;
+		
+		// Values are taken as 20 values in between mean-std and mean+std
+		for (int i = 0; i < 10; i++) {
+			values[i] = Math.max(Math.round(mean-distance*(10-i)), 0);
 		}
-		numbers[19] = arr.length - (prevIndex + 1);
+		for (int i = 0; i < 9; i++) {
+			values[i+10] = Math.round(mean+distance*i);
+		}
+		
+		// Populate how many watches are in each interval
+		int index = 0;
+		for (int i = 0; i < arr.length; i++) {
+			if (arr[i] <= values[index] || index == 19) {
+				numbers[index]++;
+			} else {
+				index++;
+				i--;
+			}
+		}
 	}
 
 	// Find the standard deviation of an array of integer
@@ -90,6 +99,12 @@ public class WatchPriceStatAnalysis {
 		float mean = 0;
 		float median = 0;
 		float std = 0;
+		int lowestPrice = 0;
+		int highestPrice = 0;
+		int numWatches = 0;
+		int numArticles = this.mysqlConnection
+				.getNumArticleWithTopicId(topicId);
+
 		int[] values = new int[20];
 		int[] numbers = new int[20];
 
@@ -123,13 +138,25 @@ public class WatchPriceStatAnalysis {
 			std = WatchPriceStatAnalysis
 					.findStandardDeviationOfArray(priceLists);
 
+			if (priceLists.length > 0) {
+				lowestPrice = priceLists[0];
+				highestPrice = priceLists[priceLists.length - 1];
+				numWatches = priceLists.length;
+			}
+
 			WatchPriceStatAnalysis.findDistributionOfSortedArray(priceLists,
-					values, numbers);
+					values, numbers, mean, median, std);
 		}
 
 		// Print out the topic price statistics
-		System.out.println("TopicId " + topicId + " = " + mean + " " + median
-				+ " " + std);
+		System.out.println("TopicId " + topicId);
+		System.out.println("Num Articles " + numArticles);
+		System.out.println("Num Watches " + numWatches);
+		System.out.println("Lowest Price " + lowestPrice);
+		System.out.println("Highest Price " + highestPrice);
+		System.out.println("Mean " + mean);
+		System.out.println("Median " + median);
+		System.out.println("Standard Deviation " + std);
 		System.out.println("Values: ");
 		for (int i = 0; i < values.length; i++)
 			System.out.print(values[i] + " ");
@@ -139,6 +166,11 @@ public class WatchPriceStatAnalysis {
 			System.out.print(numbers[i] + " ");
 		System.out.println();
 		System.out.println();
+
+		// Insert the new statistic into the database
+		this.mysqlConnection.addWatchPriceStat(topicId, numArticles,
+				numWatches, lowestPrice, highestPrice, mean, median, std,
+				values, numbers);
 	}
 
 	public static void main(String[] args) {

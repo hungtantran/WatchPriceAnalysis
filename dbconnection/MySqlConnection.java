@@ -514,6 +514,29 @@ public class MySqlConnection {
 		return null;
 	}
 
+	// Return the number of articles with given topicId
+	public int getNumArticleWithTopicId(int topicId) {
+		int numArticleWithTopicId = 0;
+		try {
+			Statement st = this.con.createStatement();
+			st.executeQuery("USE " + this.database);
+
+			String query = "SELECT COUNT(*) AS SIZE FROM article_topic_table WHERE topic_table_id = "
+					+ topicId;
+
+			ResultSet result = st.executeQuery(query);
+
+			if (result.next()) {
+				numArticleWithTopicId = result.getInt(1);
+			}
+		} catch (SQLException e) {
+			System.out.println("Get article_table information fails");
+			e.printStackTrace();
+		}
+
+		return numArticleWithTopicId;
+	}
+
 	// Get content of article with given id
 	public String getArticleContent(int articleId) {
 		String content = null;
@@ -593,7 +616,72 @@ public class MySqlConnection {
 			e.printStackTrace();
 			return false;
 		}
-		
+
+		return true;
+	}
+
+	// Add new or update watch price statistic for specified topicId
+	public boolean addWatchPriceStat(int topicId, int numArticles,
+			int numWatches, int lowestPrice, int highestPrice, float mean,
+			float median, float std, int[] values, int[] numbers) {
+		// Not enough distribution to add into the database
+		if (values.length < 20 || numbers.length < 20)
+			return false;
+
+		try {
+			Statement st = this.con.createStatement();
+			st.executeQuery("USE " + this.database);
+			st.executeUpdate("DELETE FROM watch_price_stat_table WHERE topic_table_id = "
+					+ topicId);
+		} catch (SQLException e) {
+			// TODO do something ?
+		}
+
+		try {
+			// Insert into watch_price_stat_table
+			String prepareStmt = "INSERT INTO watch_price_stat_table ("
+					+ "topic_table_id, " + "number_of_articles, "
+					+ "number_of_watches, " + "lowest_price, "
+					+ "highest_price, " + "mean_price, " + "median_price, "
+					+ "standard_deviation_price";
+
+			// Only 19 because the last 'value' and 'number' is added in
+			// separately after the loop
+			for (int i = 1; i <= 19; i++) {
+				prepareStmt += ", " + i + "_5th_price, " + i + "_5th_number";
+			}
+			prepareStmt += ", 20_5th_price, 20_5th_number)";
+
+			prepareStmt += " values (";
+			// Only 47 because the last '?' is added in separately after the
+			// loop
+			for (int i = 0; i < 47; i++) {
+				prepareStmt += "?, ";
+			}
+			prepareStmt += "?)";
+
+			PreparedStatement stmt = this.con.prepareStatement(prepareStmt);
+			stmt.setInt(1, topicId);
+			stmt.setInt(2, numArticles);
+			stmt.setInt(3, numWatches);
+			stmt.setInt(4, lowestPrice);
+			stmt.setInt(5, highestPrice);
+			stmt.setInt(6, Math.round(mean));
+			stmt.setInt(7, Math.round(median));
+			stmt.setFloat(8, std);
+
+			for (int i = 0; i < 20; i++) {
+				stmt.setInt(9 + 2 * i, values[i]);
+				stmt.setInt(10 + 2 * i, numbers[i]);
+			}
+
+			stmt.executeUpdate();
+		} catch (SQLException e) {
+			System.out.println("Insert into watch_price_stat_table fails");
+			e.printStackTrace();
+			return false;
+		}
+
 		return true;
 	}
 
