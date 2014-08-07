@@ -7,6 +7,7 @@ import newscrawler.Globals;
 import newscrawler.Helper;
 import dbconnection.MySqlConnection;
 
+
 public class TopicAnalysis {
 	private MySqlConnection mysqlConnection = null;
 
@@ -142,7 +143,7 @@ public class TopicAnalysis {
 
 	public static void main(String[] args) {
 		TopicAnalysis topicAnalysis = new TopicAnalysis();
-		// topicAnalysis.populateArticleTopic();
+		topicAnalysis.populateArticleTopic();
 		// topicAnalysis.populateWatchTopic();
 	}
 }

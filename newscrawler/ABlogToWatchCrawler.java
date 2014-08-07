@@ -6,8 +6,8 @@ public class ABlogToWatchCrawler extends BaseCrawler {
 	public static final String domain = "http://www.ablogtowatch.com/";
 	public static final String crawlerId = "ablogtowatch";
 
-	private final int lowerBoundWaitTimeSec = 5;
-	private final int upperBoundWaitTimeSec = 10;
+	private final int lowerBoundWaitTimeSec = 1;
+	private final int upperBoundWaitTimeSec = 5;
 
 	public ABlogToWatchCrawler(String startURL) {
 		super(startURL, ABlogToWatchCrawler.domain,

@@ -6,8 +6,8 @@ public class WatchReportCrawler extends BaseCrawler {
 	public static final String domain = "http://www.watchreport.com/";
 	public static final String crawlerId = "watchreport";
 
-	private final int lowerBoundWaitTimeSec = 5;
-	private final int upperBoundWaitTimeSec = 10;
+	private final int lowerBoundWaitTimeSec = 1;
+	private final int upperBoundWaitTimeSec = 5;
 
 	public WatchReportCrawler(String startURL) {
 		super(startURL, WatchReportCrawler.domain,

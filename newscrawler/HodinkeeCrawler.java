@@ -8,8 +8,8 @@ public class HodinkeeCrawler extends BaseCrawler {
 	public static final String domain = "http://www.hodinkee.com";
 	public static final String crawlerId = "hodinkee";
 
-	private final int lowerBoundWaitTimeSec = 5;
-	private final int upperBoundWaitTimeSec = 10;
+	private final int lowerBoundWaitTimeSec = 1;
+	private final int upperBoundWaitTimeSec = 5;
 
 	public HodinkeeCrawler(String startURL) {
 		super(startURL, HodinkeeCrawler.domain, HodinkeeCrawler.crawlerId);

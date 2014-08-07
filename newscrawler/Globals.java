@@ -53,7 +53,7 @@ public class Globals {
 	public static final String[] HOROLOGYTOPICS = { "A.Lange & Sohne",
 			"A.Manzoni & Fils", "Armin Strom", "Arnold & Son",
 			"Audemars Piguet", "Ball", "Balmain", "Baume & Mercier",
-			"Bell & Ross", "Blanpain", "Breguet", "Breitling", "Bremont",
+			"Bell & Ross", "Blancpain", "Breguet", "Breitling", "Bremont",
 			"Bulgari", "Bulova", "Bvlgari", "Calvin Klein", "Cartier", "Casio",
 			"Certina", "Chanel", "Chopard", "Christophe Claret", "Citizen",
 			"Concord", "Corum", "De Bethune", "DeWitt", "Flik Flak", "Fossil",
@@ -77,7 +77,24 @@ public class Globals {
 			"Buccellati", "Christopher Ward", "Ebel", "Fortis", "Graham",
 			"Lemania", "Samsung", "Stowa", "Pebble", "Hautlence", "Wempe",
 			"Minerva", "TB Buti", "Chronoswiss", "Eterna", "Van Der Bauwede",
-			"Wyler", "Daniel Roth", "Jacques Lemans", "Jacob & Co" };
+			"Wyler", "Daniel Roth", "Jacques Lemans", "Jacob & Co", "Cvstos",
+			"Tutima", "Pierre Deroche", "Revue Thommen", "U-Boat", "Waltham",
+			"Versace", "Cuervo Y Sobrinos", "Eberhard & Co.", "Meistersinger",
+			"Chaumet", "Bruno Sohnle", "Oris", "Alain Silberstein", "Michele",
+			"Ingersoll", "Jaermann & Stubi", "Election", "Raidillon",
+			"Armand Nicolet", "Formex", "Benzinger", "TW Steel", "Ikepod",
+			"Ventura", "Catorex", "Haemmer", "Valbray", "Gruen", "Hugo Boss",
+			"Davosa", "Lindburgh & Benson", "B.R.M", "Giuliano Mazzuoli",
+			"Enicar", "Azimuth", "Blacksand", "Bunz", "Squale",
+			"Romain Jerome", "Technos", "Michel Herbelin", "Di Lenardo & Co",
+			"Xemex", "Lorus", "Orfina", "Skagen", "Aristo", "DeLaCour",
+			"Damasko", "Kienzle", "Jacques Etoile", "Devon",
+			"Van Cleef & Arpels", "Junkers", "Harwood", "Cyma", "Viceroy",
+			"Auricoste", "Rothenschild", "Nixon", "Gant", "Milus", "Edox",
+			"David Yurman", "Joop", "Brior", "Traser",
+			"Christiaan van der Klaauw", "Lacoste", "Leonidas", "Wittnauer",
+			"Favre-Leuba", "Fludo", "Aerowatch", "Bertolucci", "Poljot",
+			"Auguste Reymond" };
 
 	static {
 		Map<Type, String[]> tempMap = new HashMap<Type, String[]>();

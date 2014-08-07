@@ -2,6 +2,8 @@ package newscrawler;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.text.Normalizer;
+import java.text.Normalizer.Form;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
@@ -186,13 +188,23 @@ public class Helper {
 		formattedDate = "" + year + "-" + month + "-" + dayString;
 		return formattedDate;
 	}
+	
+	// Remove all the accent from a string
+	public static String removeAccents(String text) {
+	    return text == null ? null
+	        : Normalizer.normalize(text, Form.NFD)
+	            .replaceAll("\\p{InCombiningDiacriticalMarks}+", "");
+	}
 
+	
 	// Given a name like an article name or an entry name, etc... and a set of
 	// topic words. Try to identify the topic of the name
 	public static Set<String> identifyTopicOfName(String name, String[] topics) {
 		if (name == null || topics == null)
 			return null;
-
+		
+		name = Helper.removeAccents(name);
+		
 		// Try to identify topic with exact match
 		Set<String> topicsOfName = new HashSet<String>();
 		for (String topic : topics) {
@@ -274,5 +286,13 @@ public class Helper {
 				return -1;
 			} // returning 0 would merge keys
 		}
+	}
+
+	public static void main(String[] args) {
+//		Set<String> resultedTopic = Helper.identifyTopicOfName(
+//				"A. Lange & Söhne 101.025 Lange 1 \"Stealth\", Platinum",
+//				Globals.HOROLOGYTOPICS);
+//		
+//		System.out.println(resultedTopic);
 	}
 }

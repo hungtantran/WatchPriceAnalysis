@@ -8,8 +8,8 @@ public class Chrono24Crawler extends BaseCrawler {
 	public static final String domain = "http://www.chrono24.com/";
 	public static final String crawlerId = "chrono24";
 
-	private final int lowerBoundWaitTimeSec = 5;
-	private final int upperBoundWaitTimeSec = 10;
+	private final int lowerBoundWaitTimeSec = 1;
+	private final int upperBoundWaitTimeSec = 5;
 
 	public Chrono24Crawler(String startURL) {
 		super(startURL, Chrono24Crawler.domain, Chrono24Crawler.crawlerId);
