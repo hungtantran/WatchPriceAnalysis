@@ -5,13 +5,18 @@ import java.util.*;
 public class ABlogToWatchCrawler extends BaseCrawler {
 	public static final String domain = "http://www.ablogtowatch.com/";
 	public static final String crawlerId = "ablogtowatch";
-
-	private final int lowerBoundWaitTimeSec = 1;
-	private final int upperBoundWaitTimeSec = 5;
-
+	
+	// Constructors
 	public ABlogToWatchCrawler(String startURL) {
 		super(startURL, ABlogToWatchCrawler.domain,
 				ABlogToWatchCrawler.crawlerId);
+	}
+	
+	public ABlogToWatchCrawler(String startURL, int lowerBoundWaitTimeSec,
+			int upperBoundWaitTimeSec) {
+		super(startURL, ABlogToWatchCrawler.domain,
+				ABlogToWatchCrawler.crawlerId, lowerBoundWaitTimeSec,
+				upperBoundWaitTimeSec);
 	}
 
 	// Process link (e.g. trim, truncate bad part, etc..)
@@ -28,10 +33,10 @@ public class ABlogToWatchCrawler extends BaseCrawler {
 	protected boolean isValidLink(String url) {
 		if (url == null)
 			return false;
-		
+
 		if (url.indexOf(ABlogToWatchCrawler.domain) != 0)
 			return false;
-		
+
 		if (url.indexOf("?attachment_id") != -1)
 			return false;
 

@@ -8,11 +8,15 @@ public class Chrono24Crawler extends BaseCrawler {
 	public static final String domain = "http://www.chrono24.com/";
 	public static final String crawlerId = "chrono24";
 
-	private final int lowerBoundWaitTimeSec = 1;
-	private final int upperBoundWaitTimeSec = 5;
-
+	// Constructors
 	public Chrono24Crawler(String startURL) {
 		super(startURL, Chrono24Crawler.domain, Chrono24Crawler.crawlerId);
+	}
+
+	public Chrono24Crawler(String startURL, int lowerBoundWaitTimeSec,
+			int upperBoundWaitTimeSec) {
+		super(startURL, Chrono24Crawler.domain, Chrono24Crawler.crawlerId,
+				lowerBoundWaitTimeSec, upperBoundWaitTimeSec);
 	}
 
 	// Process link (e.g. trim, truncate bad part, etc..)
@@ -38,10 +42,10 @@ public class Chrono24Crawler extends BaseCrawler {
 	protected boolean isValidLink(String url) {
 		if (url == null)
 			return false;
-		
+
 		if (url.indexOf(Chrono24Crawler.domain) != 0)
 			return false;
-		
+
 		if (url.indexOf("?") != -1)
 			return false;
 

@@ -4,6 +4,8 @@ import java.util.*;
 
 public class Globals {
 	public static final boolean DEBUG = true;
+	public static int DEFAULTLOWERBOUNDWAITTIMESEC = 1;
+	public static int DEFAULTUPPERBOUNDWAITTIMESEC = 5;
 	public static final String[] fileExtenstions = { "jpg", "xml", "gif",
 			"pdf", "png", "jpeg" };
 
@@ -66,12 +68,12 @@ public class Globals {
 			"Linde Werdelin", "Longines", "Louis Vuitton", "Maitres Du Temps",
 			"Maurice Lacroix", "MB&F", "Michael Kors", "Mido", "Montblanc",
 			"Movado", "Nomos", "Omega", "Orient", "Panerai",
-			"Parmigiani Fleurier", "Patek Philippe", "Perellet",
+			"Parmigiani Fleurier", "Patek Philippe", "Perellet",
 			"Peter Speake Marin", "Philippe Dufour", "Piaget", "Pinion",
 			"Rado", "Ralph Lauren", "Raymond Weil", "Ressence",
 			"Richard Mille", "Roger Dubuis", "Roger W.Smith", "Rolex", "Seiko",
 			"Shinola", "Sinn", "Tag Heuer", "TechnoMarine", "Thomas Prescher",
-			"Timex", "Tissot", "Tudor", "Ulysse Nardin", "Union Glashütte",
+			"Timex", "Tissot", "Tudor", "Ulysse Nardin", "Union Glashutte",
 			"Universal Geneve", "Urwerk", "Vacheron Constantin", "Victorinox",
 			"Vulcain", "Xeric", "Zeitwinkel", "Zenith (LVMH)", "Bovet",
 			"Buccellati", "Christopher Ward", "Ebel", "Fortis", "Graham",
@@ -94,7 +96,19 @@ public class Globals {
 			"David Yurman", "Joop", "Brior", "Traser",
 			"Christiaan van der Klaauw", "Lacoste", "Leonidas", "Wittnauer",
 			"Favre-Leuba", "Fludo", "Aerowatch", "Bertolucci", "Poljot",
-			"Auguste Reymond" };
+			"Auguste Reymond", "Aigner", "Angelus", "Atlantic", "Epos",
+			"Erwin Sattler", "De Grisogono", "Cyclos", "Claude Meylan",
+			"Gevril", "Fendi", "Mercure", "Martin Braun", "Marvin", "Longio",
+			"Locman", "Kelek", "Porsche Design", "Perrelet", "Tiffany & Co",
+			"Temption", "Sothis", "Schwarz Etienne", "Philip Stein", "DuBois",
+			"Itay Noy", "Dior", "Quinting", "Ollech & Wajs", "Philip Watch",
+			"Luminox", "Illinois" };
+
+	// The list needs to be all in lower-case
+	public static final HashSet<String> HOROLOGYTOPICSSTOPWORDS = new HashSet<String>(
+			Arrays.asList("steel", "gold", "titanium", "platinum", "original",
+					"stainless", "automatic", "manual", "diver", "pilot",
+					"glashutte", "geneve", "design", "schwarz", "watch"));
 
 	static {
 		Map<Type, String[]> tempMap = new HashMap<Type, String[]>();

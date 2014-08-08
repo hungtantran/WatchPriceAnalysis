@@ -604,13 +604,43 @@ public class MySqlConnection {
 	}
 
 	// Update the topic_table_id_1 of watch_table to topicId
-	public boolean updateWatchTopic(int watchId, int topicId) {
+	public boolean updateWatchTopic(int watchId, Integer[] topicIds) {
+		if (topicIds == null || topicIds.length < 1)
+			return false;
+
+		for (int i = 0; i < topicIds.length; i++)
+			if (topicIds[i] == null || topicIds[i] < 1)
+				return false;
+
 		try {
 			Statement st = this.con.createStatement();
 			st.executeQuery("USE " + this.database);
 
-			st.executeUpdate("UPDATE watch_table SET topic_table_id_1 = "
-					+ topicId + " WHERE id = " + watchId);
+			// Clear the info of the specified watch
+			String updateQuery = "UPDATE watch_table SET topic_table_id_1 = NULL, topic_table_id_2 = NULL WHERE id = "
+					+ watchId;
+			st.executeUpdate(updateQuery);
+
+			// Insert the new info for the specified watch
+			updateQuery = "UPDATE watch_table SET topic_table_id_1 = "
+					+ topicIds[0];
+			if (topicIds.length > 1)
+				updateQuery += ", topic_table_id_2 = " + topicIds[1];
+			updateQuery += " WHERE id = " + watchId;
+			st.executeUpdate(updateQuery);
+			
+			// Clear the info of the specified watch
+			updateQuery = "UPDATE watch_spec_table SET topic_table_id_1 = NULL, topic_table_id_2 = NULL WHERE watch_table_id = "
+					+ watchId;
+			st.executeUpdate(updateQuery);
+
+			// Insert the new info for the specified watch
+			updateQuery = "UPDATE watch_spec_table SET topic_table_id_1 = "
+					+ topicIds[0];
+			if (topicIds.length > 1)
+				updateQuery += ", topic_table_id_2 = " + topicIds[1];
+			updateQuery += " WHERE watch_table_id = " + watchId;
+			st.executeUpdate(updateQuery);
 		} catch (SQLException e) {
 			System.out.println("Update watch_table topic information fails");
 			e.printStackTrace();

@@ -4,6 +4,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.Normalizer;
 import java.text.Normalizer.Form;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
@@ -13,6 +14,35 @@ import java.util.Set;
 import javax.xml.bind.annotation.adapters.HexBinaryAdapter;
 
 public class Helper {
+	public static String[] splitString(String string, String delimiter) {
+		if (string == null || delimiter == null)
+			return null;
+
+		ArrayList<String> splitString = new ArrayList<String>();
+		int prevPos = 0;
+		for (int i = 0; i < string.length() - delimiter.length() + 1; i++) {
+			String subStringAtCurPos = string.substring(i,
+					i + delimiter.length());
+			if (subStringAtCurPos.equals(delimiter)) {
+				String token = string.substring(prevPos, i);
+				if (token.length() > 0)
+					splitString.add(token);
+				i += delimiter.length();
+				prevPos = i;
+			}
+		}
+
+		String token = string.substring(prevPos, string.length());
+		if (token.length() > 0)
+			splitString.add(token);
+
+		String[] wordsArray = new String[splitString.size()];
+		for (int i = 0; i < splitString.size(); i++)
+			wordsArray[i] = splitString.get(i);
+
+		return wordsArray;
+	}
+
 	// Given a string and list of delimiters. Split the string into a set of
 	// words with delimiter contained in the list
 	public static Set<String> splitString(String string, String[] delimiters) {
@@ -20,12 +50,12 @@ public class Helper {
 			return null;
 
 		Set<String> wordsSet = new HashSet<String>();
-		wordsSet.add(string.toLowerCase());
+		wordsSet.add(string);
 		for (String delimiter : delimiters) {
 			Set<String> tempSet = new HashSet<String>();
 
 			for (String word : wordsSet) {
-				String[] newWords = word.split(delimiter);
+				String[] newWords = Helper.splitString(word, delimiter);
 				for (String newWord : newWords)
 					tempSet.add(newWord);
 			}
@@ -188,45 +218,79 @@ public class Helper {
 		formattedDate = "" + year + "-" + month + "-" + dayString;
 		return formattedDate;
 	}
-	
+
 	// Remove all the accent from a string
 	public static String removeAccents(String text) {
-	    return text == null ? null
-	        : Normalizer.normalize(text, Form.NFD)
-	            .replaceAll("\\p{InCombiningDiacriticalMarks}+", "");
+		return text == null ? null : Normalizer.normalize(text, Form.NFD)
+				.replaceAll("\\p{InCombiningDiacriticalMarks}+", "");
 	}
 
-	
 	// Given a name like an article name or an entry name, etc... and a set of
 	// topic words. Try to identify the topic of the name
-	public static Set<String> identifyTopicOfName(String name, String[] topics) {
-		if (name == null || topics == null)
+	public static Set<String> identifyTopicOfName(String watchName,
+			String[] topics) {
+		if (watchName == null || topics == null)
 			return null;
 		
-		name = Helper.removeAccents(name);
-		
-		// Try to identify topic with exact match
 		Set<String> topicsOfName = new HashSet<String>();
+		String name = new String(Helper.removeAccents(watchName));
+		name = name.toLowerCase();
+
+		// Split the name into a list of words
+		String[] delimiters = { " ", "-", ",", ";", "/", ".", "\"", "(", ")" };
+		Set<String> articleNameWordsSet = Helper.splitString(name, delimiters);
+		
+		// Break topic into words and try to find
 		for (String topic : topics) {
-			if (name.indexOf(topic) != -1) {
+			String lowerCaseTopic = topic.toLowerCase();
+			Set<String> topicWords = Helper.splitString(lowerCaseTopic, delimiters);
+
+			// If the name has all the words contained in the topic, the topic
+			// is true
+			boolean topicIsTrue = true;
+			int maxPosition = 0;
+			int minPosition = name.length();
+			for (String topicWord : topicWords) {
+				if (!articleNameWordsSet.contains(topicWord)) {	
+					topicIsTrue = false;
+					break;
+				} else {
+					// Word of the same topic can't be too far from each other
+					int position = name.indexOf(topicWord);
+					maxPosition = Math.max(maxPosition, position);
+					minPosition = Math.min(minPosition, position);
+					if (maxPosition - minPosition > lowerCaseTopic.length()) {
+						topicIsTrue = false;
+						break;
+					}
+				}
+			}
+
+			// If the topic is true, remove the topic from the name and add it
+			// to the list of possible topic
+			if (topicIsTrue) {
+				for (String topicWord : topicWords)
+					name = name.replace(topicWord, "");
+
 				topicsOfName.add(topic);
-				name = name.replace(topic, "");
 			}
 		}
 
-		// Split the name into a list of words
-		String[] delimiters = { " ", "-" };
-		Set<String> articleNameWordsSet = Helper.splitString(name, delimiters);
-
+		// The new words set has less words than the original one since some
+		// potential topic words have been removed
+		articleNameWordsSet = Helper.splitString(name, delimiters);
+		
 		// TODO make generic
 		// Break topic into words and try to find those word in the name
 		for (String topic : topics) {
 			if (!topicsOfName.contains(topic)) {
-				String[] topicWords = topic.split(" ");
+				String lowerCaseTopic = topic.toLowerCase();
+				Set<String> topicWords = Helper.splitString(lowerCaseTopic, delimiters);
 				for (String topicWord : topicWords) {
-					topicWord = topicWord.trim().toLowerCase();
 					if (topicWord.length() > 3
-							&& articleNameWordsSet.contains(topicWord)) {
+							&& articleNameWordsSet.contains(topicWord)
+							&& !Globals.HOROLOGYTOPICSSTOPWORDS
+									.contains(topicWord)) {
 						topicsOfName.add(topic);
 						break;
 					}
@@ -289,10 +353,5 @@ public class Helper {
 	}
 
 	public static void main(String[] args) {
-//		Set<String> resultedTopic = Helper.identifyTopicOfName(
-//				"A. Lange & Söhne 101.025 Lange 1 \"Stealth\", Platinum",
-//				Globals.HOROLOGYTOPICS);
-//		
-//		System.out.println(resultedTopic);
 	}
 }

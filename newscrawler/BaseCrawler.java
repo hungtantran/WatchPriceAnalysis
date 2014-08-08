@@ -24,6 +24,8 @@ public abstract class BaseCrawler extends Thread {
 	protected Queue<String> urlsQueue = null;
 	protected MySqlConnection mysqlConnection = null;
 	protected int numRetriesDownloadLink = 2;
+	protected int lowerBoundWaitTimeSec = Globals.DEFAULTLOWERBOUNDWAITTIMESEC;
+	protected int upperBoundWaitTimeSec = Globals.DEFAULTUPPERBOUNDWAITTIMESEC;
 
 	// All subclass of basecrawler needs to implement these methods
 	abstract void checkDocumentUrl(String url);
@@ -33,8 +35,14 @@ public abstract class BaseCrawler extends Thread {
 	abstract boolean isValidLink(String url);
 
 	// Base constructor
-	@SuppressWarnings("unchecked")
 	protected BaseCrawler(String startURL, String domain, String crawlerId) {
+		this(startURL, domain, crawlerId, Globals.DEFAULTLOWERBOUNDWAITTIMESEC,
+				Globals.DEFAULTUPPERBOUNDWAITTIMESEC);
+	}
+
+	@SuppressWarnings("unchecked")
+	protected BaseCrawler(String startURL, String domain, String crawlerId,
+			int lowerBoundWaitTimeSec, int upperBoundWaitTimeSec) {
 		System.out.println("Start url = " + startURL);
 
 		// Start Url is not hodinkee link. initialize it to the homepage
@@ -44,7 +52,10 @@ public abstract class BaseCrawler extends Thread {
 			// Initialize private variable
 			this.startURL = startURL;
 		}
-
+		
+		this.lowerBoundWaitTimeSec = lowerBoundWaitTimeSec;
+		this.upperBoundWaitTimeSec = upperBoundWaitTimeSec;
+		
 		this.mysqlConnection = new MySqlConnection();
 		this.urlsQueue = new LinkedList<String>();
 		this.urlsCrawled = new HashSet<String>();

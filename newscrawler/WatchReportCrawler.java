@@ -6,12 +6,16 @@ public class WatchReportCrawler extends BaseCrawler {
 	public static final String domain = "http://www.watchreport.com/";
 	public static final String crawlerId = "watchreport";
 
-	private final int lowerBoundWaitTimeSec = 1;
-	private final int upperBoundWaitTimeSec = 5;
-
+	// Constructors
 	public WatchReportCrawler(String startURL) {
+		super(startURL, WatchReportCrawler.domain, WatchReportCrawler.crawlerId);
+	}
+
+	public WatchReportCrawler(String startURL, int lowerBoundWaitTimeSec,
+			int upperBoundWaitTimeSec) {
 		super(startURL, WatchReportCrawler.domain,
-				WatchReportCrawler.crawlerId);
+				WatchReportCrawler.crawlerId, lowerBoundWaitTimeSec,
+				upperBoundWaitTimeSec);
 	}
 
 	// Process link (e.g. trim, truncate bad part, etc..)
@@ -28,10 +32,10 @@ public class WatchReportCrawler extends BaseCrawler {
 	protected boolean isValidLink(String url) {
 		if (url == null)
 			return false;
-		
+
 		if (url.indexOf(WatchReportCrawler.domain) != 0)
 			return false;
-		
+
 		if (url.indexOf("?") != -1)
 			return false;
 
@@ -114,7 +118,8 @@ public class WatchReportCrawler extends BaseCrawler {
 	}
 
 	public static void main(String[] args) {
-//		 WatchReportCrawler crawler = new WatchReportCrawler("http://www.watchreport.com/");
-//		 crawler.startCrawl(false, 0, 5, 10);
+		// WatchReportCrawler crawler = new
+		// WatchReportCrawler("http://www.watchreport.com/");
+		// crawler.startCrawl(false, 0, 5, 10);
 	}
 }

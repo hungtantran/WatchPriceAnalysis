@@ -8,11 +8,15 @@ public class HodinkeeCrawler extends BaseCrawler {
 	public static final String domain = "http://www.hodinkee.com";
 	public static final String crawlerId = "hodinkee";
 
-	private final int lowerBoundWaitTimeSec = 1;
-	private final int upperBoundWaitTimeSec = 5;
-
+	// Constructor
 	public HodinkeeCrawler(String startURL) {
 		super(startURL, HodinkeeCrawler.domain, HodinkeeCrawler.crawlerId);
+	}
+
+	public HodinkeeCrawler(String startURL, int lowerBoundWaitTimeSec,
+			int upperBoundWaitTimeSec) {
+		super(startURL, HodinkeeCrawler.domain, HodinkeeCrawler.crawlerId,
+				lowerBoundWaitTimeSec, upperBoundWaitTimeSec);
 	}
 
 	// Process link (e.g. trim, truncate bad part, etc..)
@@ -29,10 +33,10 @@ public class HodinkeeCrawler extends BaseCrawler {
 	protected boolean isValidLink(String url) {
 		if (url == null)
 			return false;
-		
+
 		if (url.indexOf(HodinkeeCrawler.domain) != 0)
 			return false;
-		
+
 		if (url.indexOf("?tag=") != -1)
 			return false;
 
