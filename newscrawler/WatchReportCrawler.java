@@ -15,7 +15,7 @@ public class WatchReportCrawler extends BaseCrawler {
 			int upperBoundWaitTimeSec) {
 		super(startURL, WatchReportCrawler.domain,
 				WatchReportCrawler.crawlerId, lowerBoundWaitTimeSec,
-				upperBoundWaitTimeSec);
+				upperBoundWaitTimeSec, new TopicComparator());
 	}
 
 	// Process link (e.g. trim, truncate bad part, etc..)
@@ -104,11 +104,8 @@ public class WatchReportCrawler extends BaseCrawler {
 			}
 		}
 
-		System.out.println("Already Crawled " + this.urlsCrawled.size());
-		System.out.println("Queue has " + this.urlsQueue.size());
-
-		// Try to serialize existing data to disk
-		this.serializeDataToDisk(WatchReportCrawler.crawlerId);
+		// Perform tasks like serialization
+		postProcessUrl(WatchReportCrawler.crawlerId);
 	}
 
 	// Execute method for thread

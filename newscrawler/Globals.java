@@ -5,7 +5,7 @@ import java.util.*;
 public class Globals {
 	public static final boolean DEBUG = true;
 	public static int DEFAULTLOWERBOUNDWAITTIMESEC = 1;
-	public static int DEFAULTUPPERBOUNDWAITTIMESEC = 5;
+	public static int DEFAULTUPPERBOUNDWAITTIMESEC = 2;
 	public static final String[] fileExtenstions = { "jpg", "xml", "gif",
 			"pdf", "png", "jpeg" };
 
@@ -49,7 +49,7 @@ public class Globals {
 		tempMap.put(Domain.WATCHREPORT, "WATCHREPORT");
 		domainNameMap = Collections.unmodifiableMap(tempMap);
 	}
-
+	
 	// Map between the type and keywords associated with the type
 	public static Map<Type, String[]> typeTopicMap;
 	public static final String[] HOROLOGYTOPICS = { "A.Lange & Sohne",

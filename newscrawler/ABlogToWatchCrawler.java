@@ -16,7 +16,7 @@ public class ABlogToWatchCrawler extends BaseCrawler {
 			int upperBoundWaitTimeSec) {
 		super(startURL, ABlogToWatchCrawler.domain,
 				ABlogToWatchCrawler.crawlerId, lowerBoundWaitTimeSec,
-				upperBoundWaitTimeSec);
+				upperBoundWaitTimeSec, new TopicComparator());
 	}
 
 	// Process link (e.g. trim, truncate bad part, etc..)
@@ -104,12 +104,9 @@ public class ABlogToWatchCrawler extends BaseCrawler {
 				}
 			}
 		}
-
-		System.out.println("Already Crawled " + this.urlsCrawled.size());
-		System.out.println("Queue has " + this.urlsQueue.size());
-
-		// Try to serialize existing data to disk
-		this.serializeDataToDisk(ABlogToWatchCrawler.crawlerId);
+		
+		// Perform tasks like serialization
+		postProcessUrl(ABlogToWatchCrawler.crawlerId);
 	}
 
 	// Execute method for thread

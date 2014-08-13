@@ -11,8 +11,9 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
+import java.util.Comparator;
 import java.util.HashSet;
-import java.util.LinkedList;
+import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Set;
 
@@ -21,7 +22,7 @@ import dbconnection.MySqlConnection;
 public abstract class BaseCrawler extends Thread {
 	protected String startURL = null;
 	protected Set<String> urlsCrawled = null;
-	protected Queue<String> urlsQueue = null;
+	protected PriorityQueue<String> urlsQueue = null;
 	protected MySqlConnection mysqlConnection = null;
 	protected int numRetriesDownloadLink = 2;
 	protected int lowerBoundWaitTimeSec = Globals.DEFAULTLOWERBOUNDWAITTIMESEC;
@@ -37,12 +38,13 @@ public abstract class BaseCrawler extends Thread {
 	// Base constructor
 	protected BaseCrawler(String startURL, String domain, String crawlerId) {
 		this(startURL, domain, crawlerId, Globals.DEFAULTLOWERBOUNDWAITTIMESEC,
-				Globals.DEFAULTUPPERBOUNDWAITTIMESEC);
+				Globals.DEFAULTUPPERBOUNDWAITTIMESEC, new TopicComparator());
 	}
 
 	@SuppressWarnings("unchecked")
 	protected BaseCrawler(String startURL, String domain, String crawlerId,
-			int lowerBoundWaitTimeSec, int upperBoundWaitTimeSec) {
+			int lowerBoundWaitTimeSec, int upperBoundWaitTimeSec,
+			Comparator<String> comparator) {
 		System.out.println("Start url = " + startURL);
 
 		// Start Url is not hodinkee link. initialize it to the homepage
@@ -52,12 +54,12 @@ public abstract class BaseCrawler extends Thread {
 			// Initialize private variable
 			this.startURL = startURL;
 		}
-		
+
 		this.lowerBoundWaitTimeSec = lowerBoundWaitTimeSec;
 		this.upperBoundWaitTimeSec = upperBoundWaitTimeSec;
-		
+
 		this.mysqlConnection = new MySqlConnection();
-		this.urlsQueue = new LinkedList<String>();
+		this.urlsQueue = new PriorityQueue<String>(100, comparator);
 		this.urlsCrawled = new HashSet<String>();
 		urlsQueue.add(this.startURL);
 
@@ -131,7 +133,17 @@ public abstract class BaseCrawler extends Thread {
 
 		this.checkDocumentUrl(curUrl);
 	}
-
+	
+	protected void postProcessUrl(String crawlerId) {
+		if (this.urlsQueue.size() % 10 == 0) {
+			System.out.println("Already Crawled " + this.urlsCrawled.size());
+			System.out.println("Queue has " + this.urlsQueue.size());
+	
+			// Try to serialize existing data to disk
+			this.serializeDataToDisk(crawlerId);
+		}
+	}
+	
 	// Serialize urls already crawled and urls in the queue to disk
 	protected void serializeDataToDisk(String crawlerId) {
 		if (this.urlsCrawled.size() > 0) {

@@ -42,6 +42,7 @@ public class InitializeDB {
 		this.createWatchSpecTable();
 		this.createWatchContentTable();
 		this.createWatchPriceStatTable();
+		this.createLinkTable();
 	}
 
 	// Initialize the tables with initial data
@@ -269,6 +270,42 @@ public class InitializeDB {
 			st.executeUpdate(query);
 		} catch (SQLException e) {
 			System.out.println("CREATE TABLE watch_price_stat_table fails");
+			e.printStackTrace();
+		}
+	}
+
+	// Create link_queue_table and link_crawled_table
+	private void createLinkTable() {
+		try {
+			Statement st = this.con.createStatement();
+			st.executeQuery("USE " + this.database);
+
+			st.executeUpdate("CREATE TABLE link_queue_table ("
+					+ "id int unsigned AUTO_INCREMENT not null, "
+					+ "link char(255) not null, "
+					+ "domain_table_id_1 int unsigned not null, "
+					+ "priority int unsigned, "
+					+ "persistent int unsigned, "
+					+ "time_crawled char(128) not null, "
+					+ "date_crawled char(128) not null, "
+					+ "PRIMARY KEY(id), "
+					+ "UNIQUE (id), "
+					+ "UNIQUE (link), "
+					+ "FOREIGN KEY (domain_table_id_1) REFERENCES domain_table(id))");
+			
+			st.executeUpdate("CREATE TABLE link_crawled_table ("
+					+ "id int unsigned AUTO_INCREMENT not null, "
+					+ "link char(255) not null, "
+					+ "priority int unsigned, "
+					+ "domain_table_id_1 int unsigned not null, "
+					+ "time_crawled char(128) not null, "
+					+ "date_crawled char(128) not null, "
+					+ "PRIMARY KEY(id), "
+					+ "UNIQUE (id), "
+					+ "UNIQUE (link), "
+					+ "FOREIGN KEY (domain_table_id_1) REFERENCES domain_table(id))");
+		} catch (SQLException e) {
+			System.out.println("CREATE TABLE link_queue_table or link_crawled_table fails");
 			e.printStackTrace();
 		}
 	}

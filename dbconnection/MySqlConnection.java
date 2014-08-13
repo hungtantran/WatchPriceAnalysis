@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import newscrawler.Globals;
+import newscrawler.Helper;
 
 public class MySqlConnection {
 	private Connection con = null;
@@ -628,7 +629,7 @@ public class MySqlConnection {
 				updateQuery += ", topic_table_id_2 = " + topicIds[1];
 			updateQuery += " WHERE id = " + watchId;
 			st.executeUpdate(updateQuery);
-			
+
 			// Clear the info of the specified watch
 			updateQuery = "UPDATE watch_spec_table SET topic_table_id_1 = NULL, topic_table_id_2 = NULL WHERE watch_table_id = "
 					+ watchId;
@@ -731,6 +732,98 @@ public class MySqlConnection {
 			System.out.println("Fail to delete article with ID " + articleId);
 			e.printStackTrace();
 		}
+	}
+
+	// Insert link into link_queue_table
+	public boolean insertIntoLinkQueueTable(String link, int domainId,
+			Integer priority, Integer persistent, String timeCrawled,
+			String dateCrawled) {
+		if (link == null)
+			return false;
+
+		// If the time crawled is not specified, use the current time
+		if (timeCrawled == null || dateCrawled == null) {
+			timeCrawled = Helper.getCurrentTime();
+			dateCrawled = Helper.getCurrentDate();
+		}
+
+		try {
+			Statement st = this.con.createStatement();
+			st.executeQuery("USE " + this.database);
+
+			// Insert into watch_price_stat_table
+			String prepareStmt = "INSERT INTO link_queue_table (" + "link, "
+					+ "domain_table_id_1, " + "priority, " + "persistent, "
+					+ "time_crawled, "
+					+ "date_crawled) values (?, ?, ?, ?, ?, ?)";
+
+			PreparedStatement stmt = this.con.prepareStatement(prepareStmt);
+			stmt.setString(1, link);
+			stmt.setInt(2, domainId);
+
+			if (priority != null)
+				stmt.setInt(3, priority);
+			else
+				stmt.setNull(3, java.sql.Types.INTEGER);
+
+			if (persistent != null)
+				stmt.setInt(4, persistent);
+			else
+				stmt.setNull(4, java.sql.Types.INTEGER);
+
+			stmt.setString(5, timeCrawled);
+			stmt.setString(6, dateCrawled);
+
+			stmt.executeUpdate();
+		} catch (SQLException e) {
+			System.out.println("Insert into link_queue_table fails");
+			e.printStackTrace();
+			return false;
+		}
+
+		return true;
+	}
+
+	public boolean insertIntoLinkCrawledTable(String link, int domainId,
+			Integer priority, String timeCrawled, String dateCrawled) {
+		if (link == null)
+			return false;
+
+		// If the time crawled is not specified, use the current time
+		if (timeCrawled == null || dateCrawled == null) {
+			timeCrawled = Helper.getCurrentTime();
+			dateCrawled = Helper.getCurrentDate();
+		}
+
+		try {
+			Statement st = this.con.createStatement();
+			st.executeQuery("USE " + this.database);
+
+			// Insert into watch_price_stat_table
+			String prepareStmt = "INSERT INTO link_crawled_table (" + "link, "
+					+ "domain_table_id_1, " + "priority, " + "time_crawled, "
+					+ "date_crawled) values (?, ?, ?, ?, ?)";
+
+			PreparedStatement stmt = this.con.prepareStatement(prepareStmt);
+			stmt.setString(1, link);
+			stmt.setInt(2, domainId);
+
+			if (priority != null)
+				stmt.setInt(3, priority);
+			else
+				stmt.setNull(3, java.sql.Types.INTEGER);
+
+			stmt.setString(4, timeCrawled);
+			stmt.setString(5, dateCrawled);
+
+			stmt.executeUpdate();
+		} catch (SQLException e) {
+			System.out.println("Insert into link_crawled_table fails");
+			e.printStackTrace();
+			return false;
+		}
+
+		return true;
 	}
 
 	public static void main(String[] args) {

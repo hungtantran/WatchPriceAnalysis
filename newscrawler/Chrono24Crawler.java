@@ -16,7 +16,7 @@ public class Chrono24Crawler extends BaseCrawler {
 	public Chrono24Crawler(String startURL, int lowerBoundWaitTimeSec,
 			int upperBoundWaitTimeSec) {
 		super(startURL, Chrono24Crawler.domain, Chrono24Crawler.crawlerId,
-				lowerBoundWaitTimeSec, upperBoundWaitTimeSec);
+				lowerBoundWaitTimeSec, upperBoundWaitTimeSec, new TopicComparator());
 	}
 
 	// Process link (e.g. trim, truncate bad part, etc..)
@@ -137,11 +137,8 @@ public class Chrono24Crawler extends BaseCrawler {
 			}
 		}
 
-		System.out.println("Already Crawled " + this.urlsCrawled.size());
-		System.out.println("Queue has " + this.urlsQueue.size());
-
-		// Try to serialize existing data to disk
-		this.serializeDataToDisk(Chrono24Crawler.crawlerId);
+		// Perform tasks like serialization
+		postProcessUrl(Chrono24Crawler.crawlerId);
 	}
 
 	// Execute method for thread

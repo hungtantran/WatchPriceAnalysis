@@ -16,7 +16,7 @@ public class HodinkeeCrawler extends BaseCrawler {
 	public HodinkeeCrawler(String startURL, int lowerBoundWaitTimeSec,
 			int upperBoundWaitTimeSec) {
 		super(startURL, HodinkeeCrawler.domain, HodinkeeCrawler.crawlerId,
-				lowerBoundWaitTimeSec, upperBoundWaitTimeSec);
+				lowerBoundWaitTimeSec, upperBoundWaitTimeSec, new TopicComparator());
 	}
 
 	// Process link (e.g. trim, truncate bad part, etc..)
@@ -115,12 +115,9 @@ public class HodinkeeCrawler extends BaseCrawler {
 				}
 			}
 		}
-
-		System.out.println("Already Crawled " + this.urlsCrawled.size());
-		System.out.println("Queue has " + this.urlsQueue.size());
-
-		// Try to serialize existing data to disk
-		this.serializeDataToDisk(HodinkeeCrawler.crawlerId);
+		
+		// Perform tasks like serialization
+		postProcessUrl(HodinkeeCrawler.crawlerId);
 	}
 
 	// Execute method for thread
