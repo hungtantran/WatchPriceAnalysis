@@ -705,7 +705,8 @@ public class MySqlConnection {
 				stmt.setInt(9 + 2 * i, values[i]);
 				stmt.setInt(10 + 2 * i, numbers[i]);
 			}
-
+			
+			System.out.println(stmt.toString());
 			stmt.executeUpdate();
 		} catch (SQLException e) {
 			System.out.println("Insert into watch_price_stat_table fails");
@@ -773,7 +774,8 @@ public class MySqlConnection {
 
 			stmt.setString(5, timeCrawled);
 			stmt.setString(6, dateCrawled);
-
+			
+			if (Globals.DEBUG) System.out.println(stmt.toString());
 			stmt.executeUpdate();
 		} catch (SQLException e) {
 			System.out.println("Insert into link_queue_table fails");
@@ -815,10 +817,70 @@ public class MySqlConnection {
 
 			stmt.setString(4, timeCrawled);
 			stmt.setString(5, dateCrawled);
-
+			
+			if (Globals.DEBUG) System.out.println(stmt.toString());
 			stmt.executeUpdate();
 		} catch (SQLException e) {
 			System.out.println("Insert into link_crawled_table fails");
+			e.printStackTrace();
+			return false;
+		}
+
+		return true;
+	}
+
+	// Get link from the queue given the domainId
+	public ResultSet getLinkQueue(int domainId) {
+		try {
+			Statement st = this.con.createStatement();
+			st.executeQuery("USE " + this.database);
+
+			String query = "SELECT link FROM link_queue_table WHERE domain_table_id_1 = "
+					+ domainId;
+
+			return st.executeQuery(query);
+		} catch (SQLException e) {
+			System.out.println("Get link_queue_table fails");
+			e.printStackTrace();
+		}
+
+		return null;
+	}
+
+	// Get link from the crawled set given the domainId
+	public ResultSet getLinkCrawled(int domainId) {
+		try {
+			Statement st = this.con.createStatement();
+			st.executeQuery("USE " + this.database);
+
+			String query = "SELECT link FROM link_crawled_table WHERE domain_table_id_1 = "
+					+ domainId;
+
+			return st.executeQuery(query);
+		} catch (SQLException e) {
+			System.out.println("Get link_crawled_table fails");
+			e.printStackTrace();
+		}
+
+		return null;
+	}
+
+	// Remove link from link_queue_table
+	public boolean removeFromLinkQueueTable(String link, int domainId) {
+		try {
+			Statement st = this.con.createStatement();
+			st.executeQuery("USE " + this.database);
+
+			String query = "DELETE FROM link_queue_table WHERE domain_table_id_1 = ? AND link = ? AND persistent = 0";
+			PreparedStatement stmt = this.con.prepareStatement(query);
+			stmt.setInt(1, domainId);
+			stmt.setString(2, link);
+			
+			if (Globals.DEBUG) System.out.println(stmt.toString());
+			// execute the preparedstatement
+			stmt.execute();
+		} catch (SQLException e) {
+			System.out.println("Delete link_queue_table fails");
 			e.printStackTrace();
 			return false;
 		}

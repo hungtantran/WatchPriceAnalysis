@@ -1,20 +1,16 @@
 package newscrawler;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectInput;
-import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.PriorityQueue;
-import java.util.Queue;
 import java.util.Set;
 
 import dbconnection.MySqlConnection;
@@ -36,13 +32,12 @@ public abstract class BaseCrawler extends Thread {
 	abstract boolean isValidLink(String url);
 
 	// Base constructor
-	protected BaseCrawler(String startURL, String domain, String crawlerId) {
-		this(startURL, domain, crawlerId, Globals.DEFAULTLOWERBOUNDWAITTIMESEC,
+	protected BaseCrawler(String startURL, String domain, int domainId) {
+		this(startURL, domain, domainId, Globals.DEFAULTLOWERBOUNDWAITTIMESEC,
 				Globals.DEFAULTUPPERBOUNDWAITTIMESEC, new TopicComparator());
 	}
 
-	@SuppressWarnings("unchecked")
-	protected BaseCrawler(String startURL, String domain, String crawlerId,
+	protected BaseCrawler(String startURL, String domain, int domainId,
 			int lowerBoundWaitTimeSec, int upperBoundWaitTimeSec,
 			Comparator<String> comparator) {
 		System.out.println("Start url = " + startURL);
@@ -63,37 +58,26 @@ public abstract class BaseCrawler extends Thread {
 		this.urlsCrawled = new HashSet<String>();
 		urlsQueue.add(this.startURL);
 
-		// Try to deserialize the saved term on disk into memory
-		try (InputStream file = new FileInputStream(crawlerId
-				+ "_urlsQueue.ser");
-				InputStream buffer = new BufferedInputStream(file);
-				ObjectInput input = new ObjectInputStream(buffer);) {
-			Queue<String> tempQueue = (Queue<String>) input.readObject();
-
-			while (!tempQueue.isEmpty()) {
-				this.urlsQueue.add(tempQueue.remove());
+		// Populate the queue with previous links in the queue
+		ResultSet queue = this.mysqlConnection.getLinkQueue(domainId);
+		try {
+			while (queue.next()) {
+				this.urlsQueue.add(queue.getString(1));
 			}
-
-			System.out.println("Urls in " + crawlerId + " Queue : "
-					+ this.urlsQueue.size());
-
-			// TODO make it generic
+			
 			if (Globals.DEBUG)
-				// display its data
-				for (String term : this.urlsQueue) {
-					System.out.println("Urls in Queue : " + term);
-				}
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
+				System.out.println("Urls in Queue : " + this.urlsQueue.size());
 
-		try (InputStream file = new FileInputStream(crawlerId
-				+ "_urlsCrawled.ser");
-				InputStream buffer = new BufferedInputStream(file);
-				ObjectInput input = new ObjectInputStream(buffer);) {
-			this.urlsCrawled = (Set<String>) input.readObject();
-		} catch (Exception ex) {
-			ex.printStackTrace();
+			ResultSet crawled = this.mysqlConnection.getLinkCrawled(domainId);
+			while (crawled.next()) {
+				this.urlsCrawled.add(crawled.getString(1));
+			}
+			
+			if (Globals.DEBUG)
+				System.out.println("Urls in Crawled Set : " + this.urlsCrawled.size());
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 
@@ -133,17 +117,22 @@ public abstract class BaseCrawler extends Thread {
 
 		this.checkDocumentUrl(curUrl);
 	}
-	
-	protected void postProcessUrl(String crawlerId) {
-		if (this.urlsQueue.size() % 10 == 0) {
-			System.out.println("Already Crawled " + this.urlsCrawled.size());
-			System.out.println("Queue has " + this.urlsQueue.size());
-	
-			// Try to serialize existing data to disk
-			this.serializeDataToDisk(crawlerId);
+
+	protected void postProcessUrl(String processedlink, int domainId, Integer priority, int persistent, Set<String> newLinks) {
+		System.out.println("Already Crawled " + this.urlsCrawled.size());
+		System.out.println("Queue has " + this.urlsQueue.size());
+		
+		if (processedlink != null) {
+			this.mysqlConnection.insertIntoLinkCrawledTable(processedlink, domainId, priority, null, null);
+			this.mysqlConnection.removeFromLinkQueueTable(processedlink, domainId);
 		}
+		
+		if (newLinks != null)
+			for (String newLink : newLinks) {
+				this.mysqlConnection.insertIntoLinkQueueTable(newLink, domainId, priority, persistent, null, null);
+			}
 	}
-	
+
 	// Serialize urls already crawled and urls in the queue to disk
 	protected void serializeDataToDisk(String crawlerId) {
 		if (this.urlsCrawled.size() > 0) {

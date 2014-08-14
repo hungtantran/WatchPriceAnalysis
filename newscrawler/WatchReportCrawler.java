@@ -2,19 +2,21 @@ package newscrawler;
 
 import java.util.*;
 
+import newscrawler.Globals.Domain;
+
 public class WatchReportCrawler extends BaseCrawler {
 	public static final String domain = "http://www.watchreport.com/";
 	public static final String crawlerId = "watchreport";
 
 	// Constructors
 	public WatchReportCrawler(String startURL) {
-		super(startURL, WatchReportCrawler.domain, WatchReportCrawler.crawlerId);
+		super(startURL, WatchReportCrawler.domain, Domain.WATCHREPORT.value);
 	}
 
 	public WatchReportCrawler(String startURL, int lowerBoundWaitTimeSec,
 			int upperBoundWaitTimeSec) {
 		super(startURL, WatchReportCrawler.domain,
-				WatchReportCrawler.crawlerId, lowerBoundWaitTimeSec,
+				Domain.WATCHREPORT.value, lowerBoundWaitTimeSec,
 				upperBoundWaitTimeSec, new TopicComparator());
 	}
 
@@ -83,6 +85,7 @@ public class WatchReportCrawler extends BaseCrawler {
 				WatchReportCrawler.domain);
 
 		// Add more urls to the queue
+		Set<String> newStrings = new HashSet<String>();
 		if (linksInPage != null) {
 			if (Globals.DEBUG)
 				System.out.println("Found " + linksInPage.size()
@@ -98,14 +101,17 @@ public class WatchReportCrawler extends BaseCrawler {
 						&& !Helper.linkIsFile(linkInPage)
 						&& !this.urlsQueue.contains(linkInPage)) {
 					this.urlsQueue.add(linkInPage);
+					newStrings.add(linkInPage);
 					if (Globals.DEBUG)
 						System.out.println("Add link " + linkInPage);
 				}
 			}
 		}
 
-		// Perform tasks like serialization
-		postProcessUrl(WatchReportCrawler.crawlerId);
+		// Perform tasks like insert link into crawled set, remove it from queue
+		// from sql db
+		Integer priority = TopicComparator.getStringPriority(url);
+		postProcessUrl(url, Domain.WATCHREPORT.value, priority, 0, newStrings);
 	}
 
 	// Execute method for thread

@@ -2,6 +2,8 @@ package newscrawler;
 
 import java.util.*;
 
+import newscrawler.Globals.Domain;
+
 import org.jsoup.nodes.Document;
 
 public class Chrono24Crawler extends BaseCrawler {
@@ -10,13 +12,14 @@ public class Chrono24Crawler extends BaseCrawler {
 
 	// Constructors
 	public Chrono24Crawler(String startURL) {
-		super(startURL, Chrono24Crawler.domain, Chrono24Crawler.crawlerId);
+		super(startURL, Chrono24Crawler.domain, Domain.CHRONO24.value);
 	}
 
 	public Chrono24Crawler(String startURL, int lowerBoundWaitTimeSec,
 			int upperBoundWaitTimeSec) {
-		super(startURL, Chrono24Crawler.domain, Chrono24Crawler.crawlerId,
-				lowerBoundWaitTimeSec, upperBoundWaitTimeSec, new TopicComparator());
+		super(startURL, Chrono24Crawler.domain, Domain.CHRONO24.value,
+				lowerBoundWaitTimeSec, upperBoundWaitTimeSec,
+				new TopicComparator());
 	}
 
 	// Process link (e.g. trim, truncate bad part, etc..)
@@ -115,6 +118,7 @@ public class Chrono24Crawler extends BaseCrawler {
 				Chrono24Crawler.domain);
 
 		// Add more urls to the queue
+		Set<String> newStrings = new HashSet<String>();
 		if (linksInPage != null) {
 			if (Globals.DEBUG)
 				System.out.println("Found " + linksInPage.size()
@@ -131,14 +135,17 @@ public class Chrono24Crawler extends BaseCrawler {
 						&& !Helper.linkIsFile(linkInPage)
 						&& !this.urlsQueue.contains(linkInPage)) {
 					this.urlsQueue.add(linkInPage);
+					newStrings.add(linkInPage);
 					if (Globals.DEBUG)
 						System.out.println("Add link " + linkInPage);
 				}
 			}
 		}
 
-		// Perform tasks like serialization
-		postProcessUrl(Chrono24Crawler.crawlerId);
+		// Perform tasks like insert link into crawled set, remove it from queue
+		// from sql db
+		Integer priority = TopicComparator.getStringPriority(url);
+		postProcessUrl(url, Domain.CHRONO24.value, priority, 0, newStrings);
 	}
 
 	// Execute method for thread

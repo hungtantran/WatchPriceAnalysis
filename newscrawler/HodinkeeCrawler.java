@@ -2,6 +2,8 @@ package newscrawler;
 
 import java.util.*;
 
+import newscrawler.Globals.Domain;
+
 import org.jsoup.nodes.Document;
 
 public class HodinkeeCrawler extends BaseCrawler {
@@ -10,12 +12,12 @@ public class HodinkeeCrawler extends BaseCrawler {
 
 	// Constructor
 	public HodinkeeCrawler(String startURL) {
-		super(startURL, HodinkeeCrawler.domain, HodinkeeCrawler.crawlerId);
+		super(startURL, HodinkeeCrawler.domain, Domain.HODINKEE.value);
 	}
 
 	public HodinkeeCrawler(String startURL, int lowerBoundWaitTimeSec,
 			int upperBoundWaitTimeSec) {
-		super(startURL, HodinkeeCrawler.domain, HodinkeeCrawler.crawlerId,
+		super(startURL, HodinkeeCrawler.domain, Domain.HODINKEE.value,
 				lowerBoundWaitTimeSec, upperBoundWaitTimeSec, new TopicComparator());
 	}
 
@@ -95,6 +97,7 @@ public class HodinkeeCrawler extends BaseCrawler {
 				HodinkeeCrawler.domain);
 
 		// Add more urls to the queue
+		Set<String> newStrings = new HashSet<String>();
 		if (linksInPage != null) {
 			if (Globals.DEBUG)
 				System.out.println("Found " + linksInPage.size()
@@ -110,14 +113,17 @@ public class HodinkeeCrawler extends BaseCrawler {
 						&& !this.urlsQueue.contains(linkInPage)
 						&& this.isValidLink(linkInPage)) {
 					this.urlsQueue.add(linkInPage);
+					newStrings.add(linkInPage);
 					if (Globals.DEBUG)
 						System.out.println("Add link " + linkInPage);
 				}
 			}
 		}
 		
-		// Perform tasks like serialization
-		postProcessUrl(HodinkeeCrawler.crawlerId);
+		// Perform tasks like insert link into crawled set, remove it from queue
+		// from sql db
+		Integer priority = TopicComparator.getStringPriority(url);
+		postProcessUrl(url, Domain.HODINKEE.value, priority, 0, newStrings);
 	}
 
 	// Execute method for thread

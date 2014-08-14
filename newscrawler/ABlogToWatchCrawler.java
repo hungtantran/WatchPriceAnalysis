@@ -2,21 +2,22 @@ package newscrawler;
 
 import java.util.*;
 
+import newscrawler.Globals.Domain;
+
 public class ABlogToWatchCrawler extends BaseCrawler {
 	public static final String domain = "http://www.ablogtowatch.com/";
 	public static final String crawlerId = "ablogtowatch";
-	
+
 	// Constructors
 	public ABlogToWatchCrawler(String startURL) {
-		super(startURL, ABlogToWatchCrawler.domain,
-				ABlogToWatchCrawler.crawlerId);
+		super(startURL, ABlogToWatchCrawler.domain, Domain.ABLOGTOWATCH.value);
 	}
-	
+
 	public ABlogToWatchCrawler(String startURL, int lowerBoundWaitTimeSec,
 			int upperBoundWaitTimeSec) {
-		super(startURL, ABlogToWatchCrawler.domain,
-				ABlogToWatchCrawler.crawlerId, lowerBoundWaitTimeSec,
-				upperBoundWaitTimeSec, new TopicComparator());
+		super(startURL, ABlogToWatchCrawler.domain, Domain.ABLOGTOWATCH.value,
+				lowerBoundWaitTimeSec, upperBoundWaitTimeSec,
+				new TopicComparator());
 	}
 
 	// Process link (e.g. trim, truncate bad part, etc..)
@@ -82,8 +83,9 @@ public class ABlogToWatchCrawler extends BaseCrawler {
 		// Parse out all the links from hodinkee from the current page
 		Set<String> linksInPage = BaseParser.parseUrls(htmlContent,
 				ABlogToWatchCrawler.domain);
-
+		
 		// Add more urls to the queue
+		Set<String> newStrings = new HashSet<String>();
 		if (linksInPage != null) {
 			if (Globals.DEBUG)
 				System.out.println("Found " + linksInPage.size()
@@ -99,14 +101,17 @@ public class ABlogToWatchCrawler extends BaseCrawler {
 						&& !Helper.linkIsFile(linkInPage)
 						&& !this.urlsQueue.contains(linkInPage)) {
 					this.urlsQueue.add(linkInPage);
+					newStrings.add(linkInPage);
 					if (Globals.DEBUG)
 						System.out.println("Add link " + linkInPage);
 				}
 			}
 		}
-		
-		// Perform tasks like serialization
-		postProcessUrl(ABlogToWatchCrawler.crawlerId);
+
+		// Perform tasks like insert link into crawled set, remove it from queue
+		// from sql db
+		Integer priority = TopicComparator.getStringPriority(url);
+		postProcessUrl(url, Domain.ABLOGTOWATCH.value, priority, 0, newStrings);
 	}
 
 	// Execute method for thread
@@ -119,8 +124,8 @@ public class ABlogToWatchCrawler extends BaseCrawler {
 	}
 
 	public static void main(String[] args) {
-		// ABlogToWatchCrawler crawler = new ABlogToWatchCrawler(
-		// "http://www.ablogtowatch.com/");
-		// crawler.startCrawl(false, 0);
+//		 ABlogToWatchCrawler crawler = new ABlogToWatchCrawler(
+//		 "http://www.ablogtowatch.com/");
+//		 crawler.startCrawl(false, 0, 10, 20);
 	}
 }
