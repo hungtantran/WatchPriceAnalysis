@@ -276,12 +276,15 @@ public class MySqlConnection {
 		}
 	}
 
-	// Insert into watch_table table
-	private int insertIntoWatchTable(String link, Globals.Domain[] domains,
-			String watchName, int[] prices, String[] keywords, String[] topics,
-			String timeCreated, String dateCreated, String timeCrawled,
-			String dateCrawled, Integer[] domainsId, Integer[] topicsId)
-			throws Exception {
+	// Insert into watch_desc_table table
+	private int insertIntoWatchDescTable(String link, Globals.Domain[] domains,
+			String watchName, int[] prices, String[] keywords, String refNo,
+			String movement, String caliber, String watchCondition,
+			int watchYear, String caseMaterial, String dialColor,
+			String gender, String location1, String location2,
+			String location3, String[] topics, String timeCreated,
+			String dateCreated, String timeCrawled, String dateCrawled,
+			Integer[] domainsId, Integer[] topicsId) throws Exception {
 		String keywordsString = Arrays.toString(keywords);
 
 		Statement st = this.con.createStatement();
@@ -289,14 +292,35 @@ public class MySqlConnection {
 
 		PreparedStatement stmt = null;
 
-		// Insert into watch_table table
-		stmt = this.con.prepareStatement("INSERT INTO watch_table (" + "link, "
-				+ "domain_table_id_1, " + "topic_table_id_1, "
-				+ "topic_table_id_2, " + "watch_name, " + "price_1, "
-				+ "price_2, " + "keywords, " + "time_created, "
-				+ "date_created, " + "time_crawled, " + "date_crawled) "
-				+ "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-				Statement.RETURN_GENERATED_KEYS);
+		// Insert into watch_desc_table table
+		stmt = this.con
+				.prepareStatement(
+						"INSERT INTO watch_desc_table ("
+								+ "link, "
+								+ "domain_table_id_1, "
+								+ "topic_table_id_1, "
+								+ "topic_table_id_2, "
+								+ "watch_name, "
+								+ "price_1, "
+								+ "price_2, "
+								+ "keywords, "
+								+ "ref_no, "
+								+ "movement, "
+								+ "caliber, "
+								+ "watch_condition, "
+								+ "watch_year, "
+								+ "case_material, "
+								+ "dial_color, "
+								+ "gender, "
+								+ "location_1, "
+								+ "location_2, "
+								+ "location_3, "
+								+ "time_created, "
+								+ "date_created, "
+								+ "time_crawled, "
+								+ "date_crawled) "
+								+ "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+						Statement.RETURN_GENERATED_KEYS);
 		stmt.setString(1, link);
 		stmt.setInt(2, domainsId[0]);
 
@@ -327,10 +351,77 @@ public class MySqlConnection {
 		}
 
 		stmt.setString(8, keywordsString);
-		stmt.setString(9, timeCreated);
-		stmt.setString(10, dateCreated);
-		stmt.setString(11, timeCrawled);
-		stmt.setString(12, dateCrawled);
+
+		if (refNo != null) {
+			stmt.setString(9, refNo);
+		} else {
+			stmt.setNull(9, java.sql.Types.CHAR);
+		}
+
+		if (movement != null) {
+			stmt.setString(10, movement);
+		} else {
+			stmt.setNull(10, java.sql.Types.CHAR);
+		}
+
+		if (caliber != null) {
+			stmt.setString(11, caliber);
+		} else {
+			stmt.setNull(11, java.sql.Types.CHAR);
+		}
+
+		if (watchCondition != null) {
+			stmt.setString(12, watchCondition);
+		} else {
+			stmt.setNull(12, java.sql.Types.CHAR);
+		}
+
+		if (watchYear > 0) {
+			stmt.setInt(13, watchYear);
+		} else {
+			stmt.setNull(13, java.sql.Types.INTEGER);
+		}
+
+		if (caseMaterial != null) {
+			stmt.setString(14, caseMaterial);
+		} else {
+			stmt.setNull(14, java.sql.Types.CHAR);
+		}
+
+		if (dialColor != null) {
+			stmt.setString(15, dialColor);
+		} else {
+			stmt.setNull(15, java.sql.Types.CHAR);
+		}
+
+		if (gender != null) {
+			stmt.setString(16, gender);
+		} else {
+			stmt.setNull(16, java.sql.Types.CHAR);
+		}
+
+		if (location1 != null) {
+			stmt.setString(17, location1);
+		} else {
+			stmt.setNull(17, java.sql.Types.CHAR);
+		}
+
+		if (location2 != null) {
+			stmt.setString(18, location2);
+		} else {
+			stmt.setNull(18, java.sql.Types.CHAR);
+		}
+
+		if (location3 != null) {
+			stmt.setString(19, location3);
+		} else {
+			stmt.setNull(19, java.sql.Types.CHAR);
+		}
+
+		stmt.setString(20, timeCreated);
+		stmt.setString(21, dateCreated);
+		stmt.setString(22, timeCrawled);
+		stmt.setString(23, dateCrawled);
 
 		// Print out the SQL statement for debug purpose
 		System.out.println(stmt.toString());
@@ -347,108 +438,6 @@ public class MySqlConnection {
 		return -1;
 	}
 
-	// Insert into watch_spec_table table
-	private void insertIntoWatchSpecTable(int watchId, String refNo,
-			Integer[] topicsId, String movement, String caliber,
-			String watchCondition, int watchYear, String caseMaterial,
-			String dialColor, String gender, String location1,
-			String location2, String location3) throws Exception {
-		Statement st = this.con.createStatement();
-		st.executeQuery("USE " + this.database);
-		PreparedStatement stmt = null;
-
-		// Insert into watch_spec_table table
-		stmt = this.con.prepareStatement("INSERT INTO watch_spec_table ("
-				+ "watch_table_id, " + "ref_no, " + "topic_table_id_1, "
-				+ "topic_table_id_2, " + "movement, " + "caliber, "
-				+ "watch_condition, " + "watch_year, " + "case_material, "
-				+ "dial_color, " + "gender, " + "location_1, " + "location_2, "
-				+ "location_3) "
-				+ "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-		stmt.setInt(1, watchId);
-
-		if (refNo != null) {
-			stmt.setString(2, refNo);
-		} else {
-			stmt.setNull(2, java.sql.Types.CHAR);
-		}
-
-		if (topicsId.length > 0 && topicsId[0] != null) {
-			stmt.setInt(3, topicsId[0]);
-		} else {
-			stmt.setNull(3, java.sql.Types.INTEGER);
-		}
-
-		if (topicsId.length > 1 && topicsId[1] != null) {
-			stmt.setInt(4, topicsId[1]);
-		} else {
-			stmt.setNull(4, java.sql.Types.INTEGER);
-		}
-
-		if (movement != null) {
-			stmt.setString(5, movement);
-		} else {
-			stmt.setNull(5, java.sql.Types.CHAR);
-		}
-
-		if (caliber != null) {
-			stmt.setString(6, caliber);
-		} else {
-			stmt.setNull(6, java.sql.Types.CHAR);
-		}
-
-		if (watchCondition != null) {
-			stmt.setString(7, watchCondition);
-		} else {
-			stmt.setNull(7, java.sql.Types.CHAR);
-		}
-
-		if (watchYear > 0) {
-			stmt.setInt(8, watchYear);
-		} else {
-			stmt.setNull(8, java.sql.Types.INTEGER);
-		}
-
-		if (caseMaterial != null) {
-			stmt.setString(9, caseMaterial);
-		} else {
-			stmt.setNull(9, java.sql.Types.CHAR);
-		}
-
-		if (dialColor != null) {
-			stmt.setString(10, dialColor);
-		} else {
-			stmt.setNull(10, java.sql.Types.CHAR);
-		}
-
-		if (gender != null) {
-			stmt.setString(11, gender);
-		} else {
-			stmt.setNull(11, java.sql.Types.CHAR);
-		}
-
-		if (location1 != null) {
-			stmt.setString(12, location1);
-		} else {
-			stmt.setNull(12, java.sql.Types.CHAR);
-		}
-
-		if (location2 != null) {
-			stmt.setString(13, location2);
-		} else {
-			stmt.setNull(13, java.sql.Types.CHAR);
-		}
-
-		if (location3 != null) {
-			stmt.setString(14, location3);
-		} else {
-			stmt.setNull(14, java.sql.Types.CHAR);
-		}
-		// Print out the SQL statement for debug purpose
-		System.out.println(stmt.toString());
-		stmt.executeUpdate();
-	}
-
 	// Add new watch entry into the database
 	public void addWatchEntry(String link, Globals.Domain[] domains,
 			String watchName, int[] prices, String[] keywords, String[] topics,
@@ -462,9 +451,11 @@ public class MySqlConnection {
 		Integer[] topicsId = convertTopicToTopicId(topics);
 
 		try {
-			// Try to insert a new entry into watch_table
-			int watchId = insertIntoWatchTable(link, domains, watchName,
-					prices, keywords, topics, timeCreated, dateCreated,
+			// Try to insert a new entry into watch_desc_table
+			int watchId = insertIntoWatchDescTable(link, domains, watchName,
+					prices, keywords, refNo, movement, caliber, watchCondition,
+					watchYear, caseMaterial, dialColor, gender, location1,
+					location2, location3, topics, timeCreated, dateCreated,
 					timeCrawled, dateCrawled, domainsId, topicsId);
 
 			// Fail to insert new watch entry, return right away
@@ -476,31 +467,19 @@ public class MySqlConnection {
 			PreparedStatement stmt = null;
 
 			try {
-				// Insert into watch_content_table table
+				// Insert into watch_page_content_table table
 				stmt = this.con
-						.prepareStatement("INSERT INTO watch_content_table (watch_table_id, content) values (?, ?)");
+						.prepareStatement("INSERT INTO watch_page_content_table (watch_table_id, content) values (?, ?)");
 				stmt.setInt(1, watchId);
 				InputStream is = new ByteArrayInputStream(content.getBytes());
 				stmt.setBlob(2, is);
 				stmt.executeUpdate();
 			} catch (Exception e) {
-				System.out.println("Fail to insert into watch_content_table");
+				System.out.println("Fail to insert into watch_page_content_table");
 				e.printStackTrace();
 			}
-
-			// Insert into watch_spec_table table
-			try {
-				insertIntoWatchSpecTable(watchId, refNo, topicsId, movement,
-						caliber, watchCondition, watchYear, caseMaterial,
-						dialColor, gender, location1, location2, location3);
-
-			} catch (Exception e) {
-				System.out.println("Fail to insert into watch_spec_table");
-				e.printStackTrace();
-			}
-
 		} catch (Exception e) {
-			System.out.println("Fail to insert into watch_table");
+			System.out.println("Fail to insert into watch_desc_table");
 			e.printStackTrace();
 		}
 	}
@@ -596,7 +575,7 @@ public class MySqlConnection {
 			Statement st = this.con.createStatement();
 			st.executeQuery("USE " + this.database);
 
-			String query = "SELECT * FROM watch_table";
+			String query = "SELECT * FROM watch_desc_table";
 
 			if (topicId == null) {
 				query += " WHERE topic_table_id_1 IS NULL";
@@ -618,7 +597,7 @@ public class MySqlConnection {
 		return null;
 	}
 
-	// Update the topic_table_id_1 of watch_table to topicId
+	// Update the topic_table_id_1 of watch_desc_table to topicId
 	public boolean updateWatchTopic(int watchId, Integer[] topicIds) {
 		if (topicIds == null || topicIds.length < 1)
 			return false;
@@ -632,12 +611,12 @@ public class MySqlConnection {
 			st.executeQuery("USE " + this.database);
 
 			// Clear the info of the specified watch
-			String updateQuery = "UPDATE watch_table SET topic_table_id_1 = NULL, topic_table_id_2 = NULL WHERE id = "
+			String updateQuery = "UPDATE watch_desc_table SET topic_table_id_1 = NULL, topic_table_id_2 = NULL WHERE id = "
 					+ watchId;
 			st.executeUpdate(updateQuery);
 
 			// Insert the new info for the specified watch
-			updateQuery = "UPDATE watch_table SET topic_table_id_1 = "
+			updateQuery = "UPDATE watch_desc_table SET topic_table_id_1 = "
 					+ topicIds[0];
 			if (topicIds.length > 1)
 				updateQuery += ", topic_table_id_2 = " + topicIds[1];
@@ -657,7 +636,7 @@ public class MySqlConnection {
 			updateQuery += " WHERE watch_table_id = " + watchId;
 			st.executeUpdate(updateQuery);
 		} catch (SQLException e) {
-			System.out.println("Update watch_table topic information fails");
+			System.out.println("Update watch_desc_table topic information fails");
 			e.printStackTrace();
 			return false;
 		}

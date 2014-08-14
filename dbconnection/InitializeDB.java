@@ -38,8 +38,7 @@ public class InitializeDB {
 		this.createArticleTable();
 		this.createArticleContentTable();
 		this.createArticleTopicTable();
-		this.createWatchPriceTable();
-		this.createWatchSpecTable();
+		this.createWatchDescTableTemp();
 		this.createWatchContentTable();
 		this.createWatchPriceStatTable();
 		this.createLinkTable();
@@ -167,13 +166,12 @@ public class InitializeDB {
 			e.printStackTrace();
 		}
 	}
-
-	// Create watch_price_table
-	private void createWatchPriceTable() {
+	
+	private void createWatchDescTableTemp() {
 		try {
 			Statement st = this.con.createStatement();
 			st.executeQuery("USE " + this.database);
-			st.executeUpdate("CREATE TABLE watch_table ("
+			st.executeUpdate("CREATE TABLE watch_desc_table ("
 					+ "id int unsigned AUTO_INCREMENT not null, "
 					+ "link char(255) not null, "
 					+ "domain_table_id_1 int unsigned not null, "
@@ -183,6 +181,17 @@ public class InitializeDB {
 					+ "price_1 int unsigned not null, "
 					+ "price_2 int unsigned, "
 					+ "keywords char(255), "
+					+ "ref_no char(64), "
+					+ "movement char(64), "
+					+ "caliber char(64), "
+					+ "watch_condition char(64), "
+					+ "watch_year int unsigned, "
+					+ "case_material char(64), "
+					+ "dial_color char(64), "
+					+ "gender char(64), "
+					+ "location_1 char(128), "
+					+ "location_2 char(128), "
+					+ "location_3 char(128), "
 					+ "time_created char(128) not null, "
 					+ "date_created char(128) not null, "
 					+ "time_crawled char(128) not null, "
@@ -194,37 +203,7 @@ public class InitializeDB {
 					+ "FOREIGN KEY (topic_table_id_1) REFERENCES topic_table(id), "
 					+ "FOREIGN KEY (topic_table_id_2) REFERENCES topic_table(id))");
 		} catch (SQLException e) {
-			System.out.println("CREATE TABLE watch_table fails");
-			e.printStackTrace();
-		}
-	}
-
-	// Create watch_spec_table
-	private void createWatchSpecTable() {
-		try {
-			Statement st = this.con.createStatement();
-			st.executeQuery("USE " + this.database);
-			st.executeUpdate("CREATE TABLE watch_spec_table ("
-					+ "watch_table_id int unsigned not null, "
-					+ "ref_no char(64), "
-					+ "topic_table_id_1 int unsigned, "
-					+ "topic_table_id_2 int unsigned, "
-					+ "movement char(64), "
-					+ "caliber char(64), "
-					+ "watch_condition char(64), "
-					+ "watch_year int unsigned, "
-					+ "case_material char(64), "
-					+ "dial_color char(64), "
-					+ "gender char(64), "
-					+ "location_1 char(128), "
-					+ "location_2 char(128), "
-					+ "location_3 char(128), "
-					+ "FOREIGN KEY (watch_table_id) REFERENCES watch_table(id), "
-					+ "UNIQUE (watch_table_id), "
-					+ "FOREIGN KEY (topic_table_id_1) REFERENCES topic_table(id), "
-					+ "FOREIGN KEY (topic_table_id_2) REFERENCES topic_table(id))");
-		} catch (SQLException e) {
-			System.out.println("CREATE TABLE watch_spec_table fails");
+			System.out.println("CREATE TABLE watch_desc_table fails");
 			e.printStackTrace();
 		}
 	}
@@ -234,13 +213,13 @@ public class InitializeDB {
 		try {
 			Statement st = this.con.createStatement();
 			st.executeQuery("USE " + this.database);
-			st.executeUpdate("CREATE TABLE watch_content_table ("
+			st.executeUpdate("CREATE TABLE watch_page_content_table ("
 					+ "watch_table_id int unsigned not null, "
 					+ "content LONGBLOB not null, "
 					+ "UNIQUE(watch_table_id), "
-					+ "FOREIGN KEY (watch_table_id) REFERENCES watch_table(id))");
+					+ "FOREIGN KEY (watch_table_id) REFERENCES watch_desc_table(id))");
 		} catch (SQLException e) {
-			System.out.println("CREATE TABLE article_content_table fails");
+			System.out.println("CREATE TABLE watch_page_content_table fails");
 			e.printStackTrace();
 		}
 	}
