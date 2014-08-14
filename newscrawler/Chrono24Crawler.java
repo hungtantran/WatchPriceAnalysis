@@ -93,13 +93,23 @@ public class Chrono24Crawler extends BaseCrawler {
 			String caseMaterial = parser.getCaseMaterial();
 			String dialColor = parser.getDialColor();
 			String gender = parser.getGender();
+			
+			// Split location into parts
 			String location = parser.getLocation();
-
+			String[] locations = Helper.splitString(location, ",");
+			
+			String location1 = null;
+			String location2 = null;
+			String location3 = null;
+			if (locations.length >= 1) location1 = locations[0].trim();
+			if (locations.length >= 2) location2 = locations[1].trim();
+			if (locations.length >= 3) location3 = locations[2].trim();
+					
 			this.mysqlConnection.addWatchEntry(link, domains, watchName,
 					prices, keywords, topics, timeCreated, dateCreated,
 					timeCrawled, dateCrawled, content, refNo, movement,
 					caliber, watchCondition, watchYear, caseMaterial,
-					dialColor, gender, location);
+					dialColor, gender, location1, location2, location3);
 		} else {
 			// If the page is not an watch entry page, just get all the links
 			// and add it to the queue

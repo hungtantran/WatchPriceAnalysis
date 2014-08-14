@@ -351,7 +351,8 @@ public class MySqlConnection {
 	private void insertIntoWatchSpecTable(int watchId, String refNo,
 			Integer[] topicsId, String movement, String caliber,
 			String watchCondition, int watchYear, String caseMaterial,
-			String dialColor, String gender, String location) throws Exception {
+			String dialColor, String gender, String location1,
+			String location2, String location3) throws Exception {
 		Statement st = this.con.createStatement();
 		st.executeQuery("USE " + this.database);
 		PreparedStatement stmt = null;
@@ -361,8 +362,9 @@ public class MySqlConnection {
 				+ "watch_table_id, " + "ref_no, " + "topic_table_id_1, "
 				+ "topic_table_id_2, " + "movement, " + "caliber, "
 				+ "watch_condition, " + "watch_year, " + "case_material, "
-				+ "dial_color, " + "gender, " + "location) "
-				+ "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+				+ "dial_color, " + "gender, " + "location_1, " + "location_2, "
+				+ "location_3) "
+				+ "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 		stmt.setInt(1, watchId);
 
 		if (refNo != null) {
@@ -425,10 +427,22 @@ public class MySqlConnection {
 			stmt.setNull(11, java.sql.Types.CHAR);
 		}
 
-		if (location != null) {
-			stmt.setString(12, location);
+		if (location1 != null) {
+			stmt.setString(12, location1);
 		} else {
 			stmt.setNull(12, java.sql.Types.CHAR);
+		}
+
+		if (location2 != null) {
+			stmt.setString(13, location2);
+		} else {
+			stmt.setNull(13, java.sql.Types.CHAR);
+		}
+
+		if (location3 != null) {
+			stmt.setString(14, location3);
+		} else {
+			stmt.setNull(14, java.sql.Types.CHAR);
 		}
 		// Print out the SQL statement for debug purpose
 		System.out.println(stmt.toString());
@@ -442,7 +456,7 @@ public class MySqlConnection {
 			String dateCrawled, String content, String refNo, String movement,
 			String caliber, String watchCondition, int watchYear,
 			String caseMaterial, String dialColor, String gender,
-			String location) {
+			String location1, String location2, String location3) {
 		// Get the id of domains and topics
 		Integer[] domainsId = convertDomainToDomainId(domains);
 		Integer[] topicsId = convertTopicToTopicId(topics);
@@ -478,7 +492,7 @@ public class MySqlConnection {
 			try {
 				insertIntoWatchSpecTable(watchId, refNo, topicsId, movement,
 						caliber, watchCondition, watchYear, caseMaterial,
-						dialColor, gender, location);
+						dialColor, gender, location1, location2, location3);
 
 			} catch (Exception e) {
 				System.out.println("Fail to insert into watch_spec_table");
@@ -705,7 +719,7 @@ public class MySqlConnection {
 				stmt.setInt(9 + 2 * i, values[i]);
 				stmt.setInt(10 + 2 * i, numbers[i]);
 			}
-			
+
 			System.out.println(stmt.toString());
 			stmt.executeUpdate();
 		} catch (SQLException e) {
@@ -774,8 +788,9 @@ public class MySqlConnection {
 
 			stmt.setString(5, timeCrawled);
 			stmt.setString(6, dateCrawled);
-			
-			if (Globals.DEBUG) System.out.println(stmt.toString());
+
+			if (Globals.DEBUG)
+				System.out.println(stmt.toString());
 			stmt.executeUpdate();
 		} catch (SQLException e) {
 			System.out.println("Insert into link_queue_table fails");
@@ -817,8 +832,9 @@ public class MySqlConnection {
 
 			stmt.setString(4, timeCrawled);
 			stmt.setString(5, dateCrawled);
-			
-			if (Globals.DEBUG) System.out.println(stmt.toString());
+
+			if (Globals.DEBUG)
+				System.out.println(stmt.toString());
 			stmt.executeUpdate();
 		} catch (SQLException e) {
 			System.out.println("Insert into link_crawled_table fails");
@@ -875,8 +891,9 @@ public class MySqlConnection {
 			PreparedStatement stmt = this.con.prepareStatement(query);
 			stmt.setInt(1, domainId);
 			stmt.setString(2, link);
-			
-			if (Globals.DEBUG) System.out.println(stmt.toString());
+
+			if (Globals.DEBUG)
+				System.out.println(stmt.toString());
 			// execute the preparedstatement
 			stmt.execute();
 		} catch (SQLException e) {

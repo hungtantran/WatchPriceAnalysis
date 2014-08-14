@@ -53,15 +53,38 @@ public class WatchPriceStatAnalysis {
 			int[] values, int[] numbers, float mean, float median, float std) {
 		if (arr.length == 0 || values.length < 20 || numbers.length < 20)
 			return;
-
-		float distance = std/10;
 		
-		// Values are taken as 20 values in between mean-std and mean+std
+		float middlePoint = mean;
+		float distanceDown = Math.min(std, middlePoint)/10;
+		float distanceUp = std/10;
+		
+		// If the dataset is too dominated by outliers, attempt to remove them
+		if (std > mean * 1.5 && arr.length > 2000) {
+			ArrayList<Integer> newArrList = new ArrayList<Integer>();
+			
+			int lowerBound = (int)Math.round((float)arr.length * 0.00025);
+			int upperBound = (int)Math.round((float)arr.length * 0.99975);
+			for (int i = lowerBound; i < upperBound; i++) {
+				newArrList.add(arr[i]);
+			}
+			
+			Integer[] newArr = new Integer[newArrList.size()];
+			for (int i = 0; i < newArrList.size(); i++) {
+				newArr[i] = newArrList.get(i);
+			}
+			
+			middlePoint = WatchPriceStatAnalysis.findMeanOfArray(newArr);
+			float newStd = WatchPriceStatAnalysis.findStandardDeviationOfArray(newArr);
+			distanceDown = Math.min(newStd, middlePoint)/11;
+			distanceUp = (newStd+std)/20;
+		}
+		
+		// Values are taken as 20 values in between middlePoint-std and middlePoint+std
 		for (int i = 0; i < 10; i++) {
-			values[i] = Math.max(Math.round(mean-distance*(10-i)), 0);
+			values[i] = Math.max(Math.round(middlePoint-distanceDown*(10-i)), 0);
 		}
 		for (int i = 0; i < 9; i++) {
-			values[i+10] = Math.round(mean+distance*i);
+			values[i+10] = Math.round(middlePoint+distanceUp*i);
 		}
 		
 		// Populate how many watches are in each interval

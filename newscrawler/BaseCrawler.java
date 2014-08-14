@@ -129,7 +129,8 @@ public abstract class BaseCrawler extends Thread {
 		
 		if (newLinks != null)
 			for (String newLink : newLinks) {
-				this.mysqlConnection.insertIntoLinkQueueTable(newLink, domainId, priority, persistent, null, null);
+				Integer newLinkPriority = TopicComparator.getStringPriority(newLink);
+				this.mysqlConnection.insertIntoLinkQueueTable(newLink, domainId, newLinkPriority, persistent, null, null);
 			}
 	}
 
