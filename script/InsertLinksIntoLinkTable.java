@@ -11,9 +11,10 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.Map.Entry;
 
-import newscrawler.Globals;
+import commonlib.Globals;
+import commonlib.Globals.Domain;
+
 import newscrawler.TopicComparator;
-import newscrawler.Globals.Domain;
 import dbconnection.MySqlConnection;
 
 public class InsertLinksIntoLinkTable {

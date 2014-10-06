@@ -7,8 +7,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Map;
 
-import newscrawler.Globals;
-import newscrawler.Globals.Type;
+import commonlib.Globals;
+import commonlib.Globals.Type;
 
 public class InitializeDB {
 	private Connection con = null;

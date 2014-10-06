@@ -4,7 +4,8 @@ import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import newscrawler.Globals;
+import commonlib.Globals;
+
 import dbconnection.MySqlConnection;
 
 public class WatchPriceStatAnalysis {

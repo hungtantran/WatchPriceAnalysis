@@ -1,8 +1,9 @@
-package newscrawler;
+package commonlib;
 
 import java.util.*;
 
 public class Globals {
+	public static final LogManager crawlerLogManager = new LogManager("crawlerLog", "crawlerLog");
 	public static final boolean DEBUG = true;
 	public static int DEFAULTLOWERBOUNDWAITTIMESEC = 1;
 	public static int DEFAULTUPPERBOUNDWAITTIMESEC = 2;

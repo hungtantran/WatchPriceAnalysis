@@ -3,10 +3,12 @@ package newscrawler;
 import java.util.HashSet;
 import java.util.Set;
 
-import newscrawler.Globals.Domain;
-
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+
+import commonlib.Globals;
+import commonlib.Helper;
+import commonlib.Globals.Domain;
 
 /*import edu.stanford.nlp.process.Tokenizer;
  import edu.stanford.nlp.process.TokenizerFactory;
@@ -198,7 +200,7 @@ public class Chrono24EntryPageParser extends BaseParser {
 			this.watchName = articleNameText;
 
 			if (Globals.DEBUG)
-				System.out.println("Watch Name = " + this.watchName);
+				Globals.crawlerLogManager.writeLog("Watch Name = " + this.watchName);
 		}
 	}
 
@@ -227,7 +229,7 @@ public class Chrono24EntryPageParser extends BaseParser {
 			this.prices[0] = this.extractIntFromString(priceText);
 
 			if (Globals.DEBUG)
-				System.out.println("Watch Price = " + this.prices[0]);
+				Globals.crawlerLogManager.writeLog("Watch Price = " + this.prices[0]);
 		}
 	}
 
@@ -330,15 +332,15 @@ public class Chrono24EntryPageParser extends BaseParser {
 				this.gender = "Women";
 
 		if (Globals.DEBUG) {
-			System.out.println("Ref No = " + this.refNo);
-			System.out.println("Movement = " + this.movement);
-			System.out.println("Caliber = " + this.caliber);
-			System.out.println("Condition = " + this.watchCondition);
-			System.out.println("Year = " + this.watchYear);
-			System.out.println("Case Material = " + this.caseMaterial);
-			System.out.println("Gender = " + this.gender);
-			System.out.println("Dial = " + this.dialColor);
-			System.out.println("Location = " + this.location);
+			Globals.crawlerLogManager.writeLog("Ref No = " + this.refNo);
+			Globals.crawlerLogManager.writeLog("Movement = " + this.movement);
+			Globals.crawlerLogManager.writeLog("Caliber = " + this.caliber);
+			Globals.crawlerLogManager.writeLog("Condition = " + this.watchCondition);
+			Globals.crawlerLogManager.writeLog("Year = " + this.watchYear);
+			Globals.crawlerLogManager.writeLog("Case Material = " + this.caseMaterial);
+			Globals.crawlerLogManager.writeLog("Gender = " + this.gender);
+			Globals.crawlerLogManager.writeLog("Dial = " + this.dialColor);
+			Globals.crawlerLogManager.writeLog("Location = " + this.location);
 		}
 	}
 

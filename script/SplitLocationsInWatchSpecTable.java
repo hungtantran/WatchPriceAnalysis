@@ -6,7 +6,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import newscrawler.Helper;
+
+import commonlib.Helper;
 
 public class SplitLocationsInWatchSpecTable {
 	private static String username = "root";

@@ -13,6 +13,8 @@ import java.util.HashSet;
 import java.util.PriorityQueue;
 import java.util.Set;
 
+import commonlib.Globals;
+import commonlib.Helper;
 import dbconnection.MySqlConnection;
 
 public abstract class BaseCrawler extends Thread {
@@ -40,7 +42,7 @@ public abstract class BaseCrawler extends Thread {
 	protected BaseCrawler(String startURL, String domain, int domainId,
 			int lowerBoundWaitTimeSec, int upperBoundWaitTimeSec,
 			Comparator<String> comparator) {
-		System.out.println("Start url = " + startURL);
+		Globals.crawlerLogManager.writeLog("Start url = " + startURL);
 
 		// Start Url is not hodinkee link. initialize it to the homepage
 		if (startURL.indexOf(domain) != 0) {
@@ -66,7 +68,7 @@ public abstract class BaseCrawler extends Thread {
 			}
 			
 			if (Globals.DEBUG)
-				System.out.println("Urls in Queue : " + this.urlsQueue.size());
+				Globals.crawlerLogManager.writeLog("Urls in Queue : " + this.urlsQueue.size());
 
 			ResultSet crawled = this.mysqlConnection.getLinkCrawled(domainId);
 			while (crawled.next()) {
@@ -74,10 +76,9 @@ public abstract class BaseCrawler extends Thread {
 			}
 			
 			if (Globals.DEBUG)
-				System.out.println("Urls in Crawled Set : " + this.urlsCrawled.size());
+				Globals.crawlerLogManager.writeLog("Urls in Crawled Set : " + this.urlsCrawled.size());
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Globals.crawlerLogManager.writeLog(e.getMessage());
 		}
 	}
 
@@ -102,7 +103,7 @@ public abstract class BaseCrawler extends Thread {
 			if (!this.isValidLink(curUrl))
 				continue;
 
-			System.out.println("Process url " + curUrl);
+			Globals.crawlerLogManager.writeLog("Process url " + curUrl);
 
 			// Process the new link
 			this.processUrl(curUrl);
@@ -119,8 +120,8 @@ public abstract class BaseCrawler extends Thread {
 	}
 
 	protected void postProcessUrl(String processedlink, int domainId, Integer priority, int persistent, Set<String> newLinks) {
-		System.out.println("Already Crawled " + this.urlsCrawled.size());
-		System.out.println("Queue has " + this.urlsQueue.size());
+		Globals.crawlerLogManager.writeLog("Already Crawled " + this.urlsCrawled.size());
+		Globals.crawlerLogManager.writeLog("Queue has " + this.urlsQueue.size());
 		
 		if (processedlink != null) {
 			this.mysqlConnection.insertIntoLinkCrawledTable(processedlink, domainId, priority, null, null);
@@ -143,7 +144,7 @@ public abstract class BaseCrawler extends Thread {
 					ObjectOutput output = new ObjectOutputStream(buffer);) {
 				output.writeObject(this.urlsCrawled);
 			} catch (IOException ex) {
-				ex.printStackTrace();
+				Globals.crawlerLogManager.writeLog(ex.getMessage());
 			}
 		}
 
@@ -154,7 +155,7 @@ public abstract class BaseCrawler extends Thread {
 					ObjectOutput output = new ObjectOutputStream(buffer);) {
 				output.writeObject(this.urlsQueue);
 			} catch (IOException ex) {
-				ex.printStackTrace();
+				Globals.crawlerLogManager.writeLog(ex.getMessage());
 			}
 		}
 	}

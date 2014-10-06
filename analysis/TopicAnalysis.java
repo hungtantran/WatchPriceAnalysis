@@ -3,8 +3,8 @@ package analysis;
 import java.sql.ResultSet;
 import java.util.Set;
 
-import newscrawler.Globals;
-import newscrawler.Helper;
+import commonlib.Globals;
+import commonlib.Helper;
 import dbconnection.MySqlConnection;
 
 

@@ -3,10 +3,12 @@ package newscrawler;
 import java.util.HashSet;
 import java.util.Set;
 
-import newscrawler.Globals.Domain;
-import newscrawler.Globals.Type;
-
 import org.jsoup.select.Elements;
+
+import commonlib.Globals;
+import commonlib.Helper;
+import commonlib.Globals.Domain;
+import commonlib.Globals.Type;
 
 /*import edu.stanford.nlp.process.Tokenizer;
  import edu.stanford.nlp.process.TokenizerFactory;
@@ -137,7 +139,7 @@ public class WatchReportArticleParser extends BaseParser {
 			this.articleName = articleNameText;
 
 			if (Globals.DEBUG)
-				System.out.println("Article Name = " + this.articleName);
+				Globals.crawlerLogManager.writeLog("Article Name = " + this.articleName);
 		}
 	}
 
@@ -171,7 +173,7 @@ public class WatchReportArticleParser extends BaseParser {
 				this.dateCreated = Helper.formatDate(dateCreatedText);
 
 				if (Globals.DEBUG)
-					System.out.println("Date Created = " + this.dateCreated);
+					Globals.crawlerLogManager.writeLog("Date Created = " + this.dateCreated);
 			}
 		}
 	}

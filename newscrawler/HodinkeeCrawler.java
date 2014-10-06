@@ -2,9 +2,11 @@ package newscrawler;
 
 import java.util.*;
 
-import newscrawler.Globals.Domain;
-
 import org.jsoup.nodes.Document;
+
+import commonlib.Globals;
+import commonlib.Helper;
+import commonlib.Globals.Domain;
 
 public class HodinkeeCrawler extends BaseCrawler {
 	public static final String domain = "http://www.hodinkee.com";
@@ -100,7 +102,7 @@ public class HodinkeeCrawler extends BaseCrawler {
 		Set<String> newStrings = new HashSet<String>();
 		if (linksInPage != null) {
 			if (Globals.DEBUG)
-				System.out.println("Found " + linksInPage.size()
+				Globals.crawlerLogManager.writeLog("Found " + linksInPage.size()
 						+ " links in page");
 
 			for (String linkInPage : linksInPage) {
@@ -115,7 +117,7 @@ public class HodinkeeCrawler extends BaseCrawler {
 					this.urlsQueue.add(linkInPage);
 					newStrings.add(linkInPage);
 					if (Globals.DEBUG)
-						System.out.println("Add link " + linkInPage);
+						Globals.crawlerLogManager.writeLog("Add link " + linkInPage);
 				}
 			}
 		}

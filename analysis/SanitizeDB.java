@@ -2,11 +2,11 @@ package analysis;
 
 import java.sql.ResultSet;
 
+import commonlib.Globals;
+import commonlib.Helper;
 import newscrawler.ABlogToWatchArticleParser;
 import newscrawler.ABlogToWatchCrawler;
 import newscrawler.BaseParser;
-import newscrawler.Globals;
-import newscrawler.Helper;
 import newscrawler.HodinkeeArticleParser;
 import newscrawler.HodinkeeCrawler;
 import newscrawler.WatchReportArticleParser;

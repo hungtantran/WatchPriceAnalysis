@@ -12,8 +12,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-import newscrawler.Globals;
-import newscrawler.Helper;
+import commonlib.Globals;
+import commonlib.Helper;
 
 public class MySqlConnection {
 	private Connection con = null;
@@ -33,9 +33,9 @@ public class MySqlConnection {
 					username, password);
 			this.getDatabaseExistingInfo();
 		} catch (ClassNotFoundException e) {
-			System.out.println("Driver not found");
+			Globals.crawlerLogManager.writeLog("Driver not found");
 		} catch (SQLException e) {
-			e.printStackTrace();
+			Globals.crawlerLogManager.writeLog(e.getMessage());
 		}
 	}
 
@@ -68,11 +68,11 @@ public class MySqlConnection {
 				String type = resultSet.getString(2).trim();
 				this.idTypeMap.put(id, type);
 				if (Globals.DEBUG)
-					System.out.println(id + " : " + type);
+					Globals.crawlerLogManager.writeLog(id + " : " + type, false);
 			}
 		} catch (SQLException e) {
-			System.out.println("Get type_table information fails");
-			e.printStackTrace();
+			Globals.crawlerLogManager.writeLog("Get type_table information fails");
+			Globals.crawlerLogManager.writeLog(e.getMessage());
 		}
 	}
 
@@ -89,11 +89,11 @@ public class MySqlConnection {
 				String domain = resultSet.getString(2).trim();
 				this.idDomainMap.put(id, domain);
 				if (Globals.DEBUG)
-					System.out.println(id + " : " + domain);
+					Globals.crawlerLogManager.writeLog(id + " : " + domain, false);
 			}
 		} catch (SQLException e) {
-			System.out.println("Get domain_table information fails");
-			e.printStackTrace();
+			Globals.crawlerLogManager.writeLog("Get domain_table information fails");
+			Globals.crawlerLogManager.writeLog(e.getMessage());
 		}
 	}
 
@@ -110,12 +110,12 @@ public class MySqlConnection {
 				String topic = resultSet.getString(3).trim();
 				this.idTopicMap.put(topic, id);
 				if (Globals.DEBUG)
-					System.out.println(id + " : " + topic + " "
-							+ this.idTopicMap.get(topic));
+					Globals.crawlerLogManager.writeLog(id + " : " + topic + " "
+							+ this.idTopicMap.get(topic), false);
 			}
 		} catch (SQLException e) {
-			System.out.println("Get topic_table information fails");
-			e.printStackTrace();
+			Globals.crawlerLogManager.writeLog("Get topic_table information fails");
+			Globals.crawlerLogManager.writeLog(e.getMessage());
 		}
 	}
 
@@ -154,7 +154,7 @@ public class MySqlConnection {
 		// Get the id of topics
 		for (int i = 0; i < topics.length; i++) {
 			topicsId[i] = this.idTopicMap.get(topics[i]);
-			System.out.println(topics[i] + " : " + topicsId[i]);
+			Globals.crawlerLogManager.writeLog(topics[i] + " : " + topicsId[i]);
 		}
 
 		return topicsId;
@@ -171,8 +171,8 @@ public class MySqlConnection {
 			stmt.setInt(2, topicId);
 			stmt.executeUpdate();
 		} catch (Exception e) {
-			System.out.println("Fail to insert into article_topic_table");
-			// e.printStackTrace();
+			Globals.crawlerLogManager.writeLog("Fail to insert into article_topic_table");
+			Globals.crawlerLogManager.writeLog(e.getMessage());
 		}
 	}
 
@@ -189,8 +189,8 @@ public class MySqlConnection {
 			stmt.setBlob(2, is);
 			stmt.executeUpdate();
 		} catch (Exception e) {
-			System.out.println("Fail to insert into article_content_table");
-			e.printStackTrace();
+			Globals.crawlerLogManager.writeLog("Fail to insert into article_content_table");
+			Globals.crawlerLogManager.writeLog(e.getMessage());
 		}
 	}
 
@@ -253,7 +253,7 @@ public class MySqlConnection {
 			stmt.setString(12, dateCrawled);
 
 			// Print out the SQL statement for debug purpose
-			System.out.println(stmt.toString());
+			Globals.crawlerLogManager.writeLog(stmt.toString());
 			stmt.executeUpdate();
 
 			// Insert into article_content_table table
@@ -271,8 +271,8 @@ public class MySqlConnection {
 				}
 			}
 		} catch (Exception e) {
-			System.out.println("Fail to insert into article_table");
-			e.printStackTrace();
+			Globals.crawlerLogManager.writeLog("Fail to insert into article_table");
+			Globals.crawlerLogManager.writeLog(e.getMessage());
 		}
 	}
 
@@ -424,7 +424,7 @@ public class MySqlConnection {
 		stmt.setString(23, dateCrawled);
 
 		// Print out the SQL statement for debug purpose
-		System.out.println(stmt.toString());
+		Globals.crawlerLogManager.writeLog(stmt.toString());
 		stmt.executeUpdate();
 
 		// Insert into article_content_table table
@@ -475,12 +475,12 @@ public class MySqlConnection {
 				stmt.setBlob(2, is);
 				stmt.executeUpdate();
 			} catch (Exception e) {
-				System.out.println("Fail to insert into watch_page_content_table");
-				e.printStackTrace();
+				Globals.crawlerLogManager.writeLog("Fail to insert into watch_page_content_table");
+				Globals.crawlerLogManager.writeLog(e.getMessage());
 			}
 		} catch (Exception e) {
-			System.out.println("Fail to insert into watch_desc_table");
-			e.printStackTrace();
+			Globals.crawlerLogManager.writeLog("Fail to insert into watch_desc_table");
+			Globals.crawlerLogManager.writeLog(e.getMessage());
 		}
 	}
 
@@ -501,8 +501,8 @@ public class MySqlConnection {
 
 			return st.executeQuery(query);
 		} catch (SQLException e) {
-			System.out.println("Get article_table information fails");
-			e.printStackTrace();
+			Globals.crawlerLogManager.writeLog("Get article_table information fails");
+			Globals.crawlerLogManager.writeLog(e.getMessage());
 		}
 
 		return null;
@@ -524,8 +524,8 @@ public class MySqlConnection {
 				numArticleWithTopicId = result.getInt(1);
 			}
 		} catch (SQLException e) {
-			System.out.println("Get article_table information fails");
-			e.printStackTrace();
+			Globals.crawlerLogManager.writeLog("Get article_table information fails");
+			Globals.crawlerLogManager.writeLog(e.getMessage());
 		}
 
 		return numArticleWithTopicId;
@@ -553,8 +553,8 @@ public class MySqlConnection {
 			if (count != 1)
 				return null;
 		} catch (SQLException e) {
-			System.out.println("Get article_table information fails");
-			e.printStackTrace();
+			Globals.crawlerLogManager.writeLog("Get article_table information fails");
+			Globals.crawlerLogManager.writeLog(e.getMessage());
 		}
 
 		return content;
@@ -590,8 +590,8 @@ public class MySqlConnection {
 
 			return st.executeQuery(query);
 		} catch (SQLException e) {
-			System.out.println("Get article_table information fails");
-			e.printStackTrace();
+			Globals.crawlerLogManager.writeLog("Get article_table information fails");
+			Globals.crawlerLogManager.writeLog(e.getMessage());
 		}
 
 		return null;
@@ -636,8 +636,8 @@ public class MySqlConnection {
 			updateQuery += " WHERE watch_table_id = " + watchId;
 			st.executeUpdate(updateQuery);
 		} catch (SQLException e) {
-			System.out.println("Update watch_desc_table topic information fails");
-			e.printStackTrace();
+			Globals.crawlerLogManager.writeLog("Update watch_desc_table topic information fails");
+			Globals.crawlerLogManager.writeLog(e.getMessage());
 			return false;
 		}
 
@@ -699,11 +699,11 @@ public class MySqlConnection {
 				stmt.setInt(10 + 2 * i, numbers[i]);
 			}
 
-			System.out.println(stmt.toString());
+			Globals.crawlerLogManager.writeLog(stmt.toString());
 			stmt.executeUpdate();
 		} catch (SQLException e) {
-			System.out.println("Insert into watch_price_stat_table fails");
-			e.printStackTrace();
+			Globals.crawlerLogManager.writeLog("Insert into watch_price_stat_table fails");
+			Globals.crawlerLogManager.writeLog(e.getMessage());
 			return false;
 		}
 
@@ -723,8 +723,8 @@ public class MySqlConnection {
 			st.executeUpdate("DELETE FROM article_table WHERE id = "
 					+ articleId);
 		} catch (SQLException e) {
-			System.out.println("Fail to delete article with ID " + articleId);
-			e.printStackTrace();
+			Globals.crawlerLogManager.writeLog("Fail to delete article with ID " + articleId);
+			Globals.crawlerLogManager.writeLog(e.getMessage());
 		}
 	}
 
@@ -769,11 +769,11 @@ public class MySqlConnection {
 			stmt.setString(6, dateCrawled);
 
 			if (Globals.DEBUG)
-				System.out.println(stmt.toString());
+				Globals.crawlerLogManager.writeLog(stmt.toString());
 			stmt.executeUpdate();
 		} catch (SQLException e) {
-			System.out.println("Insert into link_queue_table fails");
-			e.printStackTrace();
+			Globals.crawlerLogManager.writeLog("Insert into link_queue_table fails");
+			Globals.crawlerLogManager.writeLog(e.getMessage());
 			return false;
 		}
 
@@ -813,11 +813,11 @@ public class MySqlConnection {
 			stmt.setString(5, dateCrawled);
 
 			if (Globals.DEBUG)
-				System.out.println(stmt.toString());
+				Globals.crawlerLogManager.writeLog(stmt.toString());
 			stmt.executeUpdate();
 		} catch (SQLException e) {
-			System.out.println("Insert into link_crawled_table fails");
-			e.printStackTrace();
+			Globals.crawlerLogManager.writeLog("Insert into link_crawled_table fails");
+			Globals.crawlerLogManager.writeLog(e.getMessage());
 			return false;
 		}
 
@@ -835,8 +835,8 @@ public class MySqlConnection {
 
 			return st.executeQuery(query);
 		} catch (SQLException e) {
-			System.out.println("Get link_queue_table fails");
-			e.printStackTrace();
+			Globals.crawlerLogManager.writeLog("Get link_queue_table fails");
+			Globals.crawlerLogManager.writeLog(e.getMessage());
 		}
 
 		return null;
@@ -853,8 +853,8 @@ public class MySqlConnection {
 
 			return st.executeQuery(query);
 		} catch (SQLException e) {
-			System.out.println("Get link_crawled_table fails");
-			e.printStackTrace();
+			Globals.crawlerLogManager.writeLog("Get link_crawled_table fails");
+			Globals.crawlerLogManager.writeLog(e.getMessage());
 		}
 
 		return null;
@@ -872,12 +872,12 @@ public class MySqlConnection {
 			stmt.setString(2, link);
 
 			if (Globals.DEBUG)
-				System.out.println(stmt.toString());
+				Globals.crawlerLogManager.writeLog(stmt.toString());
 			// execute the preparedstatement
 			stmt.execute();
 		} catch (SQLException e) {
-			System.out.println("Delete link_queue_table fails");
-			e.printStackTrace();
+			Globals.crawlerLogManager.writeLog("Delete link_queue_table fails");
+			Globals.crawlerLogManager.writeLog(e.getMessage());
 			return false;
 		}
 

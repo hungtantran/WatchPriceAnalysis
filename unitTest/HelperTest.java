@@ -4,10 +4,10 @@ import static org.junit.Assert.*;
 
 import java.util.Set;
 
-import newscrawler.Globals;
-import newscrawler.Helper;
-
 import org.junit.Test;
+
+import commonlib.Globals;
+import commonlib.Helper;
 
 public class HelperTest {
 

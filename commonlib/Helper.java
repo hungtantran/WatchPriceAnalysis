@@ -1,4 +1,4 @@
-package newscrawler;
+package commonlib;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -14,6 +14,12 @@ import java.util.Set;
 import javax.xml.bind.annotation.adapters.HexBinaryAdapter;
 
 public class Helper {
+	public static final char[] invalidFilenameChar = { '<', '>', ':', '"', '/',
+		'\\', '|', '?', '*', '\1', '\2', '\3', '\4', '\5', '\6', '\7',
+		'\t', '\10', '\11', '\12', '\13', '\14', '\15', '\16', '\17',
+		'\20', '\21', '\22', '\23', '\24', '\25', '\26', '\27',
+		'\30', '\31' };
+
 	public static String[] splitString(String string, String delimiter) {
 		if (string == null || delimiter == null)
 			return null;
@@ -122,8 +128,8 @@ public class Helper {
 
 		try {
 			messageDigest = MessageDigest.getInstance("MD5");
-		} catch (NoSuchAlgorithmException e1) {
-			e1.printStackTrace();
+		} catch (NoSuchAlgorithmException e) {
+			Globals.crawlerLogManager.writeLog(e.getMessage());
 		}
 
 		return (new HexBinaryAdapter()).marshal(messageDigest.digest(plainText
@@ -312,7 +318,7 @@ public class Helper {
 		}
 
 		if (Globals.DEBUG)
-			System.out.println("Topics = " + topicsOfName);
+			Globals.crawlerLogManager.writeLog("Topics = " + topicsOfName);
 
 		return topicsOfName;
 	}
@@ -324,14 +330,44 @@ public class Helper {
 			int waitTime = lowerBound
 					* 1000
 					+ (int) (Math.random() * ((upperBound * 1000 - lowerBound * 1000) + 1));
-			System.out.println("Wait for " + waitTime);
+			Globals.crawlerLogManager.writeLog("Wait for " + waitTime);
 			Thread.currentThread();
 			Thread.sleep(waitTime);
 		} catch (InterruptedException e) {
-			e.printStackTrace();
+			Globals.crawlerLogManager.writeLog(e.getMessage());
 		}
 	}
+	
+	// Clean up a file name
+	public static String sanitizeFileDirectoryName(String fileName) {
+		if (fileName == null)
+			return null;
+		
+		// Trim white space
+		fileName = fileName.trim();
+		fileName = Helper.removeAccents(fileName);
+		
+		// Trim ending periods
+		while (fileName.length() > 0 && fileName.charAt(fileName.length()-1) == '.') {
+			fileName = fileName.substring(0, fileName.length()-1);
+		}
+		
+		// File name can't be 0-length
+		if (fileName.length() == 0)
+			return null;
 
+		int numInvalidChar = Helper.invalidFilenameChar.length;
+		// Empty char
+		char replaceChar = ' ';
+
+		for (int i = 0; i < numInvalidChar; i++) {
+			fileName = fileName.replace(Helper.invalidFilenameChar[i],
+					replaceChar);
+		}
+
+		return fileName;
+	}
+	
 	// Comparator class to sort TreeMap
 	protected class ValueComparator implements Comparator<String> {
 

@@ -1,5 +1,7 @@
 package newscrawler;
 
+import commonlib.Globals;
+
 public class MainCrawler {
 	public static void main(String[] args) {
 		BaseCrawler[] crawlers = new BaseCrawler[4];
@@ -20,7 +22,7 @@ public class MainCrawler {
 		for (int i = 0; i < 4; i++)
 			crawlers[i].start();
 
-		System.out.println("Start Crawling");
+		Globals.crawlerLogManager.writeLog("Start Crawling");
 
 		try {
 			for (int i = 0; i < 4; i++)
@@ -29,6 +31,6 @@ public class MainCrawler {
 			e.printStackTrace();
 		}
 
-		System.out.println("Finish Crawling");
+		Globals.crawlerLogManager.writeLog("Finish Crawling");
 	}
 }

@@ -12,6 +12,8 @@ import org.jsoup.Jsoup;
 import org.jsoup.Connection.Response;
 import org.jsoup.nodes.Document;
 
+import commonlib.Globals;
+
 public class NetworkingFunctions {
 	// Download the html content into a private Document variable "doc"
 	public static Document downloadHtmlContent(String url, int numRetries) {
@@ -26,7 +28,7 @@ public class NetworkingFunctions {
 			} catch (IOException e) {
 				// Only print out fail on the last fail
 				if (i == numRetries - 1) 
-					e.printStackTrace();
+					Globals.crawlerLogManager.writeLog(e.getMessage());
 			}
 		}
 
@@ -72,9 +74,7 @@ public class NetworkingFunctions {
 			}
 			rd.close();
 		} catch (Exception e) {
-			// e.printStackTrace();
-			System.out.println("Request failed");
-			System.out.println();
+			Globals.crawlerLogManager.writeLog(e.getMessage());
 		}
 	}
 
@@ -126,10 +126,8 @@ public class NetworkingFunctions {
 			return response.toString();
 
 		} catch (Exception e) {
-
-			e.printStackTrace();
+			Globals.crawlerLogManager.writeLog(e.getMessage());
 			return null;
-
 		} finally {
 			if (connection != null) {
 				connection.disconnect();
