@@ -202,8 +202,10 @@ public class SanitizeDB {
 					String originalHtmlContent = resultSet.getString(2);
 					String compressedHtmlContent = HTMLCompressor
 							.compressHtmlContent(originalHtmlContent);
-					this.mysqlConnection.addArticleContent(resultSet.getInt(1),
-							compressedHtmlContent);
+					
+					if (!this.mysqlConnection.addArticleContent(resultSet.getInt(1),
+							compressedHtmlContent))
+						continue; 
 				}
 
 				if (count == 0)
@@ -244,8 +246,9 @@ public class SanitizeDB {
 					String originalHtmlContent = resultSet.getString(2);
 					String compressedHtmlContent = HTMLCompressor
 							.compressHtmlContent(originalHtmlContent);
-					this.mysqlConnection.addWatchPageContent(resultSet.getInt(1),
-							compressedHtmlContent);
+					if (!this.mysqlConnection.addWatchPageContent(resultSet.getInt(1),
+							compressedHtmlContent))
+						continue;
 				}
 				
 				if (count == 0)
@@ -263,7 +266,7 @@ public class SanitizeDB {
 		SanitizeDB sanitizer = new SanitizeDB();
 		// sanitizer.sanitizeBadLinkArticles();
 		// sanitizer.sanitizeDuplicateArticleLink();
-		// sanitizer.compressArticleContents();
-		sanitizer.compressWatchContents();
+		// sanitizer.compressArticleContents(); /* Should not need to use this anymore because of default compress */
+		// sanitizer.compressWatchContents(); /* Should not need to use this anymore because of default compress */
 	}
 }

@@ -192,9 +192,10 @@ public class WatchPriceStatAnalysis {
 		System.out.println();
 
 		// Insert the new statistic into the database
-		this.mysqlConnection.addWatchPriceStat(topicId, numArticles,
+		if (!this.mysqlConnection.addWatchPriceStat(topicId, numArticles,
 				numWatches, lowestPrice, highestPrice, mean, median, std,
-				values, numbers);
+				values, numbers))
+			return;
 	}
 
 	public static void main(String[] args) {

@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import commonlib.Globals;
+import commonlib.HTMLCompressor;
 import commonlib.Helper;
 
 public class MySqlConnection {
@@ -45,18 +46,19 @@ public class MySqlConnection {
 
 	// Populate information of type, domain and topic information from existing
 	// database
-	private void getDatabaseExistingInfo() {
+	private boolean getDatabaseExistingInfo() {
 		this.idTypeMap = new HashMap<Integer, String>();
 		this.idDomainMap = new HashMap<Integer, String>();
 		this.idTopicMap = new HashMap<String, Integer>();
 
-		this.getTypeInfo();
-		this.getDomainInfo();
-		this.getTopicInfo();
+		if (!this.getTypeInfo() || !this.getDomainInfo() || !this.getTopicInfo())
+			return false;
+		
+		return true;
 	}
 
 	// Populate information of type
-	private void getTypeInfo() {
+	private boolean getTypeInfo() {
 		try {
 			Statement st = this.con.createStatement();
 			st.executeQuery("USE " + this.database);
@@ -75,11 +77,15 @@ public class MySqlConnection {
 			Globals.crawlerLogManager
 					.writeLog("Get type_table information fails");
 			Globals.crawlerLogManager.writeLog(e.getMessage());
+			
+			return false;
 		}
+		
+		return true;
 	}
 
 	// Populate information of domain
-	private void getDomainInfo() {
+	private boolean getDomainInfo() {
 		try {
 			Statement st = this.con.createStatement();
 			st.executeQuery("USE " + this.database);
@@ -99,11 +105,15 @@ public class MySqlConnection {
 			Globals.crawlerLogManager
 					.writeLog("Get domain_table information fails");
 			Globals.crawlerLogManager.writeLog(e.getMessage());
+			
+			return false;
 		}
+		
+		return true;
 	}
 
 	// Populate information of topic
-	private void getTopicInfo() {
+	private boolean getTopicInfo() {
 		try {
 			Statement st = this.con.createStatement();
 			st.executeQuery("USE " + this.database);
@@ -123,7 +133,11 @@ public class MySqlConnection {
 			Globals.crawlerLogManager
 					.writeLog("Get topic_table information fails");
 			Globals.crawlerLogManager.writeLog(e.getMessage());
+			
+			return false;
 		}
+		
+		return true;
 	}
 
 	public void deleteDB() {
@@ -168,7 +182,7 @@ public class MySqlConnection {
 	}
 
 	// Add new article-topic relationship
-	public void addArticleTopicRelationship(int articleId, int topicId) {
+	public boolean addArticleTopicRelationship(int articleId, int topicId) {
 		PreparedStatement stmt = null;
 
 		try {
@@ -181,11 +195,23 @@ public class MySqlConnection {
 			Globals.crawlerLogManager
 					.writeLog("Fail to insert into article_topic_table");
 			Globals.crawlerLogManager.writeLog(e.getMessage());
+			
+			return false;
 		}
+		
+		return true;
 	}
 
 	// Add content for article into article_content_table
-	public void addArticleContent(int articleId, String content) {
+	public boolean addArticleContent(int articleId, String content) {
+		if (content == null) {
+			Globals.crawlerLogManager
+					.writeLog("Insert null into article_content_table");
+			return false;
+		} else {
+			content = HTMLCompressor.compressHtmlContent(content);
+		}
+
 		PreparedStatement stmt = null;
 
 		try {
@@ -207,12 +233,16 @@ public class MySqlConnection {
 				Globals.crawlerLogManager
 						.writeLog("Fail to insert into article_content_table");
 				Globals.crawlerLogManager.writeLog(e2.getMessage());
+				
+				return false;
 			}
 		}
+		
+		return true;
 	}
 
 	// Add new article into the database
-	public void addArticle(String link, Globals.Domain[] domains,
+	public boolean addArticle(String link, Globals.Domain[] domains,
 			String articleName, Globals.Type[] types, String[] keywords,
 			String[] topics, String timeCreated, String dateCreated,
 			String timeCrawled, String dateCrawled, String content) {
@@ -291,7 +321,11 @@ public class MySqlConnection {
 			Globals.crawlerLogManager
 					.writeLog("Fail to insert into article_table");
 			Globals.crawlerLogManager.writeLog(e.getMessage());
+			
+			return false;
 		}
+		
+		return true;
 	}
 
 	// Insert into watch_desc_table table
@@ -457,7 +491,7 @@ public class MySqlConnection {
 	}
 
 	// Add new watch entry into the database
-	public void addWatchEntry(String link, Globals.Domain[] domains,
+	public boolean addWatchEntry(String link, Globals.Domain[] domains,
 			String watchName, int[] prices, String[] keywords, String[] topics,
 			String timeCreated, String dateCreated, String timeCrawled,
 			String dateCrawled, String content, String refNo, String movement,
@@ -478,19 +512,31 @@ public class MySqlConnection {
 
 			// Fail to insert new watch entry, return right away
 			if (watchId < 0)
-				return;
-			
+				return false;
+
 			this.addWatchPageContent(watchId, content);
-			
+
 		} catch (Exception e) {
 			Globals.crawlerLogManager
 					.writeLog("Fail to insert into watch_desc_table");
 			Globals.crawlerLogManager.writeLog(e.getMessage());
+			
+			return false;
 		}
+		
+		return true;
 	}
 
 	// Add content for article into article_content_table
-	public void addWatchPageContent(int watchId, String content) {
+	public boolean addWatchPageContent(int watchId, String content) {
+		if (content == null) {
+			Globals.crawlerLogManager
+					.writeLog("Insert null into watch_page_content_table");
+			return false;
+		} else {
+			content = HTMLCompressor.compressHtmlContent(content);
+		}
+		
 		PreparedStatement stmt = null;
 
 		try {
@@ -498,24 +544,26 @@ public class MySqlConnection {
 			stmt = this.con
 					.prepareStatement("INSERT INTO watch_page_content_table (watch_table_id, content) values (?, ?)");
 			stmt.setInt(1, watchId);
-			InputStream is = new ByteArrayInputStream(content.getBytes());
-			stmt.setBlob(2, is);
+			stmt.setString(2, content);
 			stmt.executeUpdate();
 		} catch (Exception e1) {
 			try {
 				// Try to update the content of article_content_table table
 				stmt = this.con
 						.prepareStatement("UPDATE watch_page_content_table SET content = ? WHERE watch_table_id = ?");
-				InputStream is = new ByteArrayInputStream(content.getBytes());
-				stmt.setBlob(1, is);
+				stmt.setString(1, content);
 				stmt.setInt(2, watchId);
 				stmt.executeUpdate();
 			} catch (Exception e2) {
 				Globals.crawlerLogManager
 						.writeLog("Fail to insert into watch_page_content_table");
 				Globals.crawlerLogManager.writeLog(e2.getMessage());
+				
+				return false;
 			}
 		}
+		
+		return true;
 	}
 
 	// Get information from article_table
@@ -739,7 +787,7 @@ public class MySqlConnection {
 			st.executeUpdate("DELETE FROM watch_price_stat_table WHERE topic_table_id = "
 					+ topicId);
 		} catch (SQLException e) {
-			// TODO do something ?
+			return false;
 		}
 
 		try {
@@ -786,6 +834,7 @@ public class MySqlConnection {
 			Globals.crawlerLogManager
 					.writeLog("Insert into watch_price_stat_table fails");
 			Globals.crawlerLogManager.writeLog(e.getMessage());
+			
 			return false;
 		}
 
@@ -793,7 +842,7 @@ public class MySqlConnection {
 	}
 
 	// Remove article from article_table and associated table
-	public void removeArticle(int articleId) {
+	public boolean removeArticle(int articleId) {
 		try {
 			Statement st = this.con.createStatement();
 			st.executeQuery("USE " + this.database);
@@ -808,7 +857,11 @@ public class MySqlConnection {
 			Globals.crawlerLogManager
 					.writeLog("Fail to delete article with ID " + articleId);
 			Globals.crawlerLogManager.writeLog(e.getMessage());
+			
+			return false;
 		}
+		
+		return true;
 	}
 
 	// Insert link into link_queue_table

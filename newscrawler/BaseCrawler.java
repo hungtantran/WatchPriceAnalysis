@@ -124,14 +124,18 @@ public abstract class BaseCrawler extends Thread {
 		Globals.crawlerLogManager.writeLog("Queue has " + this.urlsQueue.size());
 		
 		if (processedlink != null) {
-			this.mysqlConnection.insertIntoLinkCrawledTable(processedlink, domainId, priority, null, null);
-			this.mysqlConnection.removeFromLinkQueueTable(processedlink, domainId);
+			if (!this.mysqlConnection.insertIntoLinkCrawledTable(processedlink, domainId, priority, null, null))
+				return;
+			
+			if (!this.mysqlConnection.removeFromLinkQueueTable(processedlink, domainId))
+				return;
 		}
 		
 		if (newLinks != null)
 			for (String newLink : newLinks) {
 				Integer newLinkPriority = TopicComparator.getStringPriority(newLink);
-				this.mysqlConnection.insertIntoLinkQueueTable(newLink, domainId, newLinkPriority, persistent, null, null);
+				if (!this.mysqlConnection.insertIntoLinkQueueTable(newLink, domainId, newLinkPriority, persistent, null, null))
+					return;
 			}
 	}
 

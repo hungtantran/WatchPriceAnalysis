@@ -60,8 +60,9 @@ public class TopicAnalysis {
 
 					// Insert into article_topic_table table
 					for (int topicId : topicsId) {
-						this.mysqlConnection.addArticleTopicRelationship(
-								articleId, topicId);
+						if (!this.mysqlConnection.addArticleTopicRelationship(
+								articleId, topicId))
+							continue;
 					}
 				}
 
