@@ -196,7 +196,9 @@ public class SanitizeDB {
 				while (resultSet.next()) {
 					count++;
 					// Hash the html content
-					Globals.crawlerLogManager.writeLog("Try to compress article id "+resultSet.getInt(1));
+					Globals.crawlerLogManager
+							.writeLog("Try to compress article id "
+									+ resultSet.getInt(1));
 					String originalHtmlContent = resultSet.getString(2);
 					String compressedHtmlContent = HTMLCompressor
 							.compressHtmlContent(originalHtmlContent);
@@ -215,10 +217,53 @@ public class SanitizeDB {
 		}
 	}
 
+	// Compressed html content
+	public void compressWatchContents() {
+		int lowerBound = 0;
+		int maxNumResult = 500;
+
+		try {
+			// Get maxNumResult articles at a time, until exhaust all the
+			// articles
+			while (true) {
+				this.mysqlConnection = new MySqlConnection();
+				ResultSet resultSet = this.mysqlConnection.getWatchPageContent(
+						lowerBound, maxNumResult);
+				if (resultSet == null)
+					break;
+
+				int count = 0;
+				// Iterate through the result set to populate the
+				// information
+				while (resultSet.next()) {
+					count++;
+					// Hash the html content
+					Globals.crawlerLogManager
+							.writeLog("Try to compress watch id "
+									+ resultSet.getInt(1));
+					String originalHtmlContent = resultSet.getString(2);
+					String compressedHtmlContent = HTMLCompressor
+							.compressHtmlContent(originalHtmlContent);
+					this.mysqlConnection.addWatchPageContent(resultSet.getInt(1),
+							compressedHtmlContent);
+				}
+				
+				if (count == 0)
+					break;
+
+				lowerBound += maxNumResult;
+				Helper.waitSec(2, 5);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
 	public static void main(String[] args) {
 		SanitizeDB sanitizer = new SanitizeDB();
 		// sanitizer.sanitizeBadLinkArticles();
 		// sanitizer.sanitizeDuplicateArticleLink();
-		sanitizer.compressArticleContents();
+		// sanitizer.compressArticleContents();
+		sanitizer.compressWatchContents();
 	}
 }

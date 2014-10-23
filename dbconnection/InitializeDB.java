@@ -91,7 +91,7 @@ public class InitializeDB {
 			st.executeQuery("USE " + this.database);
 			st.executeUpdate("CREATE TABLE article_content_table ("
 					+ "article_table_id int unsigned not null, "
-					+ "content LONGBLOB not null, "
+					+ "content MEDIUMTEXT not null, "
 					+ "UNIQUE(article_table_id), "
 					+ "FOREIGN KEY (article_table_id) REFERENCES article_table(id))");
 		} catch (SQLException e) {
@@ -215,7 +215,7 @@ public class InitializeDB {
 			st.executeQuery("USE " + this.database);
 			st.executeUpdate("CREATE TABLE watch_page_content_table ("
 					+ "watch_table_id int unsigned not null, "
-					+ "content LONGBLOB not null, "
+					+ "content MEDIUMTEXT not null, "
 					+ "UNIQUE(watch_table_id), "
 					+ "FOREIGN KEY (watch_table_id) REFERENCES watch_desc_table(id))");
 		} catch (SQLException e) {

@@ -193,16 +193,14 @@ public class MySqlConnection {
 			stmt = this.con
 					.prepareStatement("INSERT INTO article_content_table (article_table_id, content) values (?, ?)");
 			stmt.setInt(1, articleId);
-			InputStream is = new ByteArrayInputStream(content.getBytes());
-			stmt.setBlob(2, is);
+			stmt.setString(2, content);
 			stmt.executeUpdate();
 		} catch (Exception e1) {
 			try {
 				// Try to update the content of article_content_table table
 				stmt = this.con
 						.prepareStatement("UPDATE article_content_table SET content = ? WHERE article_table_id = ?");
-				InputStream is = new ByteArrayInputStream(content.getBytes());
-				stmt.setBlob(1, is);
+				stmt.setString(1, content);
 				stmt.setInt(2, articleId);
 				stmt.executeUpdate();
 			} catch (Exception e2) {
@@ -481,28 +479,42 @@ public class MySqlConnection {
 			// Fail to insert new watch entry, return right away
 			if (watchId < 0)
 				return;
-
-			Statement st = this.con.createStatement();
-			st.executeQuery("USE " + this.database);
-			PreparedStatement stmt = null;
-
-			try {
-				// Insert into watch_page_content_table table
-				stmt = this.con
-						.prepareStatement("INSERT INTO watch_page_content_table (watch_table_id, content) values (?, ?)");
-				stmt.setInt(1, watchId);
-				InputStream is = new ByteArrayInputStream(content.getBytes());
-				stmt.setBlob(2, is);
-				stmt.executeUpdate();
-			} catch (Exception e) {
-				Globals.crawlerLogManager
-						.writeLog("Fail to insert into watch_page_content_table");
-				Globals.crawlerLogManager.writeLog(e.getMessage());
-			}
+			
+			this.addWatchPageContent(watchId, content);
+			
 		} catch (Exception e) {
 			Globals.crawlerLogManager
 					.writeLog("Fail to insert into watch_desc_table");
 			Globals.crawlerLogManager.writeLog(e.getMessage());
+		}
+	}
+
+	// Add content for article into article_content_table
+	public void addWatchPageContent(int watchId, String content) {
+		PreparedStatement stmt = null;
+
+		try {
+			// Insert into article_content_table table
+			stmt = this.con
+					.prepareStatement("INSERT INTO watch_page_content_table (watch_table_id, content) values (?, ?)");
+			stmt.setInt(1, watchId);
+			InputStream is = new ByteArrayInputStream(content.getBytes());
+			stmt.setBlob(2, is);
+			stmt.executeUpdate();
+		} catch (Exception e1) {
+			try {
+				// Try to update the content of article_content_table table
+				stmt = this.con
+						.prepareStatement("UPDATE watch_page_content_table SET content = ? WHERE watch_table_id = ?");
+				InputStream is = new ByteArrayInputStream(content.getBytes());
+				stmt.setBlob(1, is);
+				stmt.setInt(2, watchId);
+				stmt.executeUpdate();
+			} catch (Exception e2) {
+				Globals.crawlerLogManager
+						.writeLog("Fail to insert into watch_page_content_table");
+				Globals.crawlerLogManager.writeLog(e2.getMessage());
+			}
 		}
 	}
 
@@ -570,6 +582,27 @@ public class MySqlConnection {
 		} catch (SQLException e) {
 			Globals.crawlerLogManager
 					.writeLog("Get article_content_table information fails");
+			Globals.crawlerLogManager.writeLog(e.getMessage());
+		}
+
+		return null;
+	}
+
+	// Get content of article with given id
+	public ResultSet getWatchPageContent(int lowerBound, int maxNumResult) {
+		try {
+			Statement st = this.con.createStatement();
+			st.executeQuery("USE " + this.database);
+
+			String query = "SELECT * FROM watch_page_content_table";
+
+			if (lowerBound > 0 || maxNumResult > 0)
+				query += " LIMIT " + lowerBound + "," + maxNumResult;
+
+			return st.executeQuery(query);
+		} catch (SQLException e) {
+			Globals.crawlerLogManager
+					.writeLog("Get watch_page_content_table information fails");
 			Globals.crawlerLogManager.writeLog(e.getMessage());
 		}
 
