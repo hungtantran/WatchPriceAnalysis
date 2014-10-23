@@ -69,7 +69,8 @@ public class MySqlConnection {
 				this.idTypeMap.put(id, type);
 			}
 			if (Globals.DEBUG)
-				Globals.crawlerLogManager.writeLog("Got "+this.idTypeMap.size()+" types");
+				Globals.crawlerLogManager.writeLog("Got "
+						+ this.idTypeMap.size() + " types");
 		} catch (SQLException e) {
 			Globals.crawlerLogManager
 					.writeLog("Get type_table information fails");
@@ -92,7 +93,8 @@ public class MySqlConnection {
 			}
 
 			if (Globals.DEBUG)
-				Globals.crawlerLogManager.writeLog("Got "+this.idDomainMap.size()+" domains");
+				Globals.crawlerLogManager.writeLog("Got "
+						+ this.idDomainMap.size() + " domains");
 		} catch (SQLException e) {
 			Globals.crawlerLogManager
 					.writeLog("Get domain_table information fails");
@@ -194,10 +196,20 @@ public class MySqlConnection {
 			InputStream is = new ByteArrayInputStream(content.getBytes());
 			stmt.setBlob(2, is);
 			stmt.executeUpdate();
-		} catch (Exception e) {
-			Globals.crawlerLogManager
-					.writeLog("Fail to insert into article_content_table");
-			Globals.crawlerLogManager.writeLog(e.getMessage());
+		} catch (Exception e1) {
+			try {
+				// Try to update the content of article_content_table table
+				stmt = this.con
+						.prepareStatement("UPDATE article_content_table SET content = ? WHERE article_table_id = ?");
+				InputStream is = new ByteArrayInputStream(content.getBytes());
+				stmt.setBlob(1, is);
+				stmt.setInt(2, articleId);
+				stmt.executeUpdate();
+			} catch (Exception e2) {
+				Globals.crawlerLogManager
+						.writeLog("Fail to insert into article_content_table");
+				Globals.crawlerLogManager.writeLog(e2.getMessage());
+			}
 		}
 	}
 
