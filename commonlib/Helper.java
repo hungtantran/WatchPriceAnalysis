@@ -100,26 +100,30 @@ public class Helper {
 	@SuppressWarnings("deprecation")
 	public static String getCurrentDate() {
 		Date currentDate = new Date();
-		String year = new String("" + (1900 + currentDate.getYear()));
-		String month = new String("" + currentDate.getMonth());
-		String date = new String("" + currentDate.getDate());
+		
+		StringBuilder dateString = new StringBuilder(); 
+		dateString.append(1900 + currentDate.getYear());
+		dateString.append("-");
+		dateString.append(currentDate.getMonth());
+		dateString.append("-");
+		dateString.append(currentDate.getDate());
 
-		String dateCrawled = year + "-" + month + "-" + date;
-
-		return dateCrawled;
+		return dateString.toString();
 	}
 
 	// Return the current time 22:11:30
 	@SuppressWarnings("deprecation")
 	public static String getCurrentTime() {
 		Date currentDate = new Date();
-		String hour = new String("" + currentDate.getHours());
-		String minute = new String("" + currentDate.getMinutes());
-		String second = new String("" + currentDate.getSeconds());
+		
+		StringBuilder timeString = new StringBuilder();
+		timeString.append(currentDate.getHours());
+		timeString.append(":");
+		timeString.append(currentDate.getMinutes());
+		timeString.append(":");
+		timeString.append(currentDate.getSeconds());
 
-		String timeCrawled = hour + ":" + minute + ":" + second;
-
-		return timeCrawled;
+		return timeString.toString();
 	}
 
 	// Hash a plain string text
@@ -187,8 +191,6 @@ public class Helper {
 		if (watchReportDate == null)
 			return null;
 
-		String formattedDate = "";
-
 		String[] dateSubstrs = watchReportDate.split(" ");
 
 		// If the string is not in the corrected form, return null
@@ -221,7 +223,7 @@ public class Helper {
 		if (dayString.length() < 2)
 			dayString = "0" + dayString;
 
-		formattedDate = "" + year + "-" + month + "-" + dayString;
+		String formattedDate = "" + year + "-" + month + "-" + dayString;
 		return formattedDate;
 	}
 

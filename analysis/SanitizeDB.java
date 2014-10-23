@@ -1,6 +1,9 @@
 package analysis;
 
+import java.security.MessageDigest;
 import java.sql.ResultSet;
+import java.util.HashMap;
+import java.util.Map;
 
 import commonlib.Globals;
 import commonlib.Helper;
@@ -22,7 +25,7 @@ public class SanitizeDB {
 	public boolean isValidLink(int articleId, String link) {
 		if (link == null)
 			return false;
-		
+
 		String content = this.mysqlConnection.getArticleContent(articleId);
 
 		// If there is no content, can't decide whether link is valid or not
@@ -104,7 +107,7 @@ public class SanitizeDB {
 					}
 
 				}
-				
+
 				if (count == 0)
 					break;
 			} catch (Exception e) {
@@ -119,8 +122,60 @@ public class SanitizeDB {
 		}
 	}
 
+	// Remove lin-ks with the same html content
+	public void sanitizeDuplicateArticleLink() {
+		int lowerBound = 0;
+		int maxNumResult = 500;
+		
+		try {
+			MessageDigest md = MessageDigest.getInstance("MD5");
+			Map<String, Integer> articleIdToHashStringMap = new HashMap<String, Integer>();
+
+			// Get 20 articles at a time, until exhaust all the articles
+			while (true) {
+				this.mysqlConnection = new MySqlConnection();
+				ResultSet resultSet = this.mysqlConnection.getArticleContent(
+						lowerBound, maxNumResult);
+				if (resultSet == null)
+					break;
+
+				int count = 0;
+				// Iterate through the result set to populate the
+				// information
+				while (resultSet.next()) {
+					count++;
+					// Hash the html content
+					byte[] bytesOfMessage = resultSet.getString(2).getBytes(
+							"UTF-8");
+					byte[] thedigest = md.digest(bytesOfMessage);
+					String digestMsg = new String(thedigest);
+
+					if (articleIdToHashStringMap.containsKey(digestMsg)) {
+						Globals.crawlerLogManager.writeLog("Remove article "
+								+ resultSet.getInt(1)
+								+ " has the same html with article "
+								+ articleIdToHashStringMap.get(digestMsg));
+						this.mysqlConnection.removeArticle(resultSet.getInt(1));
+					} else {
+						articleIdToHashStringMap.put(digestMsg,
+								resultSet.getInt(1));
+					}
+				}
+
+				if (count == 0)
+					break;
+
+				lowerBound += maxNumResult;
+				Helper.waitSec(2, 5);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
 	public static void main(String[] args) {
 		SanitizeDB sanitizer = new SanitizeDB();
-		sanitizer.sanitizeBadLinkArticles();
+		// sanitizer.sanitizeBadLinkArticles();
+		sanitizer.sanitizeDuplicateArticleLink();
 	}
 }

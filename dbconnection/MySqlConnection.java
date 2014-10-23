@@ -67,11 +67,12 @@ public class MySqlConnection {
 				int id = resultSet.getInt(1);
 				String type = resultSet.getString(2).trim();
 				this.idTypeMap.put(id, type);
-				if (Globals.DEBUG)
-					Globals.crawlerLogManager.writeLog(id + " : " + type, false);
 			}
+			if (Globals.DEBUG)
+				Globals.crawlerLogManager.writeLog("Got "+this.idTypeMap.size()+" types");
 		} catch (SQLException e) {
-			Globals.crawlerLogManager.writeLog("Get type_table information fails");
+			Globals.crawlerLogManager
+					.writeLog("Get type_table information fails");
 			Globals.crawlerLogManager.writeLog(e.getMessage());
 		}
 	}
@@ -88,11 +89,13 @@ public class MySqlConnection {
 				int id = resultSet.getInt(1);
 				String domain = resultSet.getString(2).trim();
 				this.idDomainMap.put(id, domain);
-				if (Globals.DEBUG)
-					Globals.crawlerLogManager.writeLog(id + " : " + domain, false);
 			}
+
+			if (Globals.DEBUG)
+				Globals.crawlerLogManager.writeLog("Got "+this.idDomainMap.size()+" domains");
 		} catch (SQLException e) {
-			Globals.crawlerLogManager.writeLog("Get domain_table information fails");
+			Globals.crawlerLogManager
+					.writeLog("Get domain_table information fails");
 			Globals.crawlerLogManager.writeLog(e.getMessage());
 		}
 	}
@@ -109,12 +112,14 @@ public class MySqlConnection {
 				int id = resultSet.getInt(1);
 				String topic = resultSet.getString(3).trim();
 				this.idTopicMap.put(topic, id);
-				if (Globals.DEBUG)
-					Globals.crawlerLogManager.writeLog(id + " : " + topic + " "
-							+ this.idTopicMap.get(topic), false);
 			}
+
+			if (Globals.DEBUG)
+				Globals.crawlerLogManager.writeLog("Got "
+						+ this.idTopicMap.size() + " topics");
 		} catch (SQLException e) {
-			Globals.crawlerLogManager.writeLog("Get topic_table information fails");
+			Globals.crawlerLogManager
+					.writeLog("Get topic_table information fails");
 			Globals.crawlerLogManager.writeLog(e.getMessage());
 		}
 	}
@@ -171,7 +176,8 @@ public class MySqlConnection {
 			stmt.setInt(2, topicId);
 			stmt.executeUpdate();
 		} catch (Exception e) {
-			Globals.crawlerLogManager.writeLog("Fail to insert into article_topic_table");
+			Globals.crawlerLogManager
+					.writeLog("Fail to insert into article_topic_table");
 			Globals.crawlerLogManager.writeLog(e.getMessage());
 		}
 	}
@@ -189,7 +195,8 @@ public class MySqlConnection {
 			stmt.setBlob(2, is);
 			stmt.executeUpdate();
 		} catch (Exception e) {
-			Globals.crawlerLogManager.writeLog("Fail to insert into article_content_table");
+			Globals.crawlerLogManager
+					.writeLog("Fail to insert into article_content_table");
 			Globals.crawlerLogManager.writeLog(e.getMessage());
 		}
 	}
@@ -271,7 +278,8 @@ public class MySqlConnection {
 				}
 			}
 		} catch (Exception e) {
-			Globals.crawlerLogManager.writeLog("Fail to insert into article_table");
+			Globals.crawlerLogManager
+					.writeLog("Fail to insert into article_table");
 			Globals.crawlerLogManager.writeLog(e.getMessage());
 		}
 	}
@@ -475,11 +483,13 @@ public class MySqlConnection {
 				stmt.setBlob(2, is);
 				stmt.executeUpdate();
 			} catch (Exception e) {
-				Globals.crawlerLogManager.writeLog("Fail to insert into watch_page_content_table");
+				Globals.crawlerLogManager
+						.writeLog("Fail to insert into watch_page_content_table");
 				Globals.crawlerLogManager.writeLog(e.getMessage());
 			}
 		} catch (Exception e) {
-			Globals.crawlerLogManager.writeLog("Fail to insert into watch_desc_table");
+			Globals.crawlerLogManager
+					.writeLog("Fail to insert into watch_desc_table");
 			Globals.crawlerLogManager.writeLog(e.getMessage());
 		}
 	}
@@ -501,7 +511,8 @@ public class MySqlConnection {
 
 			return st.executeQuery(query);
 		} catch (SQLException e) {
-			Globals.crawlerLogManager.writeLog("Get article_table information fails");
+			Globals.crawlerLogManager
+					.writeLog("Get article_table information fails");
 			Globals.crawlerLogManager.writeLog(e.getMessage());
 		}
 
@@ -524,11 +535,33 @@ public class MySqlConnection {
 				numArticleWithTopicId = result.getInt(1);
 			}
 		} catch (SQLException e) {
-			Globals.crawlerLogManager.writeLog("Get article_table information fails");
+			Globals.crawlerLogManager
+					.writeLog("Get article_table information fails");
 			Globals.crawlerLogManager.writeLog(e.getMessage());
 		}
 
 		return numArticleWithTopicId;
+	}
+
+	// Get content of article with given id
+	public ResultSet getArticleContent(int lowerBound, int maxNumResult) {
+		try {
+			Statement st = this.con.createStatement();
+			st.executeQuery("USE " + this.database);
+
+			String query = "SELECT * FROM article_content_table";
+
+			if (lowerBound > 0 || maxNumResult > 0)
+				query += " LIMIT " + lowerBound + "," + maxNumResult;
+
+			return st.executeQuery(query);
+		} catch (SQLException e) {
+			Globals.crawlerLogManager
+					.writeLog("Get article_content_table information fails");
+			Globals.crawlerLogManager.writeLog(e.getMessage());
+		}
+
+		return null;
 	}
 
 	// Get content of article with given id
@@ -553,7 +586,8 @@ public class MySqlConnection {
 			if (count != 1)
 				return null;
 		} catch (SQLException e) {
-			Globals.crawlerLogManager.writeLog("Get article_table information fails");
+			Globals.crawlerLogManager
+					.writeLog("Get article_table information fails");
 			Globals.crawlerLogManager.writeLog(e.getMessage());
 		}
 
@@ -590,7 +624,8 @@ public class MySqlConnection {
 
 			return st.executeQuery(query);
 		} catch (SQLException e) {
-			Globals.crawlerLogManager.writeLog("Get article_table information fails");
+			Globals.crawlerLogManager
+					.writeLog("Get article_table information fails");
 			Globals.crawlerLogManager.writeLog(e.getMessage());
 		}
 
@@ -636,7 +671,8 @@ public class MySqlConnection {
 			updateQuery += " WHERE watch_table_id = " + watchId;
 			st.executeUpdate(updateQuery);
 		} catch (SQLException e) {
-			Globals.crawlerLogManager.writeLog("Update watch_desc_table topic information fails");
+			Globals.crawlerLogManager
+					.writeLog("Update watch_desc_table topic information fails");
 			Globals.crawlerLogManager.writeLog(e.getMessage());
 			return false;
 		}
@@ -702,7 +738,8 @@ public class MySqlConnection {
 			Globals.crawlerLogManager.writeLog(stmt.toString());
 			stmt.executeUpdate();
 		} catch (SQLException e) {
-			Globals.crawlerLogManager.writeLog("Insert into watch_price_stat_table fails");
+			Globals.crawlerLogManager
+					.writeLog("Insert into watch_price_stat_table fails");
 			Globals.crawlerLogManager.writeLog(e.getMessage());
 			return false;
 		}
@@ -723,7 +760,8 @@ public class MySqlConnection {
 			st.executeUpdate("DELETE FROM article_table WHERE id = "
 					+ articleId);
 		} catch (SQLException e) {
-			Globals.crawlerLogManager.writeLog("Fail to delete article with ID " + articleId);
+			Globals.crawlerLogManager
+					.writeLog("Fail to delete article with ID " + articleId);
 			Globals.crawlerLogManager.writeLog(e.getMessage());
 		}
 	}
@@ -772,7 +810,8 @@ public class MySqlConnection {
 				Globals.crawlerLogManager.writeLog(stmt.toString());
 			stmt.executeUpdate();
 		} catch (SQLException e) {
-			Globals.crawlerLogManager.writeLog("Insert into link_queue_table fails");
+			Globals.crawlerLogManager
+					.writeLog("Insert into link_queue_table fails");
 			Globals.crawlerLogManager.writeLog(e.getMessage());
 			return false;
 		}
@@ -816,7 +855,8 @@ public class MySqlConnection {
 				Globals.crawlerLogManager.writeLog(stmt.toString());
 			stmt.executeUpdate();
 		} catch (SQLException e) {
-			Globals.crawlerLogManager.writeLog("Insert into link_crawled_table fails");
+			Globals.crawlerLogManager
+					.writeLog("Insert into link_crawled_table fails");
 			Globals.crawlerLogManager.writeLog(e.getMessage());
 			return false;
 		}
