@@ -54,11 +54,11 @@ public abstract class BaseParser {
 	// public abstract String getTimeCreated();
 	// public abstract String getDateCreated();
 
-	protected BaseParser(String link, String domain, Globals.Domain domainVal, MySqlConnection con,
-			LogManager logManager, Scheduler scheduler) {
+	protected BaseParser(String link, String domain, Globals.Domain domainVal,
+			MySqlConnection con, LogManager logManager, Scheduler scheduler) {
 		this.domain = domain;
 		this.domainVal = domainVal;
-		
+
 		if (link.indexOf(this.domain) != 0) {
 			this.link = this.domain;
 		} else {
@@ -162,26 +162,27 @@ public abstract class BaseParser {
 
 		return resultUrls;
 	}
-	
+
 	protected void postProcessUrl(String processedlink, int domainId,
 			Integer priority, int persistent, Set<String> newLinks) {
 		if (processedlink != null) {
-			if (!this.mysqlConnection.insertIntoLinkCrawledTable(processedlink,
-					domainId, priority, null, null))
-				return;
+			this.mysqlConnection.removeFromLinkQueueTable(processedlink,
+					domainId);
 
-			if (!this.mysqlConnection.removeFromLinkQueueTable(processedlink,
-					domainId))
-				return;
+			this.mysqlConnection.insertIntoLinkCrawledTable(processedlink,
+					domainId, priority, null, null);
 		}
 
 		if (newLinks != null)
 			for (String newLink : newLinks) {
-				Integer newLinkPriority = TopicComparator
-						.getStringPriority(newLink);
-				if (!this.mysqlConnection.insertIntoLinkQueueTable(newLink,
-						domainId, newLinkPriority, persistent, null, null))
-					return;
+				if (this.scheduler.urlsCrawledContain(newLink)
+						&& !this.scheduler.urlsQueueContain(newLink)) {
+					Integer newLinkPriority = TopicComparator
+							.getStringPriority(newLink);
+					if (!this.mysqlConnection.insertIntoLinkQueueTable(newLink,
+							domainId, newLinkPriority, persistent, null, null))
+						continue;
+				}
 			}
 	}
 }

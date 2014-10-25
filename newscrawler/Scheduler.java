@@ -59,9 +59,11 @@ public class Scheduler {
 			while (queue.next()) {
 				this.forceAddToUrlsQueue(queue.getString(1));
 			}
-
-			this.logManager.writeLog("Urls in Queue : "
-					+ this.getUrlsQueueSize());
+			
+			for (int i = 0; i < this.numQueue; i++) {
+				this.logManager.writeLog("Urls in Queue "+i+" : "
+						+ this.urlsQueue[i].size());
+			}
 
 			ResultSet crawled = this.con.getLinkCrawled();
 			while (crawled.next()) {
