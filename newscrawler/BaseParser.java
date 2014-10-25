@@ -226,7 +226,7 @@ public abstract class BaseParser {
 			return;
 
 		for (String newLink : newLinks) {
-			if (this.scheduler.urlsCrawledContain(newLink)
+			if (!this.scheduler.urlsCrawledContain(newLink)
 					&& !this.scheduler.urlsQueueContain(newLink)) {
 				Integer newLinkPriority = TopicComparator
 						.getStringPriority(newLink);
