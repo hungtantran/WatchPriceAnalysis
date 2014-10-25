@@ -206,7 +206,7 @@ public class Chrono24EntryPageParser extends BaseParser {
 			this.watchName = articleNameText;
 
 			if (Globals.DEBUG)
-				Globals.crawlerLogManager.writeLog("Watch Name = "
+				this.logManager.writeLog("Watch Name = "
 						+ this.watchName);
 		}
 	}
@@ -236,7 +236,7 @@ public class Chrono24EntryPageParser extends BaseParser {
 			this.prices[0] = this.extractIntFromString(priceText);
 
 			if (Globals.DEBUG)
-				Globals.crawlerLogManager.writeLog("Watch Price = "
+				this.logManager.writeLog("Watch Price = "
 						+ this.prices[0]);
 		}
 	}
@@ -340,17 +340,35 @@ public class Chrono24EntryPageParser extends BaseParser {
 				this.gender = "Women";
 
 		if (Globals.DEBUG) {
-			Globals.crawlerLogManager.writeLog("Ref No = " + this.refNo);
-			Globals.crawlerLogManager.writeLog("Movement = " + this.movement);
-			Globals.crawlerLogManager.writeLog("Caliber = " + this.caliber);
-			Globals.crawlerLogManager.writeLog("Condition = "
-					+ this.watchCondition);
-			Globals.crawlerLogManager.writeLog("Year = " + this.watchYear);
-			Globals.crawlerLogManager.writeLog("Case Material = "
-					+ this.caseMaterial);
-			Globals.crawlerLogManager.writeLog("Gender = " + this.gender);
-			Globals.crawlerLogManager.writeLog("Dial = " + this.dialColor);
-			Globals.crawlerLogManager.writeLog("Location = " + this.location);
+			StringBuilder builder = new StringBuilder();
+			builder.append("Ref No = ");
+			builder.append(this.refNo);
+			builder.append("\n");
+			builder.append("Movement = ");
+			builder.append(this.movement);
+			builder.append("\n");
+			builder.append("Caliber = ");
+			builder.append(this.caliber);
+			builder.append("\n");
+			builder.append("Condition = ");
+			builder.append(this.watchCondition);
+			builder.append("\n");
+			builder.append("Year = ");
+			builder.append(this.watchYear);
+			builder.append("\n");
+			builder.append("Case Material = ");
+			builder.append(this.caseMaterial);
+			builder.append("\n");
+			builder.append("Gender = ");
+			builder.append(this.gender);
+			builder.append("\n");
+			builder.append("Dial = ");
+			builder.append(this.dialColor);
+			builder.append("\n");
+			builder.append("Location = ");
+			builder.append(this.location);
+			builder.append("\n");
+			this.logManager.writeLog(builder.toString());
 		}
 	}
 

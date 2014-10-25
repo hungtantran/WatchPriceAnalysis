@@ -11,9 +11,9 @@ import dbconnection.MySqlConnection;
 
 public class Globals {
 	public static final boolean DEBUG = true;
-	public static int DEFAULTLOWERBOUNDWAITTIMESEC = 1;
-	public static int DEFAULTUPPERBOUNDWAITTIMESEC = 2;
-	public static int NUMMAXTHREADS = 2;
+	public static int DEFAULTLOWERBOUNDWAITTIMESEC = 5;
+	public static int DEFAULTUPPERBOUNDWAITTIMESEC = 10;
+	public static int NUMMAXTHREADS = 5;
 	
 	public static final String[] fileExtenstions = { "jpg", "xml", "gif",
 			"pdf", "png", "jpeg" };

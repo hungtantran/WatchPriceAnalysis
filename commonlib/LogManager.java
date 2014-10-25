@@ -9,14 +9,17 @@ import java.util.Date;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class LogManager {
+	private int maxBufferSize = 1024*32;
 	private boolean defaultWriteToDisk = true;
 	private String logDir = null; // Logging directory
 	private String baseFileName = null; // Base file name
 	private final ReentrantLock mutex = new ReentrantLock();
-
+	private StringBuilder logBuffer = null;
+	
 	public LogManager(String directory, String baseFileName) {
 		this.logDir = directory;
 		this.baseFileName = baseFileName;
+		this.logBuffer = new StringBuilder();
 	}
 
 	public LogManager(String directory, String baseFileName,
@@ -90,42 +93,50 @@ public class LogManager {
 		if (this.logDir == null || this.baseFileName == null
 				|| functionName == null || log == null)
 			return false;
-
+		
 		this.mutex.lock();
-
+		
 		try {
-			if (!this.createDir()) {
-				return false;
-			}
-
-			Date currentDate = new Date();
-			String fileName = this.logDir + "\\" + this.baseFileName + "."
-					+ Helper.getCurrentDate() + "-" + currentDate.getHours()
-					+ ".log";
-			File logFileName = new File(fileName);
-			if (!logFileName.exists() && this.createFile(fileName)) {
-				System.out.println("File " + fileName + " created");
-			} else if (!logFileName.exists()) {
-				System.out.println("File " + fileName + " can't be created");
-				return false;
-			}
-
 			String logLine = "[" + Helper.getCurrentDate() + "] ["
 					+ Helper.getCurrentTimeWithMilisec() + "] [Thread# "
 					+ Thread.currentThread().getId() + "] [" + functionName
 					+ "]: " + log;
-
-			System.out.println("Log: " + logLine);
-			if (writeToDisk) {
-				try (PrintWriter out = new PrintWriter(new BufferedWriter(
-						new FileWriter(fileName, true)))) {
-					out.println(logLine);
-				} catch (IOException e) {
-					e.printStackTrace();
+	
+			System.out.println("Buffersize = "+this.logBuffer.length()+" Log: " + logLine);
+			
+			this.logBuffer.append(logLine);
+			this.logBuffer.append("\n");
+			
+			if (this.logBuffer.length() >= this.maxBufferSize) {
+				if (!this.createDir()) {
 					return false;
 				}
+	
+				Date currentDate = new Date();
+				String fileName = this.logDir + "\\" + this.baseFileName + "."
+						+ Helper.getCurrentDate() + "-" + currentDate.getHours()
+						+ ".log";
+				File logFileName = new File(fileName);
+				if (!logFileName.exists() && this.createFile(fileName)) {
+					System.out.println("File " + fileName + " created");
+				} else if (!logFileName.exists()) {
+					System.out.println("File " + fileName + " can't be created");
+					return false;
+				}
+	
+	
+				if (writeToDisk) {
+					try (PrintWriter out = new PrintWriter(new BufferedWriter(
+							new FileWriter(fileName, true)))) {
+						out.print(logBuffer.toString());
+						logBuffer.setLength(0);
+					} catch (IOException e) {
+						e.printStackTrace();
+						return false;
+					}
+				}
 			}
-
+			
 			return true;
 		} finally {
 			this.mutex.unlock();
@@ -133,9 +144,9 @@ public class LogManager {
 	}
 
 	public static void main(String[] args) {
-		LogManager logManager = new LogManager("C:\\Project\\log", "testlog");
-		logManager.writeLog("main", "testlog hahah lolol", true);
-		logManager.writeLog("main", "testlog hahah lolol 2123123123asdq", true);
-		logManager.writeLog("testlog hahah lolol 2123123123asdq");
+//		LogManager logManager = new LogManager("C:\\Project\\log", "testlog");
+//		logManager.writeLog("main", "testlog hahah lolol", true);
+//		logManager.writeLog("main", "testlog hahah lolol 2123123123asdq", true);
+//		logManager.writeLog("testlog hahah lolol 2123123123asdq");
 	}
 }
