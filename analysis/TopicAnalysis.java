@@ -7,7 +7,6 @@ import commonlib.Globals;
 import commonlib.Helper;
 import dbconnection.MySqlConnection;
 
-
 public class TopicAnalysis {
 	private MySqlConnection mysqlConnection = null;
 
@@ -51,8 +50,7 @@ public class TopicAnalysis {
 						index++;
 					}
 
-					Integer[] topicsId = this.mysqlConnection
-							.convertTopicToTopicId(topics);
+					Integer[] topicsId = Helper.convertTopicToTopicId(topics);
 
 					if (Globals.DEBUG)
 						System.out.println("Topics " + topics.toString() + ": "
@@ -83,17 +81,19 @@ public class TopicAnalysis {
 		int maxNumResult = 2000;
 		int watchCount = lowerBound;
 		boolean result = true;
-		
+
 		// Get 2000 articles at a time, until exhaust all the articles
 		while (true) {
 			ResultSet resultSet = null;
-			
+
 			if (fullPopulate) {
-				resultSet = this.mysqlConnection.getWatchInfo(0, lowerBound, maxNumResult);
+				resultSet = this.mysqlConnection.getWatchInfo(0, lowerBound,
+						maxNumResult);
 			} else {
-				resultSet = this.mysqlConnection.getWatchInfo(null, lowerBound, maxNumResult);
+				resultSet = this.mysqlConnection.getWatchInfo(null, lowerBound,
+						maxNumResult);
 			}
-			
+
 			if (resultSet == null)
 				break;
 
@@ -120,18 +120,20 @@ public class TopicAnalysis {
 						index++;
 					}
 
-					Integer[] topicsId = this.mysqlConnection
-							.convertTopicToTopicId(topics);
+					Integer[] topicsId = Helper.convertTopicToTopicId(topics);
 
 					if (Globals.DEBUG)
 						System.out.println("Topics " + topics.toString() + ": "
 								+ topicsId.toString());
-					
+
 					// Insert into article_topic_table table
-					result = this.mysqlConnection.updateWatchTopic(watchId, topicsId);
-					
+					result = this.mysqlConnection.updateWatchTopic(watchId,
+							topicsId);
+
 					if (!result && Globals.DEBUG)
-						System.out.println("Fail to insert new topic for watch id "+watchId + ": "+watchName);
+						System.out
+								.println("Fail to insert new topic for watch id "
+										+ watchId + ": " + watchName);
 				}
 
 				if (count == 0)
@@ -140,8 +142,9 @@ public class TopicAnalysis {
 				e.printStackTrace();
 				break;
 			}
-			
-			if (!result) break;
+
+			if (!result)
+				break;
 			lowerBound += maxNumResult;
 		}
 	}
@@ -150,6 +153,6 @@ public class TopicAnalysis {
 		TopicAnalysis topicAnalysis = new TopicAnalysis();
 		topicAnalysis.populateArticleTopic();
 		topicAnalysis.populateWatchTopic(false);
-		//topicAnalysis.populateWatchTopic(true);
+		// topicAnalysis.populateWatchTopic(true);
 	}
 }

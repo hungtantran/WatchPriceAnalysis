@@ -1,14 +1,41 @@
 package commonlib;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+
+import newscrawler.Scheduler;
+import dbconnection.MySqlConnection;
 
 public class Globals {
-	public static final LogManager crawlerLogManager = new LogManager("crawlerLog", "crawlerLog");
 	public static final boolean DEBUG = true;
 	public static int DEFAULTLOWERBOUNDWAITTIMESEC = 1;
 	public static int DEFAULTUPPERBOUNDWAITTIMESEC = 2;
+	public static int NUMMAXTHREADS = 2;
+	
 	public static final String[] fileExtenstions = { "jpg", "xml", "gif",
 			"pdf", "png", "jpeg" };
+
+	// Map between the start url and domain
+	public static Map<String, Domain> startUrlDomainMap;
+	static {
+		Map<String, Domain> tempMap = new HashMap<String, Domain>();
+		tempMap.put("http://www.hodinkee.com", Domain.HODINKEE);
+		tempMap.put("http://www.ablogtowatch.com/", Domain.ABLOGTOWATCH);
+		tempMap.put("http://www.chrono24.com/", Domain.CHRONO24);
+		tempMap.put("http://www.watchreport.com", Domain.WATCHREPORT);
+		startUrlDomainMap = Collections.unmodifiableMap(tempMap);
+	}
+
+	public static Map<Integer, String> idTypeMap = null;
+	public static Map<Integer, String> idDomainMap = null;
+	public static Map<String, Integer> idTopicMap = null;
+	
+	public static LogManager crawlerLogManager = null;
+	public static MySqlConnection con = null;
+	public static Scheduler scheduler = null;
 
 	// Type of links
 	public static enum Type {
@@ -31,12 +58,19 @@ public class Globals {
 
 	// Domain of links
 	public static enum Domain {
-		HODINKEE(1), ABLOGTOWATCH(2), CHRONO24(3), WATCHREPORT(4);
+		HODINKEE(1, "HODINKEE", "http://www.hodinkee.com"),
+		ABLOGTOWATCH(2, "ABLOGTOWATCH", "http://www.ablogtowatch.com"),
+		CHRONO24(3, "CHRONO24", "http://www.chrono24.com"),
+		WATCHREPORT(4, "WATCHREPORT", "http://www.watchreport.com");
 
 		public final int value;
-
-		private Domain(int value) {
+		public final String string;
+		public final String domain;
+		
+		private Domain(int value, String string, String domain) {
 			this.value = value;
+			this.string = string;
+			this.domain = domain;
 		}
 	};
 
@@ -50,7 +84,7 @@ public class Globals {
 		tempMap.put(Domain.WATCHREPORT, "WATCHREPORT");
 		domainNameMap = Collections.unmodifiableMap(tempMap);
 	}
-	
+
 	// Map between the type and keywords associated with the type
 	public static Map<Type, String[]> typeTopicMap;
 	public static final String[] HOROLOGYTOPICS = { "A.Lange & Sohne",

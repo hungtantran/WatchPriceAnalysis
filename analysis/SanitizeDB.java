@@ -5,16 +5,15 @@ import java.sql.ResultSet;
 import java.util.HashMap;
 import java.util.Map;
 
+import newscrawler.ABlogToWatchArticleParser;
+import newscrawler.BaseParser;
+import newscrawler.HodinkeeArticleParser;
+import newscrawler.WatchReportArticleParser;
+
 import commonlib.Globals;
 import commonlib.HTMLCompressor;
 import commonlib.Helper;
-import newscrawler.ABlogToWatchArticleParser;
-import newscrawler.ABlogToWatchCrawler;
-import newscrawler.BaseParser;
-import newscrawler.HodinkeeArticleParser;
-import newscrawler.HodinkeeCrawler;
-import newscrawler.WatchReportArticleParser;
-import newscrawler.WatchReportCrawler;
+
 import dbconnection.MySqlConnection;
 
 public class SanitizeDB {
@@ -36,18 +35,18 @@ public class SanitizeDB {
 		BaseParser parser = null;
 
 		// ABlogToWatch link check
-		if (link.indexOf(ABlogToWatchCrawler.domain) == 0) {
-			parser = new ABlogToWatchArticleParser(link);
+		if (link.indexOf(Globals.Domain.ABLOGTOWATCH.domain) == 0) {
+			parser = new ABlogToWatchArticleParser(link, null, null, null);
 		}
 
 		// ABlogToWatch link check
-		if (link.indexOf(HodinkeeCrawler.domain) == 0) {
-			parser = new HodinkeeArticleParser(link);
+		if (link.indexOf(Globals.Domain.HODINKEE.domain) == 0) {
+			parser = new HodinkeeArticleParser(link, null, null, null);
 		}
 
 		// ABlogToWatch link check
-		if (link.indexOf(WatchReportCrawler.domain) == 0) {
-			parser = new WatchReportArticleParser(link);
+		if (link.indexOf(Globals.Domain.WATCHREPORT.domain) == 0) {
+			parser = new WatchReportArticleParser(link, null, null, null);
 		}
 
 		// Check if link is valid

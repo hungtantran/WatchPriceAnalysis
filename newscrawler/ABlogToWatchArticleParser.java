@@ -7,8 +7,11 @@ import org.jsoup.select.Elements;
 
 import commonlib.Globals;
 import commonlib.Helper;
+import commonlib.LogManager;
+import commonlib.TopicComparator;
 import commonlib.Globals.Domain;
 import commonlib.Globals.Type;
+import dbconnection.MySqlConnection;
 
 /*import edu.stanford.nlp.process.Tokenizer;
  import edu.stanford.nlp.process.TokenizerFactory;
@@ -22,7 +25,6 @@ import commonlib.Globals.Type;
  import edu.stanford.nlp.parser.lexparser.LexicalizedParser;*/
 
 public class ABlogToWatchArticleParser extends BaseParser {
-	private final String domain = "http://www.ablogtowatch.com/";
 	private final int numRetryDownloadPage = 2;
 
 	private String articleName = null;
@@ -30,8 +32,11 @@ public class ABlogToWatchArticleParser extends BaseParser {
 	private Set<Globals.Type> types = null;
 	private Set<String> topics = null;
 
-	public ABlogToWatchArticleParser(String articleUrl) {
-		this.link = articleUrl;
+	public ABlogToWatchArticleParser(String articleUrl, MySqlConnection con,
+			LogManager logManager, Scheduler scheduler) {
+		super(articleUrl, "http://www.ablogtowatch.com/", Domain.ABLOGTOWATCH,
+				con, logManager, scheduler);
+
 		this.keywords = new HashSet<String>();
 		this.types = new HashSet<Globals.Type>();
 		this.types.add(Type.HOROLOGY);
@@ -125,7 +130,7 @@ public class ABlogToWatchArticleParser extends BaseParser {
 
 		// Parse the date created the article
 		this.parseDateCreated();
-		
+
 		return true;
 	}
 
@@ -138,7 +143,8 @@ public class ABlogToWatchArticleParser extends BaseParser {
 			this.articleName = articleNameText;
 
 			if (Globals.DEBUG)
-				Globals.crawlerLogManager.writeLog("Article Name = " + this.articleName);
+				Globals.crawlerLogManager.writeLog("Article Name = "
+						+ this.articleName);
 		}
 	}
 
@@ -173,17 +179,108 @@ public class ABlogToWatchArticleParser extends BaseParser {
 			this.dateCreated = dateCreatedText;
 
 			if (Globals.DEBUG)
-				Globals.crawlerLogManager.writeLog("Date Created = " + this.dateCreated);
+				Globals.crawlerLogManager.writeLog("Date Created = "
+						+ this.dateCreated);
 		}
+	}
+
+	// Process link (e.g. trim, truncate bad part, etc..)
+	protected String processLink(String url) {
+		if (url == null)
+			return url;
+
+		url = url.trim();
+
+		return url;
+	}
+
+	// Check if current url is valid or not
+	protected boolean isValidLink(String url) {
+		if (url == null)
+			return false;
+
+		if (url.indexOf(this.domain) != 0)
+			return false;
+
+		if (url.indexOf("?attachment_id") != -1)
+			return false;
+
+		// If the link is a file, not a web page, skip it and continue to
+		// the next link in the queue
+		if (Helper.linkIsFile(url))
+			return false;
+
+		return true;
+	}
+
+	protected void checkDocumentUrl(String url) {
+		String htmlContent = null;
+		// If the page is an article page, parse it
+		this.parseDoc();
+		htmlContent = this.getContent();
+
+		if (this.isArticlePage()) {
+			String link = this.getLink();
+			Globals.Domain[] domains = this.getDomains();
+			String articleName = this.getArticleName();
+			Globals.Type[] types = this.getTypes();
+			String[] keywords = this.getKeywords();
+			String[] topics = this.getTopics();
+			String content = this.getContent();
+			String timeCreated = this.getTimeCreated();
+			String dateCreated = this.getDateCreated();
+
+			// Calculated the time the article is crawled
+			String timeCrawled = Helper.getCurrentTime();
+			String dateCrawled = Helper.getCurrentDate();
+
+			this.mysqlConnection.addArticle(link, domains, articleName, types,
+					keywords, topics, timeCreated, dateCreated, timeCrawled,
+					dateCrawled, content);
+		}
+
+		if (htmlContent == null)
+			return;
+
+		// Parse out all the links from the current page
+		Set<String> linksInPage = BaseParser
+				.parseUrls(htmlContent, this.domain);
+
+		// Add more urls to the queue
+		Set<String> newStrings = new HashSet<String>();
+		if (linksInPage != null) {
+			if (Globals.DEBUG)
+				this.logManager.writeLog("Found " + linksInPage.size()
+						+ " links in page");
+
+			for (String linkInPage : linksInPage) {
+				linkInPage = linkInPage.trim();
+				if (linkInPage.length() < 1)
+					continue;
+
+				if (linkInPage.contains(this.domain)
+						&& !Helper.linkIsFile(linkInPage)) {
+					this.scheduler.addToUrlsQueue(linkInPage);
+					newStrings.add(linkInPage);
+					if (Globals.DEBUG)
+						this.logManager.writeLog("Add link " + linkInPage);
+				}
+			}
+		}
+
+		// Perform tasks like insert link into crawled set, remove it from queue
+		// from sql db
+		Integer priority = TopicComparator.getStringPriority(url);
+		postProcessUrl(url, this.domainVal.value, priority, 0, newStrings);
 	}
 
 	public static void main(String[] args) {
 		// ABlogToWatchArticleParser parser = new ABlogToWatchArticleParser(
 		// "http://www.ablogtowatch.com/charlie-sheen-father-debut-in-patek-philippe-watch-ad/");
-		ABlogToWatchArticleParser parser = new ABlogToWatchArticleParser(
-				"http://www.ablogtowatch.com/jeanrichard-terrascope-watch-review/");
+		// ABlogToWatchArticleParser parser = new ABlogToWatchArticleParser(
+		// "http://www.ablogtowatch.com/jeanrichard-terrascope-watch-review/");
 		// ABlogToWatchArticleParser parser = new ABlogToWatchArticleParser(
 		// "http://www.ablogtowatch.com/jaeger-lecoultre-geophysic-watches-hands/");
-		parser.parseDoc();
+		// parser.parseDoc();
 	}
 }

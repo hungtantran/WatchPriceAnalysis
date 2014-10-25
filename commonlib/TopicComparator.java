@@ -1,4 +1,4 @@
-package newscrawler;
+package commonlib;
 
 import java.util.Collections;
 import java.util.Comparator;

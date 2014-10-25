@@ -1,4 +1,4 @@
-package newscrawler;
+package commonlib;
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
@@ -11,8 +11,6 @@ import java.net.URL;
 import org.jsoup.Jsoup;
 import org.jsoup.Connection.Response;
 import org.jsoup.nodes.Document;
-
-import commonlib.Globals;
 
 public class NetworkingFunctions {
 	// Download the html content into a private Document variable "doc"

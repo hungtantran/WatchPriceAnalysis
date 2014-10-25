@@ -4,9 +4,9 @@ import static org.junit.Assert.*;
 
 import java.util.PriorityQueue;
 
-import newscrawler.TopicComparator;
-
 import org.junit.Test;
+
+import commonlib.TopicComparator;
 
 public class TopicComparatorTest {
 

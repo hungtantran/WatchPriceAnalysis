@@ -1,36 +1,134 @@
 package newscrawler;
 
+import java.sql.ResultSet;
+import java.util.HashMap;
+
 import commonlib.Globals;
+import commonlib.LogManager;
+import dbconnection.MySqlConnection;
 
 public class MainCrawler {
-	public static void main(String[] args) {
-		BaseCrawler[] crawlers = new BaseCrawler[4];
-		
-		crawlers[0] = new HodinkeeCrawler(
-				"http://www.hodinkee.com");
+	// Populate information of type, domain and topic information from existing
+	// database
+	public static boolean getDatabaseExistingInfo() {
+		Globals.idTypeMap = new HashMap<Integer, String>();
+		Globals.idDomainMap = new HashMap<Integer, String>();
+		Globals.idTopicMap = new HashMap<String, Integer>();
 
-		crawlers[1] = new ABlogToWatchCrawler(
-				"http://www.ablogtowatch.com/");
+		if (!MainCrawler.getTypeInfo())
+			return false;
 
-		crawlers[2] = new Chrono24Crawler(
-				"http://www.chrono24.com/");
-		
-		crawlers[3] = new WatchReportCrawler(
-				"http://www.watchreport.com");
+		if (!MainCrawler.getDomainInfo())
+			return false;
 
-		// Each crawler has 1 thread. Start them all
-		for (int i = 0; i < 4; i++)
-			crawlers[i].start();
+		if (!MainCrawler.getTopicInfo())
+			return false;
 
-		Globals.crawlerLogManager.writeLog("Start Crawling");
+		return true;
+	}
+
+	public static boolean getDomainInfo() {
+		if (Globals.con == null)
+			return false;
+
+		ResultSet resultSet = Globals.con.getDomainInfo();
+
+		if (resultSet == null)
+			return false;
 
 		try {
-			for (int i = 0; i < 4; i++)
-				crawlers[i].join();
+			// Iterate through the result set to populate the information
+			while (resultSet.next()) {
+				int id = resultSet.getInt(1);
+				String domain = resultSet.getString(2).trim();
+				Globals.idDomainMap.put(id, domain);
+			}
+
+			if (Globals.DEBUG)
+				Globals.crawlerLogManager.writeLog("Got "
+						+ Globals.idDomainMap.size() + " domains");
+
+			return true;
 		} catch (Exception e) {
-			e.printStackTrace();
+			Globals.crawlerLogManager.writeLog(e.getMessage());
 		}
 
-		Globals.crawlerLogManager.writeLog("Finish Crawling");
+		return false;
+	}
+
+	public static boolean getTypeInfo() {
+		if (Globals.con == null)
+			return false;
+
+		ResultSet resultSet = Globals.con.getTypeInfo();
+
+		if (resultSet == null)
+			return false;
+
+		try {
+			// Iterate through the result set to populate the information
+			while (resultSet.next()) {
+				int id = resultSet.getInt(1);
+				String type = resultSet.getString(2).trim();
+				Globals.idTypeMap.put(id, type);
+			}
+
+			Globals.crawlerLogManager.writeLog("Got "
+					+ Globals.idTypeMap.size() + " types");
+
+			return true;
+		} catch (Exception e) {
+			Globals.crawlerLogManager.writeLog(e.getMessage());
+		}
+
+		return false;
+	}
+
+	public static boolean getTopicInfo() {
+		if (Globals.con == null)
+			return false;
+
+		ResultSet resultSet = Globals.con.getTopicInfo();
+
+		if (resultSet == null)
+			return false;
+
+		try {
+			// Iterate through the result set to populate the information
+			while (resultSet.next()) {
+				int id = resultSet.getInt(1);
+				String topic = resultSet.getString(3).trim();
+				Globals.idTopicMap.put(topic, id);
+			}
+
+			Globals.crawlerLogManager.writeLog("Got "
+					+ Globals.idTopicMap.size() + " topics");
+
+			return true;
+		} catch (Exception e) {
+			Globals.crawlerLogManager.writeLog(e.getMessage());
+		}
+
+		return false;
+	}
+
+	public static boolean startUpState() {
+		// TODO pass inconnection properties
+		Globals.crawlerLogManager = new LogManager("crawlerLog", "crawlerLog");
+		Globals.con = new MySqlConnection();
+
+		if (!MainCrawler.getDatabaseExistingInfo())
+			return false;
+
+		return true;
+	}
+
+	public static void main(String[] args) {
+		if (!MainCrawler.startUpState())
+			return;
+
+		Globals.scheduler = new Scheduler(Globals.crawlerLogManager,
+				Globals.con, Globals.NUMMAXTHREADS);
+		Globals.scheduler.start();
 	}
 }

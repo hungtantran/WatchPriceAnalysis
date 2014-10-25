@@ -1,7 +1,5 @@
 package dbconnection;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -9,176 +7,102 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-
 import commonlib.Globals;
 import commonlib.HTMLCompressor;
 import commonlib.Helper;
 
 public class MySqlConnection {
 	private Connection con = null;
-	private static String username = "root";
-	private static String password = "";
-	private static String server = "localhost";
+	private String username = "root";
+	private String password = "";
+	private String server = "localhost";
 	private String database = "newscrawler";
-	private Map<Integer, String> idTypeMap = null;
-	private Map<Integer, String> idDomainMap = null;
-	private Map<String, Integer> idTopicMap = null;
 
 	public MySqlConnection() {
+		if (!this.establishConnection())
+			return;
+	}
+	
+	public MySqlConnection(String username, String password, String server,
+			String database) {
+		this.username = username;
+		this.password = password;
+		this.server = server;
+		this.database = database;
+		
+		if (!this.establishConnection())
+			return;
+	}
+
+	private boolean establishConnection() {
 		// Set up sql connection
 		try {
 			Class.forName("com.mysql.jdbc.Driver");
 			this.con = DriverManager.getConnection("jdbc:mysql://" + server,
 					username, password);
-			this.getDatabaseExistingInfo();
 		} catch (ClassNotFoundException e) {
 			Globals.crawlerLogManager.writeLog("Driver not found");
+			return false;
 		} catch (SQLException e) {
 			Globals.crawlerLogManager.writeLog(e.getMessage());
-		}
-	}
-
-	public Map<String, Integer> getIdTopicMap() {
-		return this.idTopicMap;
-	}
-
-	// Populate information of type, domain and topic information from existing
-	// database
-	private boolean getDatabaseExistingInfo() {
-		this.idTypeMap = new HashMap<Integer, String>();
-		this.idDomainMap = new HashMap<Integer, String>();
-		this.idTopicMap = new HashMap<String, Integer>();
-
-		if (!this.getTypeInfo() || !this.getDomainInfo() || !this.getTopicInfo())
 			return false;
+		}
 		
 		return true;
 	}
 
 	// Populate information of type
-	private boolean getTypeInfo() {
+	public ResultSet getTypeInfo() {
 		try {
 			Statement st = this.con.createStatement();
 			st.executeQuery("USE " + this.database);
 			ResultSet resultSet = st.executeQuery("SELECT * FROM type_table");
 
-			// Iterate through the result set to populate the information
-			while (resultSet.next()) {
-				int id = resultSet.getInt(1);
-				String type = resultSet.getString(2).trim();
-				this.idTypeMap.put(id, type);
-			}
-			if (Globals.DEBUG)
-				Globals.crawlerLogManager.writeLog("Got "
-						+ this.idTypeMap.size() + " types");
+			return resultSet;
 		} catch (SQLException e) {
 			Globals.crawlerLogManager
 					.writeLog("Get type_table information fails");
 			Globals.crawlerLogManager.writeLog(e.getMessage());
-			
-			return false;
 		}
-		
-		return true;
+
+		return null;
 	}
 
 	// Populate information of domain
-	private boolean getDomainInfo() {
+	public ResultSet getDomainInfo() {
 		try {
 			Statement st = this.con.createStatement();
 			st.executeQuery("USE " + this.database);
 			ResultSet resultSet = st.executeQuery("SELECT * FROM domain_table");
-
-			// Iterate through the result set to populate the information
-			while (resultSet.next()) {
-				int id = resultSet.getInt(1);
-				String domain = resultSet.getString(2).trim();
-				this.idDomainMap.put(id, domain);
-			}
-
-			if (Globals.DEBUG)
-				Globals.crawlerLogManager.writeLog("Got "
-						+ this.idDomainMap.size() + " domains");
+			
+			return resultSet;
 		} catch (SQLException e) {
 			Globals.crawlerLogManager
 					.writeLog("Get domain_table information fails");
 			Globals.crawlerLogManager.writeLog(e.getMessage());
-			
-			return false;
 		}
-		
-		return true;
+
+		return null;
 	}
 
 	// Populate information of topic
-	private boolean getTopicInfo() {
+	public ResultSet getTopicInfo() {
 		try {
 			Statement st = this.con.createStatement();
 			st.executeQuery("USE " + this.database);
 			ResultSet resultSet = st.executeQuery("SELECT * FROM topic_table");
-
-			// Iterate through the result set to populate the information
-			while (resultSet.next()) {
-				int id = resultSet.getInt(1);
-				String topic = resultSet.getString(3).trim();
-				this.idTopicMap.put(topic, id);
-			}
-
-			if (Globals.DEBUG)
-				Globals.crawlerLogManager.writeLog("Got "
-						+ this.idTopicMap.size() + " topics");
+			
+			return resultSet;
 		} catch (SQLException e) {
 			Globals.crawlerLogManager
 					.writeLog("Get topic_table information fails");
 			Globals.crawlerLogManager.writeLog(e.getMessage());
-			
-			return false;
 		}
-		
-		return true;
+
+		return null;
 	}
 
 	public void deleteDB() {
-	}
-
-	public Integer[] convertDomainToDomainId(Globals.Domain[] domains) {
-		Integer[] domainsId = new Integer[3];
-
-		// Get the id of domains
-		for (int i = 0; i < domains.length; i++)
-			domainsId[i] = domains[i].value;
-
-		for (int i = domains.length; i < 3; i++)
-			domainsId[i] = null;
-
-		return domainsId;
-	}
-
-	public Integer[] convertTypeToTypeId(Globals.Type[] types) {
-		Integer[] typesId = new Integer[3];
-
-		// Get the id of types
-		for (int i = 0; i < types.length; i++)
-			typesId[i] = types[i].value;
-
-		for (int i = types.length; i < 3; i++)
-			typesId[i] = null;
-
-		return typesId;
-	}
-
-	public Integer[] convertTopicToTopicId(String[] topics) {
-		Integer[] topicsId = new Integer[topics.length];
-
-		// Get the id of topics
-		for (int i = 0; i < topics.length; i++) {
-			topicsId[i] = this.idTopicMap.get(topics[i]);
-			Globals.crawlerLogManager.writeLog(topics[i] + " : " + topicsId[i]);
-		}
-
-		return topicsId;
 	}
 
 	// Add new article-topic relationship
@@ -195,10 +119,10 @@ public class MySqlConnection {
 			Globals.crawlerLogManager
 					.writeLog("Fail to insert into article_topic_table");
 			Globals.crawlerLogManager.writeLog(e.getMessage());
-			
+
 			return false;
 		}
-		
+
 		return true;
 	}
 
@@ -233,11 +157,11 @@ public class MySqlConnection {
 				Globals.crawlerLogManager
 						.writeLog("Fail to insert into article_content_table");
 				Globals.crawlerLogManager.writeLog(e2.getMessage());
-				
+
 				return false;
 			}
 		}
-		
+
 		return true;
 	}
 
@@ -247,10 +171,13 @@ public class MySqlConnection {
 			String[] topics, String timeCreated, String dateCreated,
 			String timeCrawled, String dateCrawled, String content) {
 		// Get the id of domains, types and topics
-		Integer[] domainsId = convertDomainToDomainId(domains);
-		Integer[] typesId = convertTypeToTypeId(types);
-		Integer[] topicsId = convertTopicToTopicId(topics);
-
+		Integer[] domainsId = Helper.convertDomainToDomainId(domains);
+		Integer[] typesId = Helper.convertTypeToTypeId(types);
+		Integer[] topicsId = Helper.convertTopicToTopicId(topics);
+		
+		if (domainsId == null || typesId == null || topicsId == null)
+			return false;
+		
 		String keywordsString = Arrays.toString(keywords);
 
 		try {
@@ -321,10 +248,10 @@ public class MySqlConnection {
 			Globals.crawlerLogManager
 					.writeLog("Fail to insert into article_table");
 			Globals.crawlerLogManager.writeLog(e.getMessage());
-			
+
 			return false;
 		}
-		
+
 		return true;
 	}
 
@@ -499,9 +426,12 @@ public class MySqlConnection {
 			String caseMaterial, String dialColor, String gender,
 			String location1, String location2, String location3) {
 		// Get the id of domains and topics
-		Integer[] domainsId = convertDomainToDomainId(domains);
-		Integer[] topicsId = convertTopicToTopicId(topics);
-
+		Integer[] domainsId = Helper.convertDomainToDomainId(domains);
+		Integer[] topicsId = Helper.convertTopicToTopicId(topics);
+		
+		if (domainsId == null || topicsId == null)
+			return false;
+		
 		try {
 			// Try to insert a new entry into watch_desc_table
 			int watchId = insertIntoWatchDescTable(link, domains, watchName,
@@ -520,10 +450,10 @@ public class MySqlConnection {
 			Globals.crawlerLogManager
 					.writeLog("Fail to insert into watch_desc_table");
 			Globals.crawlerLogManager.writeLog(e.getMessage());
-			
+
 			return false;
 		}
-		
+
 		return true;
 	}
 
@@ -536,7 +466,7 @@ public class MySqlConnection {
 		} else {
 			content = HTMLCompressor.compressHtmlContent(content);
 		}
-		
+
 		PreparedStatement stmt = null;
 
 		try {
@@ -558,11 +488,11 @@ public class MySqlConnection {
 				Globals.crawlerLogManager
 						.writeLog("Fail to insert into watch_page_content_table");
 				Globals.crawlerLogManager.writeLog(e2.getMessage());
-				
+
 				return false;
 			}
 		}
-		
+
 		return true;
 	}
 
@@ -834,7 +764,7 @@ public class MySqlConnection {
 			Globals.crawlerLogManager
 					.writeLog("Insert into watch_price_stat_table fails");
 			Globals.crawlerLogManager.writeLog(e.getMessage());
-			
+
 			return false;
 		}
 
@@ -857,10 +787,10 @@ public class MySqlConnection {
 			Globals.crawlerLogManager
 					.writeLog("Fail to delete article with ID " + articleId);
 			Globals.crawlerLogManager.writeLog(e.getMessage());
-			
+
 			return false;
 		}
-		
+
 		return true;
 	}
 
@@ -979,6 +909,22 @@ public class MySqlConnection {
 
 		return null;
 	}
+	
+	public ResultSet getLinkQueue() {
+		try {
+			Statement st = this.con.createStatement();
+			st.executeQuery("USE " + this.database);
+
+			String query = "SELECT link FROM link_queue_table";
+
+			return st.executeQuery(query);
+		} catch (SQLException e) {
+			Globals.crawlerLogManager.writeLog("Get link_queue_table fails");
+			Globals.crawlerLogManager.writeLog(e.getMessage());
+		}
+
+		return null;
+	}
 
 	// Get link from the crawled set given the domainId
 	public ResultSet getLinkCrawled(int domainId) {
@@ -988,6 +934,22 @@ public class MySqlConnection {
 
 			String query = "SELECT link FROM link_crawled_table WHERE domain_table_id_1 = "
 					+ domainId;
+
+			return st.executeQuery(query);
+		} catch (SQLException e) {
+			Globals.crawlerLogManager.writeLog("Get link_crawled_table fails");
+			Globals.crawlerLogManager.writeLog(e.getMessage());
+		}
+
+		return null;
+	}
+	
+	public ResultSet getLinkCrawled() {
+		try {
+			Statement st = this.con.createStatement();
+			st.executeQuery("USE " + this.database);
+
+			String query = "SELECT link FROM link_crawled_table";
 
 			return st.executeQuery(query);
 		} catch (SQLException e) {

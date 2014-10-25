@@ -7,8 +7,10 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Map;
 
+import newscrawler.MainCrawler;
 import commonlib.Globals;
 import commonlib.Globals.Type;
+import commonlib.Helper;
 
 public class InitializeDB {
 	private Connection con = null;
@@ -49,6 +51,7 @@ public class InitializeDB {
 		this.initializeDomainTable();
 		this.initializeTypeTable();
 		this.initializeTopicTable();
+		this.initializeLinkQueueTable();
 	}
 
 	// Create article_table
@@ -166,7 +169,7 @@ public class InitializeDB {
 			e.printStackTrace();
 		}
 	}
-	
+
 	private void createWatchDescTableTemp() {
 		try {
 			Statement st = this.con.createStatement();
@@ -273,7 +276,7 @@ public class InitializeDB {
 					+ "UNIQUE (id), "
 					+ "UNIQUE (link), "
 					+ "FOREIGN KEY (domain_table_id_1) REFERENCES domain_table(id))");
-			
+
 			st.executeUpdate("CREATE TABLE link_crawled_table ("
 					+ "id int unsigned AUTO_INCREMENT not null, "
 					+ "link char(255) not null, "
@@ -286,7 +289,8 @@ public class InitializeDB {
 					+ "UNIQUE (link), "
 					+ "FOREIGN KEY (domain_table_id_1) REFERENCES domain_table(id))");
 		} catch (SQLException e) {
-			System.out.println("CREATE TABLE link_queue_table or link_crawled_table fails");
+			System.out
+					.println("CREATE TABLE link_queue_table or link_crawled_table fails");
 			e.printStackTrace();
 		}
 	}
@@ -383,7 +387,50 @@ public class InitializeDB {
 		}
 	}
 
+	// Insert all the types into the type tables
+	private void initializeLinkQueueTable() {
+		try {
+			Statement st = this.con.createStatement();
+			st.executeQuery("USE " + this.database);
+		} catch (SQLException e) {
+			System.out.println("Fail to initialize link queue table");
+			e.printStackTrace();
+		}
+
+		// Iteratate through each type to get the list of topics of that type
+		for (Map.Entry<String, Globals.Domain> entry : Globals.startUrlDomainMap
+				.entrySet()) {
+			String startUrl = entry.getKey();
+			Globals.Domain[] domain = { entry.getValue() };
+			Integer[] domainIds = Helper.convertDomainToDomainId(domain);
+			if (domainIds == null)
+				return;
+
+			try {
+				PreparedStatement stmt = null;
+				stmt = this.con
+						.prepareStatement("INSERT INTO link_queue_table (link, domain_table_id_1, priority, persistent, time_crawled, date_crawled) values (?, ?, ?, ?, ?, ?)");
+				stmt.setString(1, startUrl); // link
+				stmt.setInt(2, domainIds[0]); // domain_table_id
+				stmt.setInt(3, 0); // priority
+				stmt.setInt(4, 1); // persistent
+				stmt.setString(5, "00:00:00"); // time crawled
+				stmt.setString(6, "0000-00-00"); // date crawled
+				stmt.executeUpdate();
+
+				Globals.crawlerLogManager.writeLog(stmt.toString());
+			} catch (SQLException e) {
+				System.out.println("Fail to insert startUrl '" + startUrl
+						+ "' with domain " + domainIds[0]
+						+ " into link_queue_table");
+			}
+		}
+	}
+
 	public static void main(String[] args) {
+		if (!MainCrawler.startUpState())
+			return;
+
 		InitializeDB con = new InitializeDB();
 		con.createDB();
 		con.initializeDB();

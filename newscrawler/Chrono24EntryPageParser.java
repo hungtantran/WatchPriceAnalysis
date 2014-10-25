@@ -3,16 +3,20 @@ package newscrawler;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import commonlib.Globals;
 import commonlib.Helper;
+import commonlib.LogManager;
+import commonlib.NetworkingFunctions;
+import commonlib.TopicComparator;
 import commonlib.Globals.Domain;
+import dbconnection.MySqlConnection;
 
 /*import edu.stanford.nlp.process.Tokenizer;
  import edu.stanford.nlp.process.TokenizerFactory;
- import edu.stanford.nlp.process.CoreLabelTokenFactory;
  import edu.stanford.nlp.process.DocumentPreprocessor;
  import edu.stanford.nlp.process.PTBTokenizer;
  import edu.stanford.nlp.ling.CoreLabel;
@@ -22,7 +26,6 @@ import commonlib.Globals.Domain;
  import edu.stanford.nlp.parser.lexparser.LexicalizedParser;*/
 
 public class Chrono24EntryPageParser extends BaseParser {
-	private final String domain = "http://www.chrono24.com/";
 	private final int numRetryDownloadPage = 3;
 
 	private String watchName = null;
@@ -39,8 +42,11 @@ public class Chrono24EntryPageParser extends BaseParser {
 	private String dialColor = null;
 	private String location = null;
 
-	public Chrono24EntryPageParser(String articleUrl) {
-		this.link = articleUrl;
+	public Chrono24EntryPageParser(String articleUrl, MySqlConnection con,
+			LogManager logManager, Scheduler scheduler) {
+		super(articleUrl, "http://www.chrono24.com/", Domain.CHRONO24, con,
+				logManager, scheduler);
+
 		this.prices = new int[2];
 		this.prices[0] = -1;
 		this.prices[1] = -1;
@@ -187,7 +193,7 @@ public class Chrono24EntryPageParser extends BaseParser {
 
 		// Parse the spec of watch (ref no, movement, caliber, color, etc...)
 		this.parseSpec();
-		
+
 		return true;
 	}
 
@@ -200,7 +206,8 @@ public class Chrono24EntryPageParser extends BaseParser {
 			this.watchName = articleNameText;
 
 			if (Globals.DEBUG)
-				Globals.crawlerLogManager.writeLog("Watch Name = " + this.watchName);
+				Globals.crawlerLogManager.writeLog("Watch Name = "
+						+ this.watchName);
 		}
 	}
 
@@ -229,7 +236,8 @@ public class Chrono24EntryPageParser extends BaseParser {
 			this.prices[0] = this.extractIntFromString(priceText);
 
 			if (Globals.DEBUG)
-				Globals.crawlerLogManager.writeLog("Watch Price = " + this.prices[0]);
+				Globals.crawlerLogManager.writeLog("Watch Price = "
+						+ this.prices[0]);
 		}
 	}
 
@@ -335,18 +343,157 @@ public class Chrono24EntryPageParser extends BaseParser {
 			Globals.crawlerLogManager.writeLog("Ref No = " + this.refNo);
 			Globals.crawlerLogManager.writeLog("Movement = " + this.movement);
 			Globals.crawlerLogManager.writeLog("Caliber = " + this.caliber);
-			Globals.crawlerLogManager.writeLog("Condition = " + this.watchCondition);
+			Globals.crawlerLogManager.writeLog("Condition = "
+					+ this.watchCondition);
 			Globals.crawlerLogManager.writeLog("Year = " + this.watchYear);
-			Globals.crawlerLogManager.writeLog("Case Material = " + this.caseMaterial);
+			Globals.crawlerLogManager.writeLog("Case Material = "
+					+ this.caseMaterial);
 			Globals.crawlerLogManager.writeLog("Gender = " + this.gender);
 			Globals.crawlerLogManager.writeLog("Dial = " + this.dialColor);
 			Globals.crawlerLogManager.writeLog("Location = " + this.location);
 		}
 	}
 
+	// Process link (e.g. trim, truncate bad part, etc..)
+	protected String processLink(String url) {
+		if (url == null)
+			return url;
+
+		url = url.trim();
+
+		// Trim everything after "?"
+		// Truncate a complementary pages of a watch entry page
+		// (picture page, spec page, etc...) to the main page
+		// Do nothing if the link is not watch entry page
+		String surfixLink = "?";
+		if (url != null && url.indexOf(surfixLink) != -1) {
+			url = url.substring(0, url.indexOf(surfixLink));
+		}
+
+		return url;
+	}
+
+	// Check if current url is valid or not
+	protected boolean isValidLink(String url) {
+		if (url == null)
+			return false;
+
+		if (url.indexOf(this.domain) != 0)
+			return false;
+
+		if (url.indexOf("?") != -1)
+			return false;
+
+		// If the link is a file, not a web page, skip it and continue to
+		// the next link in the queue
+		if (Helper.linkIsFile(url))
+			return false;
+
+		return true;
+	}
+
+	protected void checkDocumentUrl(String url) {
+		String htmlContent = null;
+
+		// If the page is an watch entry page, parse it
+		if (this.isArticlePage()) {
+			this.parseDoc();
+			htmlContent = this.getContent();
+
+			String link = this.getLink();
+			Globals.Domain[] domains = this.getDomains();
+			String[] topics = this.getTopics();
+			String watchName = this.getWatchName();
+			int[] prices = this.getPrices();
+			String[] keywords = this.getKeywords();
+			String content = this.getContent();
+			String timeCreated = this.getTimeCreated();
+			String dateCreated = this.getDateCreated();
+
+			// Calculated the time the article is crawled
+			String timeCrawled = Helper.getCurrentTime();
+			String dateCrawled = Helper.getCurrentDate();
+
+			// Get spec of the watch
+			String refNo = this.getRefNo();
+			String movement = this.getMovement();
+			String caliber = this.getCaliber();
+			String watchCondition = this.getWatchCondition();
+			int watchYear = this.getWatchYear();
+			String caseMaterial = this.getCaseMaterial();
+			String dialColor = this.getDialColor();
+			String gender = this.getGender();
+
+			// Split location into parts
+			String location = this.getLocation();
+			if (location == null)
+				return;
+			String[] locations = Helper.splitString(location, ",");
+
+			String location1 = null;
+			String location2 = null;
+			String location3 = null;
+			if (locations.length >= 1)
+				location1 = locations[0].trim();
+			if (locations.length >= 2)
+				location2 = locations[1].trim();
+			if (locations.length >= 3)
+				location3 = locations[2].trim();
+
+			this.mysqlConnection.addWatchEntry(link, domains, watchName,
+					prices, keywords, topics, timeCreated, dateCreated,
+					timeCrawled, dateCrawled, content, refNo, movement,
+					caliber, watchCondition, watchYear, caseMaterial,
+					dialColor, gender, location1, location2, location3);
+		} else {
+			// If the page is not an watch entry page, just get all the links
+			// and add it to the queue
+			Document htmlDoc = NetworkingFunctions.downloadHtmlContent(url,
+					this.numRetryDownloadPage);
+
+			if (htmlDoc != null)
+				htmlContent = htmlDoc.outerHtml();
+		}
+
+		if (htmlContent == null)
+			return;
+
+		// Parse out all the links from the current page
+		Set<String> linksInPage = BaseParser
+				.parseUrls(htmlContent, this.domain);
+
+		// Add more urls to the queue
+		Set<String> newStrings = new HashSet<String>();
+		if (linksInPage != null) {
+			if (Globals.DEBUG)
+				this.logManager.writeLog("Found " + linksInPage.size()
+						+ " links in page");
+
+			for (String linkInPage : linksInPage) {
+				linkInPage = linkInPage.trim();
+				linkInPage = this.processLink(linkInPage);
+				if (linkInPage.length() < 1)
+					continue;
+
+				if (linkInPage.contains(this.domain)
+						&& !Helper.linkIsFile(linkInPage)) {
+					this.scheduler.addToUrlsQueue(linkInPage);
+					newStrings.add(linkInPage);
+					if (Globals.DEBUG)
+						this.logManager.writeLog("Add link " + linkInPage);
+				}
+			}
+		}
+
+		// Perform tasks like insert link into crawled set, remove it from queue
+		// from sql db
+		Integer priority = TopicComparator.getStringPriority(url);
+		postProcessUrl(url, Domain.CHRONO24.value, priority, 0, newStrings);
+	}
+
 	public static void main(String[] args) {
-		Chrono24EntryPageParser parser = new Chrono24EntryPageParser(
-				"http://www.chrono24.com/en/omega/omega-seamaster-annual-calendar-2-tone-18k-pink-full-package--id2768035.htm");
-		parser.parseDoc();
+		// Chrono24EntryPageParser parser = new Chrono24EntryPageParser(
+		// "http://www.chrono24.com/en/omega/omega-seamaster-annual-calendar-2-tone-18k-pink-full-package--id2768035.htm");
+		// parser.parseDoc();
 	}
 }

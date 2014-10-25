@@ -5,10 +5,8 @@ import java.security.NoSuchAlgorithmException;
 import java.text.Normalizer;
 import java.text.Normalizer.Form;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 import javax.xml.bind.annotation.adapters.HexBinaryAdapter;
@@ -122,6 +120,23 @@ public class Helper {
 		timeString.append(currentDate.getMinutes());
 		timeString.append(":");
 		timeString.append(currentDate.getSeconds());
+
+		return timeString.toString();
+	}
+	
+	// Return the current time 22:11:30:79
+	@SuppressWarnings("deprecation")
+	public static String getCurrentTimeWithMilisec() {
+		Date currentDate = new Date();
+		
+		StringBuilder timeString = new StringBuilder();
+		timeString.append(currentDate.getHours());
+		timeString.append(":");
+		timeString.append(currentDate.getMinutes());
+		timeString.append(":");
+		timeString.append(currentDate.getSeconds());
+		timeString.append(":");
+		timeString.append(currentDate.getTime() % 100);
 
 		return timeString.toString();
 	}
@@ -340,6 +355,55 @@ public class Helper {
 		}
 	}
 	
+	// Convert topic to topic id
+	public static Integer[] convertTopicToTopicId(String[] topics) {
+		if (Globals.idTopicMap == null)
+			return null;
+		
+		Integer[] topicsId = new Integer[topics.length];
+
+		// Get the id of topics
+		for (int i = 0; i < topics.length; i++) {
+			topicsId[i] = Globals.idTopicMap.get(topics[i]);
+		}
+
+		return topicsId;
+	}
+	
+	// Convert domain to domain id
+	public static Integer[] convertDomainToDomainId(Globals.Domain[] domains) {
+		if (Globals.idDomainMap == null)
+			return null;
+		
+		Integer[] domainsId = new Integer[3];
+
+		// Get the id of domains
+		for (int i = 0; i < domains.length; i++)
+			domainsId[i] = domains[i].value;
+
+		for (int i = domains.length; i < 3; i++)
+			domainsId[i] = null;
+
+		return domainsId;
+	}
+	
+	// Convert type to type id
+	public static Integer[] convertTypeToTypeId(Globals.Type[] types) {
+		if (Globals.idTypeMap == null)
+			return null;
+		
+		Integer[] typesId = new Integer[3];
+
+		// Get the id of types
+		for (int i = 0; i < types.length; i++)
+			typesId[i] = types[i].value;
+
+		for (int i = types.length; i < 3; i++)
+			typesId[i] = null;
+
+		return typesId;
+	}
+	
 	// Clean up a file name
 	public static String sanitizeFileDirectoryName(String fileName) {
 		if (fileName == null)
@@ -368,26 +432,6 @@ public class Helper {
 		}
 
 		return fileName;
-	}
-	
-	// Comparator class to sort TreeMap
-	protected class ValueComparator implements Comparator<String> {
-
-		Map<String, Integer> base;
-
-		public ValueComparator(Map<String, Integer> base) {
-			this.base = base;
-		}
-
-		// Note: this comparator imposes orderings that are inconsistent with
-		// equals.
-		public int compare(String a, String b) {
-			if (base.get(a) >= base.get(b)) {
-				return 1;
-			} else {
-				return -1;
-			} // returning 0 would merge keys
-		}
 	}
 
 	public static void main(String[] args) {

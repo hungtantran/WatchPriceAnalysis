@@ -40,7 +40,7 @@ public class LogManager {
 
 		return true;
 	}
-	
+
 	// fileName is full path and fileName
 	private boolean createFile(String fileName) {
 		if (fileName == null || fileName.length() == 0)
@@ -66,7 +66,8 @@ public class LogManager {
 	// Write log with default writeToDisk value
 	public boolean writeLog(String log) {
 		final StackTraceElement[] ste = Thread.currentThread().getStackTrace();
-		// 0 is getStackTrace, 1 is the writeLog function, 2 is the writeLog's caller
+		// 0 is getStackTrace, 1 is the writeLog function, 2 is the writeLog's
+		// caller
 		String functionName = ste[2].getMethodName();
 
 		return this.writeLog(functionName, log, this.defaultWriteToDisk);
@@ -75,10 +76,11 @@ public class LogManager {
 	public boolean writeLog(String functionName, String log) {
 		return this.writeLog(functionName, log, this.defaultWriteToDisk);
 	}
-	
+
 	public boolean writeLog(String log, boolean writeToDisk) {
 		final StackTraceElement[] ste = Thread.currentThread().getStackTrace();
-		// 0 is getStackTrace, 1 is the writeLog function, 2 is the writeLog's caller
+		// 0 is getStackTrace, 1 is the writeLog function, 2 is the writeLog's
+		// caller
 		String functionName = ste[2].getMethodName();
 		return this.writeLog(functionName, log, writeToDisk);
 	}
@@ -88,14 +90,14 @@ public class LogManager {
 		if (this.logDir == null || this.baseFileName == null
 				|| functionName == null || log == null)
 			return false;
-		
+
 		this.mutex.lock();
-		
+
 		try {
 			if (!this.createDir()) {
 				return false;
 			}
-	
+
 			Date currentDate = new Date();
 			String fileName = this.logDir + "\\" + this.baseFileName + "."
 					+ Helper.getCurrentDate() + "-" + currentDate.getHours()
@@ -107,11 +109,13 @@ public class LogManager {
 				System.out.println("File " + fileName + " can't be created");
 				return false;
 			}
-	
+
 			String logLine = "[" + Helper.getCurrentDate() + "] ["
-					+ Helper.getCurrentTime() + "] [" + functionName + "]: " + log;
-			
-			System.out.println("Log: "+logLine);
+					+ Helper.getCurrentTimeWithMilisec() + "] [Thread# "
+					+ Thread.currentThread().getId() + "] [" + functionName
+					+ "]: " + log;
+
+			System.out.println("Log: " + logLine);
 			if (writeToDisk) {
 				try (PrintWriter out = new PrintWriter(new BufferedWriter(
 						new FileWriter(fileName, true)))) {
@@ -121,7 +125,7 @@ public class LogManager {
 					return false;
 				}
 			}
-	
+
 			return true;
 		} finally {
 			this.mutex.unlock();
