@@ -45,7 +45,7 @@ public abstract class BaseParser {
 
 	abstract String processLink(String url);
 
-	abstract boolean isValidLink(String url);
+	public abstract boolean isValidLink(String url);
 
 	// public abstract String getLink();
 	// public abstract Globals.Domain[] getDomains();
@@ -178,12 +178,13 @@ public abstract class BaseParser {
 					postProcessUrl(url, this.domainVal.value, null, 0, null);
 				}
 			}
-			
+
 			if (this.exception.getClass() == MalformedURLException.class) {
-				this.logManager.writeLog("Remove link " + url + " because of malformed url");
+				this.logManager.writeLog("Remove link " + url
+						+ " because of malformed url");
 				postProcessUrl(url, this.domainVal.value, null, 0, null);
 			}
-			
+
 			if (this.exception.getClass() == IllegalArgumentException.class) {
 				this.logManager.writeLog("Remove link " + url + " because of ");
 				postProcessUrl(url, this.domainVal.value, null, 0, null);
@@ -207,7 +208,8 @@ public abstract class BaseParser {
 				linkInPage = linkInPage.trim();
 
 				if (linkInPage.contains(this.domain)
-						&& !Helper.linkIsFile(linkInPage)) {
+						&& !Helper.linkIsFile(linkInPage)
+						&& this.isValidLink(linkInPage)) {
 					newStrings.add(linkInPage);
 				}
 			}
@@ -228,7 +230,7 @@ public abstract class BaseParser {
 			this.mysqlConnection.insertIntoLinkCrawledTable(processedlink,
 					domainId, priority, null, null);
 		}
-		
+
 		if (newLinks == null)
 			return;
 

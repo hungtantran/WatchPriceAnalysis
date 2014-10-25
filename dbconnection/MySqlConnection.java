@@ -988,16 +988,16 @@ public class MySqlConnection {
 		try {
 			Statement st = this.con.createStatement();
 			st.executeQuery("USE " + this.database);
-
+			
 			String query = "DELETE FROM link_queue_table WHERE link = ? AND persistent = 0";
 			PreparedStatement stmt = this.con.prepareStatement(query);
 			stmt.setString(1, link);
-
+			
 			if (Globals.DEBUG)
 				Globals.crawlerLogManager.writeLog(stmt.toString());
 			// execute the preparedstatement
 			stmt.execute();
-		} catch (SQLException e) {
+		} catch (Exception e) {
 			Globals.crawlerLogManager.writeLog("Delete link_queue_table fails");
 			Globals.crawlerLogManager.writeLog(e.getMessage());
 			return false;

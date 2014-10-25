@@ -7,13 +7,13 @@ import java.util.Map;
 
 import newscrawler.ABlogToWatchArticleParser;
 import newscrawler.BaseParser;
+import newscrawler.Chrono24EntryPageParser;
 import newscrawler.HodinkeeArticleParser;
+import newscrawler.MainCrawler;
 import newscrawler.WatchReportArticleParser;
-
 import commonlib.Globals;
 import commonlib.HTMLCompressor;
 import commonlib.Helper;
-
 import dbconnection.MySqlConnection;
 
 public class SanitizeDB {
@@ -22,7 +22,7 @@ public class SanitizeDB {
 	public SanitizeDB() {
 	}
 
-	public boolean isValidLink(int articleId, String link) {
+	public boolean isArticleLink(int articleId, String link) {
 		if (link == null)
 			return false;
 
@@ -97,7 +97,7 @@ public class SanitizeDB {
 								+ articleLink);
 
 					// Check if link is valid or not. If not, delete the article
-					boolean isValidLink = this.isValidLink(articleId,
+					boolean isValidLink = this.isArticleLink(articleId,
 							articleLink);
 					if (!isValidLink) {
 						if (Globals.DEBUG)
@@ -119,6 +119,76 @@ public class SanitizeDB {
 			// Suggest the garbage collector to run to avoid out of heap space
 			System.gc();
 			Helper.waitSec(2, 5);
+		}
+	}
+
+	public boolean isValidLink(String link) {
+		if (link == null)
+			return false;
+
+		BaseParser parser = null;
+
+		// ABlogToWatch link check
+		if (link.indexOf(Globals.Domain.ABLOGTOWATCH.domain) == 0) {
+			parser = new ABlogToWatchArticleParser(link, null, null, null);
+		}
+
+		// ABlogToWatch link check
+		if (link.indexOf(Globals.Domain.HODINKEE.domain) == 0) {
+			parser = new HodinkeeArticleParser(link, null, null, null);
+		}
+
+		// ABlogToWatch link check
+		if (link.indexOf(Globals.Domain.WATCHREPORT.domain) == 0) {
+			parser = new WatchReportArticleParser(link, null, null, null);
+		}
+
+		// Chrono24 link check
+		if (link.indexOf(Globals.Domain.CHRONO24.domain) == 0) {
+			parser = new Chrono24EntryPageParser(link, null, null, null);
+		}
+
+		// Check if link is valid
+		if (parser == null) {
+			if (Globals.DEBUG)
+				System.out
+						.println("Link is invalid because it is not of existing domains");
+			return false;
+		}
+
+		if (!parser.isValidLink(link)) {
+			if (Globals.DEBUG)
+				System.out
+						.println("Link is invalid because it is not a valid link");
+			return false;
+		}
+
+		return true;
+	}
+
+	// Remove from database articles with bad link
+	public void sanitizeInvalidLinks() {
+		this.mysqlConnection = new MySqlConnection();
+		ResultSet resultSet = this.mysqlConnection.getLinkQueue();
+		if (resultSet == null)
+			return;
+
+		try {
+			int count = 0;
+			// Iterate through the result set to populate the information
+			while (resultSet.next()) {
+				String link = resultSet.getString(1);
+
+				// Check if link is valid or not. If not, delete the article
+				boolean isValidLink = this.isValidLink(link);
+				if (!isValidLink) {
+					count++;
+					System.out.println("("+count+") Delete link " + link);
+					this.mysqlConnection.removeFromLinkQueueTable(link);
+				}
+			}
+		} catch (Exception e) {
+
 		}
 	}
 
@@ -201,10 +271,10 @@ public class SanitizeDB {
 					String originalHtmlContent = resultSet.getString(2);
 					String compressedHtmlContent = HTMLCompressor
 							.compressHtmlContent(originalHtmlContent);
-					
-					if (!this.mysqlConnection.addArticleContent(resultSet.getInt(1),
-							compressedHtmlContent))
-						continue; 
+
+					if (!this.mysqlConnection.addArticleContent(
+							resultSet.getInt(1), compressedHtmlContent))
+						continue;
 				}
 
 				if (count == 0)
@@ -245,11 +315,11 @@ public class SanitizeDB {
 					String originalHtmlContent = resultSet.getString(2);
 					String compressedHtmlContent = HTMLCompressor
 							.compressHtmlContent(originalHtmlContent);
-					if (!this.mysqlConnection.addWatchPageContent(resultSet.getInt(1),
-							compressedHtmlContent))
+					if (!this.mysqlConnection.addWatchPageContent(
+							resultSet.getInt(1), compressedHtmlContent))
 						continue;
 				}
-				
+
 				if (count == 0)
 					break;
 
@@ -262,10 +332,15 @@ public class SanitizeDB {
 	}
 
 	public static void main(String[] args) {
+		MainCrawler.startUpState();
+		
 		SanitizeDB sanitizer = new SanitizeDB();
+		// sanitizer.sanitizeInvalidLinks();
 		// sanitizer.sanitizeBadLinkArticles();
 		// sanitizer.sanitizeDuplicateArticleLink();
-		// sanitizer.compressArticleContents(); /* Should not need to use this anymore because of default compress */
-		// sanitizer.compressWatchContents(); /* Should not need to use this anymore because of default compress */
+		// sanitizer.compressArticleContents(); /* Should not need to use this
+		// anymore because of default compress */
+		// sanitizer.compressWatchContents(); /* Should not need to use this
+		// anymore because of default compress */
 	}
 }

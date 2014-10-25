@@ -396,7 +396,7 @@ public class Chrono24EntryPageParser extends BaseParser {
 	}
 
 	// Check if current url is valid or not
-	protected boolean isValidLink(String url) {
+	public boolean isValidLink(String url) {
 		if (url == null)
 			return false;
 
@@ -404,6 +404,11 @@ public class Chrono24EntryPageParser extends BaseParser {
 			return false;
 
 		if (url.indexOf("?") != -1)
+			return false;
+		
+		// For chrono24, realize that for number of '/' < 4 is garbage link
+		int numOccurenceOfSlashes = Helper.numOccurance(url, "/"); 
+		if (numOccurenceOfSlashes < 4 && !url.equals(this.domain))
 			return false;
 
 		// If the link is a file, not a web page, skip it and continue to

@@ -202,7 +202,7 @@ public class ABlogToWatchArticleParser extends BaseParser {
 	}
 
 	// Check if current url is valid or not
-	protected boolean isValidLink(String url) {
+	public boolean isValidLink(String url) {
 		if (url == null)
 			return false;
 

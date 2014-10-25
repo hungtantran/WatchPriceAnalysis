@@ -69,11 +69,16 @@ public class BaseCrawler extends Thread {
 				return;
 
 			this.parser = this.chooseParser(curUrl);
-
+			
 			if (this.parser == null) {
 				this.logManager.writeLog("Can't find parser for url "+curUrl);
 				this.mysqlConnection.removeFromLinkQueueTable(curUrl);
 				continue;
+			}
+			
+			if (!this.parser.isValidLink(curUrl)) {
+				this.logManager.writeLog("Link "+curUrl+" is invalid. Assume already crawled, move on don't process");
+				this.mysqlConnection.removeFromLinkQueueTable(curUrl);
 			}
 
 			// Process link (e.g. trim, truncate bad part, etc..)
