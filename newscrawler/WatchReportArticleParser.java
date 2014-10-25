@@ -34,7 +34,7 @@ public class WatchReportArticleParser extends BaseParser {
 
 	public WatchReportArticleParser(String articleUrl, MySqlConnection con,
 			LogManager logManager, Scheduler scheduler) {
-		super(articleUrl, "http://www.watchreport.com/", Domain.WATCHREPORT,
+		super(articleUrl, Globals.Domain.WATCHREPORT.domain, Domain.WATCHREPORT,
 				con, logManager, scheduler);
 
 		this.keywords = new HashSet<String>();
@@ -47,6 +47,9 @@ public class WatchReportArticleParser extends BaseParser {
 	// Return true if the articleUrl is a valid article page of WatchReport,
 	// false if not
 	public boolean isArticlePage() {
+		if (!this.isValidLink(this.link))
+			return false;
+		
 		if (this.doc == null)
 			return false;
 

@@ -34,7 +34,7 @@ public class HodinkeeArticleParser extends BaseParser {
 
 	public HodinkeeArticleParser(String articleUrl, MySqlConnection con,
 			LogManager logManager, Scheduler scheduler) {
-		super(articleUrl, "http://www.hodinkee.com/", Domain.HODINKEE, con,
+		super(articleUrl, Globals.Domain.HODINKEE.domain, Domain.HODINKEE, con,
 				logManager, scheduler);
 
 		this.keywords = new HashSet<String>();
@@ -47,6 +47,9 @@ public class HodinkeeArticleParser extends BaseParser {
 	// Return true if the articleUrl is a valid article page of Hodinkee, false
 	// if not
 	public boolean isArticlePage() {
+		if (!this.isValidLink(this.link))
+			return false;
+		
 		return (this.link.indexOf(this.domain + "blog/") == 0);
 	}
 

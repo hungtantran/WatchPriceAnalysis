@@ -190,12 +190,14 @@ public class Scheduler {
 		this.logManager.writeLog("Run threads for scheduler");
 
 		for (int i = 0; i < this.maxCrawlers; i++) {
+			this.logManager.writeLog("Thread "+i+" startes");
 			this.crawlers[i].start();
 		}
 
 		try {
-			for (int i = 0; i < this.maxCrawlers; i++)
+			for (int i = 0; i < this.maxCrawlers; i++) {
 				crawlers[i].join();
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

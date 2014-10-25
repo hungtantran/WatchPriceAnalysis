@@ -42,7 +42,7 @@ public class Chrono24EntryPageParser extends BaseParser {
 
 	public Chrono24EntryPageParser(String articleUrl, MySqlConnection con,
 			LogManager logManager, Scheduler scheduler) {
-		super(articleUrl, "http://www.chrono24.com/", Domain.CHRONO24, con,
+		super(articleUrl, Globals.Domain.CHRONO24.domain, Domain.CHRONO24, con,
 				logManager, scheduler);
 
 		this.prices = new int[2];
@@ -56,6 +56,9 @@ public class Chrono24EntryPageParser extends BaseParser {
 	// Return true if the articleUrl is a valid watch entry page of chrono24,
 	// false if not
 	public boolean isArticlePage() {
+		if (!this.isValidLink(this.link))
+			return false;
+		
 		return (this.link.indexOf(this.domain) == 0 && this.link
 				.indexOf("--id") != -1);
 	}

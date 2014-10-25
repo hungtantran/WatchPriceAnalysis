@@ -12,6 +12,11 @@ public class TopicComparator implements Comparator<String> {
 	public static Map<String, Integer> topicPriorityMap;
 	static {
 		Map<String, Integer> tempMap = new HashMap<String, Integer>();
+		// Article ranks the highest
+		tempMap.put("Hodinkee", 0);
+		tempMap.put("ABlogToWatch", 0);
+		tempMap.put("WatchReport", 0);
+		// The rest rank according to brand famous
 		tempMap.put("Rolex", 1);
 		tempMap.put("Omega", 2);
 		tempMap.put("Patek Philippe", 3);

@@ -178,6 +178,16 @@ public abstract class BaseParser {
 					postProcessUrl(url, this.domainVal.value, null, 0, null);
 				}
 			}
+			
+			if (this.exception.getClass() == MalformedURLException.class) {
+				this.logManager.writeLog("Remove link " + url + " because of malformed url");
+				postProcessUrl(url, this.domainVal.value, null, 0, null);
+			}
+			
+			if (this.exception.getClass() == IllegalArgumentException.class) {
+				this.logManager.writeLog("Remove link " + url + " because of ");
+				postProcessUrl(url, this.domainVal.value, null, 0, null);
+			}
 
 			return;
 		}
@@ -195,12 +205,9 @@ public abstract class BaseParser {
 
 			for (String linkInPage : linksInPage) {
 				linkInPage = linkInPage.trim();
-				if (linkInPage.length() < 1)
-					continue;
 
 				if (linkInPage.contains(this.domain)
 						&& !Helper.linkIsFile(linkInPage)) {
-					this.scheduler.addToUrlsQueue(linkInPage);
 					newStrings.add(linkInPage);
 				}
 			}
@@ -230,6 +237,7 @@ public abstract class BaseParser {
 					&& !this.scheduler.urlsQueueContain(newLink)) {
 				Integer newLinkPriority = TopicComparator
 						.getStringPriority(newLink);
+				this.scheduler.addToUrlsQueue(newLink);
 				if (!this.mysqlConnection.insertIntoLinkQueueTable(newLink,
 						domainId, newLinkPriority, persistent, null, null))
 					continue;

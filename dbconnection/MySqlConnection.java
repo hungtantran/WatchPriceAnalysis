@@ -898,7 +898,7 @@ public class MySqlConnection {
 			Statement st = this.con.createStatement();
 			st.executeQuery("USE " + this.database);
 
-			String query = "SELECT link FROM link_queue_table WHERE domain_table_id_1 = "
+			String query = "SELECT link, domain_table_id_1, priority FROM link_queue_table WHERE domain_table_id_1 = "
 					+ domainId;
 
 			return st.executeQuery(query);
@@ -915,7 +915,7 @@ public class MySqlConnection {
 			Statement st = this.con.createStatement();
 			st.executeQuery("USE " + this.database);
 
-			String query = "SELECT link FROM link_queue_table";
+			String query = "SELECT link, domain_table_id_1, priority FROM link_queue_table";
 
 			return st.executeQuery(query);
 		} catch (SQLException e) {
@@ -932,7 +932,7 @@ public class MySqlConnection {
 			Statement st = this.con.createStatement();
 			st.executeQuery("USE " + this.database);
 
-			String query = "SELECT link FROM link_crawled_table WHERE domain_table_id_1 = "
+			String query = "SELECT link, domain_table_id_1, priority FROM link_crawled_table WHERE domain_table_id_1 = "
 					+ domainId;
 
 			return st.executeQuery(query);
@@ -949,7 +949,7 @@ public class MySqlConnection {
 			Statement st = this.con.createStatement();
 			st.executeQuery("USE " + this.database);
 
-			String query = "SELECT link FROM link_crawled_table";
+			String query = "SELECT link, domain_table_id_1, priority FROM link_crawled_table";
 
 			return st.executeQuery(query);
 		} catch (SQLException e) {
@@ -970,6 +970,28 @@ public class MySqlConnection {
 			PreparedStatement stmt = this.con.prepareStatement(query);
 			stmt.setInt(1, domainId);
 			stmt.setString(2, link);
+
+			if (Globals.DEBUG)
+				Globals.crawlerLogManager.writeLog(stmt.toString());
+			// execute the preparedstatement
+			stmt.execute();
+		} catch (SQLException e) {
+			Globals.crawlerLogManager.writeLog("Delete link_queue_table fails");
+			Globals.crawlerLogManager.writeLog(e.getMessage());
+			return false;
+		}
+
+		return true;
+	}
+	
+	public boolean removeFromLinkQueueTable(String link) {
+		try {
+			Statement st = this.con.createStatement();
+			st.executeQuery("USE " + this.database);
+
+			String query = "DELETE FROM link_queue_table WHERE link = ? AND persistent = 0";
+			PreparedStatement stmt = this.con.prepareStatement(query);
+			stmt.setString(1, link);
 
 			if (Globals.DEBUG)
 				Globals.crawlerLogManager.writeLog(stmt.toString());

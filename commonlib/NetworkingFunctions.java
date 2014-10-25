@@ -44,7 +44,7 @@ public class NetworkingFunctions {
 						.timeout(10000).followRedirects(true).execute();
 				
 				doc = response.parse();
-			} catch (MalformedURLException e) { 
+			} catch (MalformedURLException e) {
 				Globals.crawlerLogManager.writeLog("Try to download malformed url "+url);
 				result = e;
 				break;

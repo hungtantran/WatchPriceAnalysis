@@ -63,24 +63,23 @@ public class BaseCrawler extends Thread {
 
 		while (true) {
 			String curUrl = this.scheduler.getNextLinkFromUrlsQueue();
-
+			System.out.println("Get link "+curUrl);
 			// If for some reason startUrl is null stop right away
 			if (curUrl == null)
 				return;
 
 			this.parser = this.chooseParser(curUrl);
 
-			if (this.parser == null)
+			if (this.parser == null) {
+				this.logManager.writeLog("Can't find parser for url "+curUrl);
+				this.mysqlConnection.removeFromLinkQueueTable(curUrl);
 				continue;
+			}
 
 			// Process link (e.g. trim, truncate bad part, etc..)
-			// Check if link is still valid or not
 			curUrl = this.parser.processLink(curUrl);
-			if (!this.parser.isValidLink(curUrl))
-				return;
 
-			if (this.logManager != null)
-				this.logManager.writeLog("Process url " + curUrl);
+			this.logManager.writeLog("Process url " + curUrl);
 
 			// Process the new link
 			this.processUrl(curUrl);

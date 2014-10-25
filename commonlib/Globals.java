@@ -26,7 +26,7 @@ public class Globals {
 		tempMap.put("http://www.hodinkee.com", Domain.HODINKEE);
 		tempMap.put("http://www.ablogtowatch.com/", Domain.ABLOGTOWATCH);
 		tempMap.put("http://www.chrono24.com/", Domain.CHRONO24);
-		tempMap.put("http://www.watchreport.com", Domain.WATCHREPORT);
+		tempMap.put("http://watchreport.com", Domain.WATCHREPORT);
 		startUrlDomainMap = Collections.unmodifiableMap(tempMap);
 	}
 
@@ -62,7 +62,7 @@ public class Globals {
 		HODINKEE(1, "HODINKEE", "http://www.hodinkee.com"),
 		ABLOGTOWATCH(2, "ABLOGTOWATCH", "http://www.ablogtowatch.com"),
 		CHRONO24(3, "CHRONO24", "http://www.chrono24.com"),
-		WATCHREPORT(4, "WATCHREPORT", "http://www.watchreport.com");
+		WATCHREPORT(4, "WATCHREPORT", "http://watchreport.com");
 
 		public final int value;
 		public final String string;
