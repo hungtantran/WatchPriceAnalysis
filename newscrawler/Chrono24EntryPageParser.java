@@ -3,16 +3,14 @@ package newscrawler;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import commonlib.Globals;
+import commonlib.Globals.Domain;
 import commonlib.Helper;
 import commonlib.LogManager;
-import commonlib.NetworkingFunctions;
-import commonlib.TopicComparator;
-import commonlib.Globals.Domain;
+
 import dbconnection.MySqlConnection;
 
 /*import edu.stanford.nlp.process.Tokenizer;
@@ -174,6 +172,9 @@ public class Chrono24EntryPageParser extends BaseParser {
 
 		// If the download content fails, return
 		if (this.doc == null)
+			return false;
+		
+		if (!this.isArticlePage())
 			return false;
 
 		// Parse the name of the watch
@@ -411,20 +412,17 @@ public class Chrono24EntryPageParser extends BaseParser {
 	}
 
 	protected void checkDocumentUrl(String url) {
-		String htmlContent = null;
-
+		this.parseDoc();
+		
 		// If the page is an watch entry page, parse it
-		if (this.isArticlePage()) {
-			this.parseDoc();
-			htmlContent = this.getContent();
-
+		if (this.isArticlePage() && this.doc != null) {
 			String link = this.getLink();
 			Globals.Domain[] domains = this.getDomains();
 			String[] topics = this.getTopics();
 			String watchName = this.getWatchName();
 			int[] prices = this.getPrices();
 			String[] keywords = this.getKeywords();
-			String content = this.getContent();
+			String content = this.doc.outerHtml();
 			String timeCreated = this.getTimeCreated();
 			String dateCreated = this.getDateCreated();
 
@@ -463,48 +461,11 @@ public class Chrono24EntryPageParser extends BaseParser {
 					timeCrawled, dateCrawled, content, refNo, movement,
 					caliber, watchCondition, watchYear, caseMaterial,
 					dialColor, gender, location1, location2, location3);
-		} else {
-			// If the page is not an watch entry page, just get all the links
-			// and add it to the queue
-			Document htmlDoc = NetworkingFunctions.downloadHtmlContent(url,
-					this.numRetryDownloadPage);
-
-			if (htmlDoc != null)
-				htmlContent = htmlDoc.outerHtml();
 		}
 
-		if (htmlContent == null)
-			return;
-
-		// Parse out all the links from the current page
-		Set<String> linksInPage = BaseParser
-				.parseUrls(htmlContent, this.domain);
-
-		// Add more urls to the queue
-		Set<String> newStrings = new HashSet<String>();
-		if (linksInPage != null) {
-			if (Globals.DEBUG)
-				this.logManager.writeLog("Found " + linksInPage.size()
-						+ " links in page");
-
-			for (String linkInPage : linksInPage) {
-				linkInPage = linkInPage.trim();
-				linkInPage = this.processLink(linkInPage);
-				if (linkInPage.length() < 1)
-					continue;
-
-				if (linkInPage.contains(this.domain)
-						&& !Helper.linkIsFile(linkInPage)) {
-					this.scheduler.addToUrlsQueue(linkInPage);
-					newStrings.add(linkInPage);
-				}
-			}
-		}
-
-		// Perform tasks like insert link into crawled set, remove it from queue
-		// from sql db
-		Integer priority = TopicComparator.getStringPriority(url);
-		postProcessUrl(url, Domain.CHRONO24.value, priority, 0, newStrings);
+		// Remove current link from queue, add it to crawl set
+		// Adds all links in page to queue
+		this.processLinksInPage(url);
 	}
 
 	public static void main(String[] args) {

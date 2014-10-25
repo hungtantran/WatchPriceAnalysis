@@ -4,6 +4,8 @@ import static org.junit.Assert.*;
 
 import java.util.Set;
 
+import newscrawler.MainCrawler;
+
 import org.junit.Test;
 
 import commonlib.Globals;
@@ -13,6 +15,7 @@ public class HelperTest {
 
 	@Test
 	public void test() {
+		MainCrawler.startUpState();
 		testTopicIdentifier();
 		// testTopicIdentifierHard();
 	}

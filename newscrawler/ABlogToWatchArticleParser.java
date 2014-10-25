@@ -6,11 +6,11 @@ import java.util.Set;
 import org.jsoup.select.Elements;
 
 import commonlib.Globals;
-import commonlib.Helper;
-import commonlib.LogManager;
-import commonlib.TopicComparator;
 import commonlib.Globals.Domain;
 import commonlib.Globals.Type;
+import commonlib.Helper;
+import commonlib.LogManager;
+
 import dbconnection.MySqlConnection;
 
 /*import edu.stanford.nlp.process.Tokenizer;
@@ -47,8 +47,12 @@ public class ABlogToWatchArticleParser extends BaseParser {
 	// Return true if the articleUrl is a valid article page of ABlogToWatch,
 	// false if not
 	public boolean isArticlePage() {
-		return (this.content != null && this.content
-				.indexOf("article:published_time") != -1);
+		if (this.doc == null)
+			return false;
+
+		String content = this.doc.outerHtml();
+
+		return (content != null && content.indexOf("article:published_time") != -1);
 	}
 
 	// Get domains of the article
@@ -214,19 +218,17 @@ public class ABlogToWatchArticleParser extends BaseParser {
 	}
 
 	protected void checkDocumentUrl(String url) {
-		String htmlContent = null;
 		// If the page is an article page, parse it
 		this.parseDoc();
-		htmlContent = this.getContent();
 
-		if (this.isArticlePage()) {
+		if (this.isArticlePage() && this.doc != null) {
 			String link = this.getLink();
 			Globals.Domain[] domains = this.getDomains();
 			String articleName = this.getArticleName();
 			Globals.Type[] types = this.getTypes();
 			String[] keywords = this.getKeywords();
 			String[] topics = this.getTopics();
-			String content = this.getContent();
+			String content = this.doc.outerHtml();
 			String timeCreated = this.getTimeCreated();
 			String dateCreated = this.getDateCreated();
 
@@ -238,38 +240,10 @@ public class ABlogToWatchArticleParser extends BaseParser {
 					keywords, topics, timeCreated, dateCreated, timeCrawled,
 					dateCrawled, content);
 		}
-
-		if (htmlContent == null)
-			return;
-
-		// Parse out all the links from the current page
-		Set<String> linksInPage = BaseParser
-				.parseUrls(htmlContent, this.domain);
-
-		// Add more urls to the queue
-		Set<String> newStrings = new HashSet<String>();
-		if (linksInPage != null) {
-			if (Globals.DEBUG)
-				this.logManager.writeLog("Found " + linksInPage.size()
-						+ " links in page");
-
-			for (String linkInPage : linksInPage) {
-				linkInPage = linkInPage.trim();
-				if (linkInPage.length() < 1)
-					continue;
-
-				if (linkInPage.contains(this.domain)
-						&& !Helper.linkIsFile(linkInPage)) {
-					this.scheduler.addToUrlsQueue(linkInPage);
-					newStrings.add(linkInPage);
-				}
-			}
-		}
-
-		// Perform tasks like insert link into crawled set, remove it from queue
-		// from sql db
-		Integer priority = TopicComparator.getStringPriority(url);
-		postProcessUrl(url, this.domainVal.value, priority, 0, newStrings);
+		
+		// Remove current link from queue, add it to crawl set
+		// Adds all links in page to queue
+		this.processLinksInPage(url);
 	}
 
 	public static void main(String[] args) {

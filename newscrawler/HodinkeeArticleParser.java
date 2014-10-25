@@ -3,16 +3,14 @@ package newscrawler;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
 
 import commonlib.Globals;
-import commonlib.Helper;
-import commonlib.LogManager;
-import commonlib.NetworkingFunctions;
-import commonlib.TopicComparator;
 import commonlib.Globals.Domain;
 import commonlib.Globals.Type;
+import commonlib.Helper;
+import commonlib.LogManager;
+
 import dbconnection.MySqlConnection;
 
 /*import edu.stanford.nlp.process.Tokenizer;
@@ -116,6 +114,9 @@ public class HodinkeeArticleParser extends BaseParser {
 		if (this.doc == null)
 			return false;
 
+		if (!this.isArticlePage())
+			return false;
+
 		// Parse the name of the article
 		this.parseArticleName();
 
@@ -212,19 +213,17 @@ public class HodinkeeArticleParser extends BaseParser {
 	}
 
 	protected void checkDocumentUrl(String url) {
-		String htmlContent = null;
-		// If the page is an article page, parse it
-		if (this.isArticlePage()) {
-			this.parseDoc();
-			htmlContent = this.getContent();
+		this.parseDoc();
 
+		// If the page is an article page, parse it
+		if (this.isArticlePage() && this.doc != null) {
 			String link = this.getLink();
 			Globals.Domain[] domains = this.getDomains();
 			String articleName = this.getArticleName();
 			Globals.Type[] types = this.getTypes();
 			String[] keywords = this.getKeywords();
 			String[] topics = this.getTopics();
-			String content = this.getContent();
+			String content = this.doc.outerHtml();
 			String timeCreated = this.getTimeCreated();
 			String dateCreated = this.getDateCreated();
 
@@ -235,53 +234,16 @@ public class HodinkeeArticleParser extends BaseParser {
 			this.mysqlConnection.addArticle(link, domains, articleName, types,
 					keywords, topics, timeCreated, dateCreated, timeCrawled,
 					dateCrawled, content);
-		} else {
-			// If the page is not an watch entry page, just get all the links
-			// and add it to the queue
-			Document htmlDoc = NetworkingFunctions.downloadHtmlContent(url,
-					this.numRetryDownloadPage);
-
-			if (htmlDoc != null)
-				htmlContent = htmlDoc.outerHtml();
 		}
 
-		if (htmlContent == null)
-			return;
-
-		// Parse out all the links from hodinkee from the current page
-		Set<String> linksInPage = BaseParser.parseUrls(htmlContent,
-				this.domain);
-
-		// Add more urls to the queue
-
-		Set<String> newStrings = new HashSet<String>();
-		if (linksInPage != null) {
-			if (Globals.DEBUG)
-				this.logManager.writeLog("Found " + linksInPage.size()
-						+ " links in page");
-
-			for (String linkInPage : linksInPage) {
-				linkInPage = linkInPage.trim();
-				if (linkInPage.length() < 1)
-					continue;
-
-				if (linkInPage.contains(this.domain)
-						&& this.isValidLink(linkInPage)) {
-					this.scheduler.addToUrlsQueue(linkInPage);
-					newStrings.add(linkInPage);
-				}
-			}
-		}
-
-		// Perform tasks like insert link into crawled set, remove it from queue
-		// from sql db
-		Integer priority = TopicComparator.getStringPriority(url);
-		postProcessUrl(url, Domain.HODINKEE.value, priority, 0, newStrings);
+		// Remove current link from queue, add it to crawl set
+		// Adds all links in page to queue
+		this.processLinksInPage(url);
 	}
 
 	public static void main(String[] args) {
 		// HodinkeeArticleParser parser = new HodinkeeArticleParser(
-		//		"http://www.hodinkee.com/blog/a-look-at-jb-champions-unique-observatory-chronometer-wristwatch-the-other-patek-with-a-chance-to-become-the-most-expensive-watch-in-the-world");
+		// "http://www.hodinkee.com/blog/a-look-at-jb-champions-unique-observatory-chronometer-wristwatch-the-other-patek-with-a-chance-to-become-the-most-expensive-watch-in-the-world");
 		// parser.parseDoc();
 	}
 }

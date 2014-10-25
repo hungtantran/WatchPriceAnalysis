@@ -6,11 +6,11 @@ import java.util.Set;
 import org.jsoup.select.Elements;
 
 import commonlib.Globals;
-import commonlib.Helper;
-import commonlib.LogManager;
-import commonlib.TopicComparator;
 import commonlib.Globals.Domain;
 import commonlib.Globals.Type;
+import commonlib.Helper;
+import commonlib.LogManager;
+
 import dbconnection.MySqlConnection;
 
 /*import edu.stanford.nlp.process.Tokenizer;
@@ -34,9 +34,9 @@ public class WatchReportArticleParser extends BaseParser {
 
 	public WatchReportArticleParser(String articleUrl, MySqlConnection con,
 			LogManager logManager, Scheduler scheduler) {
-		super(articleUrl, "http://www.watchreport.com/", Domain.WATCHREPORT, con,
-				logManager, scheduler);
-		
+		super(articleUrl, "http://www.watchreport.com/", Domain.WATCHREPORT,
+				con, logManager, scheduler);
+
 		this.keywords = new HashSet<String>();
 		this.types = new HashSet<Globals.Type>();
 		this.types.add(Type.HOROLOGY);
@@ -47,12 +47,16 @@ public class WatchReportArticleParser extends BaseParser {
 	// Return true if the articleUrl is a valid article page of WatchReport,
 	// false if not
 	public boolean isArticlePage() {
+		if (this.doc == null)
+			return false;
+
+		String content = this.doc.outerHtml();
+
 		return (this.link.indexOf(this.domain) == 0
-				&& this.content != null
-				&& this.content
-						.indexOf("property=\"og:type\" content=\"article\"") != -1
-				&& this.content.indexOf("<h1") != -1
-				&& this.content.indexOf("<p class=\"post-meta\">") != -1 && Helper
+				&& content != null
+				&& content.indexOf("property=\"og:type\" content=\"article\"") != -1
+				&& content.indexOf("<h1") != -1
+				&& content.indexOf("<p class=\"post-meta\">") != -1 && Helper
 					.numOccurance(this.link, "/") == 4);
 	}
 
@@ -215,19 +219,16 @@ public class WatchReportArticleParser extends BaseParser {
 	}
 
 	protected void checkDocumentUrl(String url) {
-		String htmlContent = null;
-		// If the page is an article page, parse it
 		this.parseDoc();
-		htmlContent = this.getContent();
 
-		if (this.isArticlePage()) {
+		if (this.isArticlePage() && this.doc != null) {
 			String link = this.getLink();
 			Globals.Domain[] domains = this.getDomains();
 			String articleName = this.getArticleName();
 			Globals.Type[] types = this.getTypes();
 			String[] keywords = this.getKeywords();
 			String[] topics = this.getTopics();
-			String content = this.getContent();
+			String content = this.doc.outerHtml();
 			String timeCreated = this.getTimeCreated();
 			String dateCreated = this.getDateCreated();
 
@@ -240,42 +241,14 @@ public class WatchReportArticleParser extends BaseParser {
 					dateCrawled, content);
 		}
 
-		if (htmlContent == null)
-			return;
-
-		// Parse out all the links from hodinkee from the current page
-		Set<String> linksInPage = BaseParser.parseUrls(htmlContent,
-				this.domain);
-
-		// Add more urls to the queue
-		Set<String> newStrings = new HashSet<String>();
-		if (linksInPage != null) {
-			if (Globals.DEBUG)
-				this.logManager.writeLog("Found " + linksInPage.size()
-						+ " links in page");
-
-			for (String linkInPage : linksInPage) {
-				linkInPage = linkInPage.trim();
-				if (linkInPage.length() < 1)
-					continue;
-
-				if (linkInPage.contains(this.domain)
-						&& !Helper.linkIsFile(linkInPage)) {
-					Globals.scheduler.addToUrlsQueue(linkInPage);
-					newStrings.add(linkInPage);
-				}
-			}
-		}
-
-		// Perform tasks like insert link into crawled set, remove it from queue
-		// from sql db
-		Integer priority = TopicComparator.getStringPriority(url);
-		postProcessUrl(url, Domain.WATCHREPORT.value, priority, 0, newStrings);
+		// Remove current link from queue, add it to crawl set
+		// Adds all links in page to queue
+		this.processLinksInPage(url);
 	}
 
 	public static void main(String[] args) {
 		// WatchReportArticleParser parser = new WatchReportArticleParser(
-		//		"http://www.watchreport.com/citizen-eco-drive-promaster-aqualand-depth-meter-bn2024-05e-2/");
+		// "http://www.watchreport.com/citizen-eco-drive-promaster-aqualand-depth-meter-bn2024-05e-2/");
 		// parser.parseDoc();
 	}
 }

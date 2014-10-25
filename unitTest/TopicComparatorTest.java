@@ -4,6 +4,8 @@ import static org.junit.Assert.*;
 
 import java.util.PriorityQueue;
 
+import newscrawler.MainCrawler;
+
 import org.junit.Test;
 
 import commonlib.TopicComparator;
@@ -12,6 +14,7 @@ public class TopicComparatorTest {
 
 	@Test
 	public void test() {
+		MainCrawler.startUpState();
 		TestgetStringPriority();
 		TestComparator();
 	}

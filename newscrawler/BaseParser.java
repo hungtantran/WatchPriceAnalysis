@@ -5,13 +5,16 @@ import java.net.URL;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
 
 import commonlib.Globals;
+import commonlib.Helper;
 import commonlib.LogManager;
 import commonlib.NetworkingFunctions;
+import commonlib.NetworkingFunctions.NetPkg;
 import commonlib.TopicComparator;
 import dbconnection.MySqlConnection;
 
@@ -29,7 +32,7 @@ public abstract class BaseParser {
 	protected String domain = null;
 	protected Globals.Domain domainVal = null;
 	protected Document doc = null;
-	protected String content = null;
+	protected Exception exception = null;
 	protected String timeCreated = null;
 	protected String dateCreated = null;
 
@@ -71,14 +74,18 @@ public abstract class BaseParser {
 		this.scheduler = scheduler;
 	}
 
+	public boolean setContent(String content) {
+		if (content == null)
+			return false;
+
+		this.doc = Jsoup.parse(content);
+
+		return true;
+	}
+
 	// Get link to the page
 	public String getLink() {
 		return this.link;
-	}
-
-	// Get the content of the article
-	public String getContent() {
-		return this.content;
 	}
 
 	// Get time created
@@ -91,19 +98,12 @@ public abstract class BaseParser {
 		return this.dateCreated;
 	}
 
-	// Set html content of parser
-	public void setContent(String content) {
-		this.content = content;
-	}
-
 	protected void downloadHtmlContent(String url, int numRetryDownloadPage) {
-		this.doc = NetworkingFunctions.downloadHtmlContent(url,
+		NetPkg pkg = NetworkingFunctions.downloadHtmlContent(url,
 				numRetryDownloadPage);
 
-		if (this.doc != null) {
-			this.content = this.doc.outerHtml();
-		} else
-			this.content = null;
+		this.doc = pkg.doc;
+		this.exception = pkg.e;
 	}
 
 	protected static boolean dedupNoun(String noun1, String noun2) {
@@ -163,6 +163,55 @@ public abstract class BaseParser {
 		return resultUrls;
 	}
 
+	// Add links in the page into the queue, add current link into the crawled
+	// set
+	// Remove current link from the queue set
+	protected void processLinksInPage(String url) {
+		if (this.doc == null) {
+			// If the page fails to download for reasons like 404, remove it
+			if (this.exception.getClass() == HttpStatusException.class) {
+				HttpStatusException e = (HttpStatusException) this.exception;
+
+				if (e.getStatusCode() == 404) {
+					this.logManager.writeLog("Remove link " + url
+							+ " because of 404");
+					postProcessUrl(url, this.domainVal.value, null, 0, null);
+				}
+			}
+
+			return;
+		}
+
+		// Parse out all the links from the current page
+		Set<String> linksInPage = BaseParser.parseUrls(this.doc.outerHtml(),
+				this.domain);
+
+		// Add more urls to the queue
+		Set<String> newStrings = new HashSet<String>();
+		if (linksInPage != null) {
+			if (Globals.DEBUG)
+				this.logManager.writeLog("Found " + linksInPage.size()
+						+ " links in page");
+
+			for (String linkInPage : linksInPage) {
+				linkInPage = linkInPage.trim();
+				if (linkInPage.length() < 1)
+					continue;
+
+				if (linkInPage.contains(this.domain)
+						&& !Helper.linkIsFile(linkInPage)) {
+					this.scheduler.addToUrlsQueue(linkInPage);
+					newStrings.add(linkInPage);
+				}
+			}
+		}
+
+		// Perform tasks like insert link into crawled set, remove it from queue
+		// from sql db
+		Integer priority = TopicComparator.getStringPriority(url);
+		postProcessUrl(url, this.domainVal.value, priority, 0, newStrings);
+	}
+
 	protected void postProcessUrl(String processedlink, int domainId,
 			Integer priority, int persistent, Set<String> newLinks) {
 		if (processedlink != null) {
@@ -172,17 +221,19 @@ public abstract class BaseParser {
 			this.mysqlConnection.insertIntoLinkCrawledTable(processedlink,
 					domainId, priority, null, null);
 		}
+		
+		if (newLinks == null)
+			return;
 
-		if (newLinks != null)
-			for (String newLink : newLinks) {
-				if (this.scheduler.urlsCrawledContain(newLink)
-						&& !this.scheduler.urlsQueueContain(newLink)) {
-					Integer newLinkPriority = TopicComparator
-							.getStringPriority(newLink);
-					if (!this.mysqlConnection.insertIntoLinkQueueTable(newLink,
-							domainId, newLinkPriority, persistent, null, null))
-						continue;
-				}
+		for (String newLink : newLinks) {
+			if (this.scheduler.urlsCrawledContain(newLink)
+					&& !this.scheduler.urlsQueueContain(newLink)) {
+				Integer newLinkPriority = TopicComparator
+						.getStringPriority(newLink);
+				if (!this.mysqlConnection.insertIntoLinkQueueTable(newLink,
+						domainId, newLinkPriority, persistent, null, null))
+					continue;
 			}
+		}
 	}
 }

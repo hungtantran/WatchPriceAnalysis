@@ -6,15 +6,35 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.SocketTimeoutException;
 import java.net.URL;
+import java.net.UnknownHostException;
 
+import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.Connection.Response;
+import org.jsoup.UnsupportedMimeTypeException;
 import org.jsoup.nodes.Document;
 
 public class NetworkingFunctions {
+	public static class NetPkg {
+		public Document doc;
+		public Exception e;
+		
+		public NetPkg (Document doc, Exception e) {
+			this.doc = doc;
+			this.e = e;
+		}
+	}
+	
 	// Download the html content into a private Document variable "doc"
-	public static Document downloadHtmlContent(String url, int numRetries) {
+	public static NetPkg downloadHtmlContent(String url, int numRetries) {
+		if (url == null)
+			return null;
+		
+		Exception result = null;
+		Document doc = null;
 		for (int i = 0; i < numRetries; i++) {
 			try {
 				Response response = Jsoup
@@ -22,15 +42,40 @@ public class NetworkingFunctions {
 						.userAgent(
 								"Mozilla/5.0 (Windows; U; WindowsNT 5.1; en-US; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6")
 						.timeout(10000).followRedirects(true).execute();
-				return response.parse();
+				
+				doc = response.parse();
+			} catch (MalformedURLException e) { 
+				Globals.crawlerLogManager.writeLog("Try to download malformed url "+url);
+				result = e;
+				break;
+			} catch (HttpStatusException e) {
+				Globals.crawlerLogManager.writeLog("The response is error "+e.getStatusCode()+", http status exception from "+url);
+				result = e;
+				break;
+			} catch (UnsupportedMimeTypeException e) {
+				Globals.crawlerLogManager.writeLog("Unsupported mime from "+url);
+				result = e;
+				break;
+			} catch (SocketTimeoutException e) {
+				Globals.crawlerLogManager.writeLog("Socket time out from "+url);
+				result = e;
+			} catch (UnknownHostException e) {
+				Globals.crawlerLogManager.writeLog("Unknown Host Exception from "+url);
+				result = e;
+				break;
+			} catch (IllegalArgumentException e) {
+				Globals.crawlerLogManager.writeLog("Malformed URL from "+url);
+				result = e;
+				break;
 			} catch (IOException e) {
-				// Only print out fail on the last fail
-				if (i == numRetries - 1) 
-					Globals.crawlerLogManager.writeLog(e.getMessage());
+				Globals.crawlerLogManager.writeLog("Generic error from "+url);
+				result = e;
 			}
 		}
+		
+		NetPkg response = new NetPkg(doc, result);
 
-		return null;
+		return response;
 	}
 
 	// Send an http request given url and the parameters
