@@ -433,6 +433,19 @@ public class Helper {
 
 		return fileName;
 	}
+	
+	public static int hashStringToInt(String string) {
+		if (string == null)
+			return -1;
+		
+		int hash = 0;
+		
+		for (int i = 0; i < string.length(); i++) {
+			hash += string.charAt(i);
+		}
+		
+		return hash;
+	}
 
 	public static void main(String[] args) {
 	}

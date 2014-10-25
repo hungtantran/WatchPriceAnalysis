@@ -269,8 +269,6 @@ public class HodinkeeArticleParser extends BaseParser {
 						&& this.isValidLink(linkInPage)) {
 					this.scheduler.addToUrlsQueue(linkInPage);
 					newStrings.add(linkInPage);
-					if (Globals.DEBUG)
-						this.logManager.writeLog("Add link " + linkInPage);
 				}
 			}
 		}

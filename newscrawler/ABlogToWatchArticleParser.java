@@ -262,8 +262,6 @@ public class ABlogToWatchArticleParser extends BaseParser {
 						&& !Helper.linkIsFile(linkInPage)) {
 					this.scheduler.addToUrlsQueue(linkInPage);
 					newStrings.add(linkInPage);
-					if (Globals.DEBUG)
-						this.logManager.writeLog("Add link " + linkInPage);
 				}
 			}
 		}

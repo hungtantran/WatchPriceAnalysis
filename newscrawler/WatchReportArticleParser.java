@@ -263,8 +263,6 @@ public class WatchReportArticleParser extends BaseParser {
 						&& !Helper.linkIsFile(linkInPage)) {
 					Globals.scheduler.addToUrlsQueue(linkInPage);
 					newStrings.add(linkInPage);
-					if (Globals.DEBUG)
-						this.logManager.writeLog("Add link " + linkInPage);
 				}
 			}
 		}

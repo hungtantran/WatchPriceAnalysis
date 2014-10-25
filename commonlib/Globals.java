@@ -14,6 +14,7 @@ public class Globals {
 	public static int DEFAULTLOWERBOUNDWAITTIMESEC = 5;
 	public static int DEFAULTUPPERBOUNDWAITTIMESEC = 10;
 	public static int NUMMAXTHREADS = 5;
+	public static int NUMMAXQUEUE = 10;
 	
 	public static final String[] fileExtenstions = { "jpg", "xml", "gif",
 			"pdf", "png", "jpeg" };

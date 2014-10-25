@@ -4,28 +4,44 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.locks.ReentrantLock;
 
+import commonlib.Helper;
 import commonlib.LogManager;
 import commonlib.TopicComparator;
 
 import dbconnection.MySqlConnection;
 
 public class Scheduler {
+	protected Random rand = null;
 	protected Set<String> urlsCrawled = null;
-	protected PriorityBlockingQueue<String> urlsQueue = null;
+	protected PriorityBlockingQueue<String>[] urlsQueue = null;
 	protected LogManager logManager = null;
 	protected MySqlConnection con = null;
 	protected BaseCrawler[] crawlers = null;
 	protected int maxCrawlers = 0;
+	protected int numQueue = 0;
 
 	private final ReentrantLock mutex = new ReentrantLock();
 
-	public Scheduler(LogManager logManager, MySqlConnection con, int maxCrawlers) {
-		this.urlsQueue = new PriorityBlockingQueue<String>(100,
-				new TopicComparator());
+	@SuppressWarnings("unchecked")
+	public Scheduler(LogManager logManager, MySqlConnection con,
+			int maxCrawlers, int numQueue) {
+		if (numQueue <= 0 || maxCrawlers <= 0)
+			return;
+		
+		this.rand = new Random();
+		this.urlsQueue = new PriorityBlockingQueue[numQueue];
+		this.numQueue = numQueue;
+
+		for (int i = 0; i < numQueue; i++) {
+			this.urlsQueue[i] = new PriorityBlockingQueue<String>(100,
+					new TopicComparator());
+		}
+
 		this.urlsCrawled = Collections.synchronizedSet(new HashSet<String>());
 
 		this.logManager = logManager;
@@ -36,12 +52,12 @@ public class Scheduler {
 
 	public boolean startUp() {
 		this.logManager.writeLog("Begin start up scheduler");
-		
+
 		// Populate the queue with previous links in the queue
 		try {
 			ResultSet queue = this.con.getLinkQueue();
 			while (queue.next()) {
-				this.urlsQueue.add(queue.getString(1));
+				this.forceAddToUrlsQueue(queue.getString(1));
 			}
 
 			this.logManager.writeLog("Urls in Queue : "
@@ -74,13 +90,29 @@ public class Scheduler {
 		if (!this.isValidLink(url))
 			return false;
 
-		if (!this.urlsCrawled.contains(url) && !this.urlsQueue.contains(url)) {
-			this.urlsQueue.add(url);
+		int index = Helper.hashStringToInt(url) % this.numQueue;
+
+		if (!this.urlsCrawled.contains(url)
+				&& !this.urlsQueue[index].contains(url)) {
+			System.out.println("Add to queue "+index);
+			this.urlsQueue[index].add(url);
+			
+			this.logManager.writeLog("Add link " + url + " to queue "+index);
 			return true;
 		}
 
 		return false;
 
+	}
+
+	public boolean forceAddToUrlsQueue(String url) {
+		if (url == null)
+			return false;
+
+		int hash = Helper.hashStringToInt(url);
+		this.urlsQueue[hash % this.numQueue].add(url);
+
+		return true;
 	}
 
 	public boolean addToUrlsCrawled(String url) {
@@ -93,16 +125,31 @@ public class Scheduler {
 	}
 
 	public int getUrlsQueueSize() {
-		return this.urlsQueue.size();
+		int size = 0;
+
+		for (int i = 0; i < this.numQueue; i++) {
+			size += this.urlsQueue[i].size();
+		}
+
+		return size;
 	}
 
 	public String getNextLinkFromUrlsQueue() {
 		String nextLink = null;
 
-		try {
-			nextLink = this.urlsQueue.take();
-		} catch (InterruptedException e) {
-			this.logManager.writeLog(e.getMessage());
+		int numTries = 0;
+		while (true) {
+			int index = this.rand.nextInt(this.numQueue);
+			
+			if (this.urlsQueue[index].size() > 0) {
+				nextLink = this.urlsQueue[index].remove();
+				break;
+			} else if (numTries % this.numQueue == 10) {
+				// If we have too many tries, wait a bit
+				Helper.waitSec(5, 10);
+			}
+
+			numTries++;
 		}
 
 		return nextLink;
@@ -116,7 +163,9 @@ public class Scheduler {
 		if (!this.isValidLink(url))
 			return false;
 
-		return this.urlsQueue.contains(url);
+		int index = Helper.hashStringToInt(url) % this.numQueue;
+
+		return this.urlsQueue[index].contains(url);
 	}
 
 	public boolean urlsCrawledContain(String url) {
@@ -135,9 +184,9 @@ public class Scheduler {
 		for (int i = 0; i < this.maxCrawlers; i++) {
 			this.crawlers[i] = new BaseCrawler(this.con, this.logManager, this);
 		}
-		
+
 		this.logManager.writeLog("Run threads for scheduler");
-		
+
 		for (int i = 0; i < this.maxCrawlers; i++) {
 			this.crawlers[i].start();
 		}

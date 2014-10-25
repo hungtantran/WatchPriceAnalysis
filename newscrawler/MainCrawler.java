@@ -128,7 +128,7 @@ public class MainCrawler {
 			return;
 
 		Globals.scheduler = new Scheduler(Globals.crawlerLogManager,
-				Globals.con, Globals.NUMMAXTHREADS);
+				Globals.con, Globals.NUMMAXTHREADS, Globals.NUMMAXQUEUE);
 		Globals.scheduler.start();
 	}
 }
