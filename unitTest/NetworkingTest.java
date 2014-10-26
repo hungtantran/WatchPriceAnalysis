@@ -1,9 +1,9 @@
 package unitTest;
 
-import java.net.UnknownHostException;
-import java.util.Set;
+import static org.junit.Assert.assertEquals;
 
-import static org.junit.Assert.*;
+import java.net.UnknownHostException;
+
 import newscrawler.MainCrawler;
 
 import org.jsoup.HttpStatusException;

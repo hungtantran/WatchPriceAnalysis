@@ -1,0 +1,93 @@
+package daoconnection;
+
+import java.io.Serializable;
+
+public class LinkQueue implements Serializable {
+	private static final long serialVersionUID = 1L;
+
+	private int id;
+	private String link;
+	private int domainTableId1;
+	private Integer priority;
+	private Integer persistent;
+	private String timeCrawled;
+	private String dateCrawled;
+
+	// Getters / Setters
+	public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
+
+	public String getLink() {
+		return link;
+	}
+
+	public void setLink(String link) {
+		this.link = link;
+	}
+
+	public int getDomainTableId1() {
+		return domainTableId1;
+	}
+
+	public void setDomainTableId1(int domainTableId1) {
+		this.domainTableId1 = domainTableId1;
+	}
+
+	public Integer getPriority() {
+		return priority;
+	}
+
+	public void setPriority(Integer priority) {
+		this.priority = priority;
+	}
+
+	public Integer getPersistent() {
+		return persistent;
+	}
+
+	public void setPersistent(Integer persistent) {
+		this.persistent = persistent;
+	}
+
+	public String getTimeCrawled() {
+		return timeCrawled;
+	}
+
+	public void setTimeCrawled(String timeCrawled) {
+		this.timeCrawled = timeCrawled;
+	}
+
+	public String getDateCrawled() {
+		return dateCrawled;
+	}
+
+	public void setDateCrawled(String dateCrawled) {
+		this.dateCrawled = dateCrawled;
+	}
+
+	// Object overrides
+	@Override
+	public boolean equals(Object other) {
+		return (other instanceof LinkQueue)
+				&& this.link == ((LinkQueue) other).link;
+	}
+
+	@Override
+	public int hashCode() {
+		Integer id = this.id;
+		return this.getClass().hashCode() + id.hashCode();
+	}
+
+	@Override
+	public String toString() {
+		return String
+				.format("LinkQueue[id=%d, link=%s, domainTableId1=%d, priority=%d, persistent=%d, timeCrawled=%s, dateCrawled=%s]",
+						this.id, this.link, this.domainTableId1, this.priority,
+						this.persistent, this.timeCrawled, this.dateCrawled);
+	}
+}
