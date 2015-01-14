@@ -5,13 +5,13 @@ import java.io.Serializable;
 public class Article implements Serializable {
 	private static final long serialVersionUID = 1L;
 
-	private int id;
+	private Integer id;
 	private String link;
-	private int domainTableId1;
+	private Integer domainTableId1;
 	private Integer domainTableId2;
 	private Integer domainTableId3;
 	private String articleName;
-	private int typeTable1;
+	private Integer typeTable1;
 	private Integer typeTable2;
 	private String keywords;
 	private String timeCreated;
@@ -20,11 +20,11 @@ public class Article implements Serializable {
 	private String dateCrawled;
 
 	// Getters / Setters
-	public int getId() {
+	public Integer getId() {
 		return id;
 	}
 
-	public void setId(int id) {
+	public void setId(Integer id) {
 		this.id = id;
 	}
 
@@ -36,11 +36,11 @@ public class Article implements Serializable {
 		this.link = link;
 	}
 
-	public int getDomainTableId1() {
+	public Integer getDomainTableId1() {
 		return domainTableId1;
 	}
 
-	public void setDomainTableId1(int domainTableId1) {
+	public void setDomainTableId1(Integer domainTableId1) {
 		this.domainTableId1 = domainTableId1;
 	}
 
@@ -72,7 +72,7 @@ public class Article implements Serializable {
 		return typeTable1;
 	}
 
-	public void setTypeTable1(int typeTable1) {
+	public void setTypeTable1(Integer typeTable1) {
 		this.typeTable1 = typeTable1;
 	}
 

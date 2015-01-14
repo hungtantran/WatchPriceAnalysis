@@ -5,20 +5,20 @@ import java.io.Serializable;
 public class LinkQueue implements Serializable {
 	private static final long serialVersionUID = 1L;
 
-	private int id;
+	private Integer id;
 	private String link;
-	private int domainTableId1;
+	private Integer domainTableId1;
 	private Integer priority;
 	private Integer persistent;
 	private String timeCrawled;
 	private String dateCrawled;
 
 	// Getters / Setters
-	public int getId() {
+	public Integer getId() {
 		return id;
 	}
 
-	public void setId(int id) {
+	public void setId(Integer id) {
 		this.id = id;
 	}
 
@@ -34,7 +34,7 @@ public class LinkQueue implements Serializable {
 		return domainTableId1;
 	}
 
-	public void setDomainTableId1(int domainTableId1) {
+	public void setDomainTableId1(Integer domainTableId1) {
 		this.domainTableId1 = domainTableId1;
 	}
 

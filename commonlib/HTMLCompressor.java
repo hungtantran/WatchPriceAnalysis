@@ -1,6 +1,11 @@
 package commonlib;
 
-import dbconnection.MySqlConnection;
+import java.sql.SQLException;
+
+import daoconnection.ArticleContent;
+import daoconnection.ArticleContentDAO;
+import daoconnection.ArticleContentDAOJDBC;
+import daoconnection.DAOFactory;
 
 public class HTMLCompressor {
 	public HTMLCompressor() {
@@ -65,9 +70,9 @@ public class HTMLCompressor {
 		return htmlContent;
 	}
 	
-	public static void main(String[] args) {
-		MySqlConnection mysqlConnection = new MySqlConnection();
-		String content = mysqlConnection.getArticleContent(1);
-		HTMLCompressor.compressHtmlContent(content);
+	public static void main(String[] args) throws ClassNotFoundException, SQLException {
+		ArticleContentDAO articleContentDAO = new ArticleContentDAOJDBC(DAOFactory.getInstance(Globals.username, Globals.password, Globals.server + Globals.database));
+		ArticleContent articleContent = articleContentDAO.getArticleContent(1);
+		HTMLCompressor.compressHtmlContent(articleContent.getContent());
 	}
 }

@@ -272,8 +272,7 @@ public class SanitizeDB {
 					String compressedHtmlContent = HTMLCompressor
 							.compressHtmlContent(originalHtmlContent);
 
-					if (!this.mysqlConnection.addArticleContent(
-							resultSet.getInt(1), compressedHtmlContent))
+					if (!this.mysqlConnection.addArticleContent(resultSet.getInt(1), compressedHtmlContent))
 						continue;
 				}
 

@@ -5,15 +5,15 @@ import java.io.Serializable;
 public class WatchPageContent implements Serializable {
 	private static final long serialVersionUID = 1L;
 
-	private int watchTableId;
+	private Integer watchTableId;
 	private String content;
 
 	// Getters / Setters
-	public int getWatchTableId() {
+	public Integer getWatchTableId() {
 		return watchTableId;
 	}
 
-	public void setWatchTableId(int watchTableId) {
+	public void setWatchTableId(Integer watchTableId) {
 		this.watchTableId = watchTableId;
 	}
 

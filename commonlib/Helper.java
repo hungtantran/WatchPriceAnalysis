@@ -388,7 +388,7 @@ public class Helper {
 	}
 	
 	// Convert type to type id
-	public static Integer[] convertTypeToTypeId(Globals.Type[] types) {
+	public static Integer[] convertTypeToTypeId(Globals.TypeValue[] types) {
 		if (Globals.idTypeMap == null)
 			return null;
 		

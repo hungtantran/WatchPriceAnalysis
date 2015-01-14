@@ -5,24 +5,24 @@ import java.io.Serializable;
 public class Topic implements Serializable {
 	private static final long serialVersionUID = 1L;
 
-	private int id;
-	private int typeTableId;
+	private Integer id;
+	private Integer typeTableId;
 	private String topic;
 
 	// Getters / Setters
-	public int getId() {
+	public Integer getId() {
 		return id;
 	}
 
-	public void setId(int id) {
+	public void setId(Integer id) {
 		this.id = id;
 	}
 
-	public int getTypeTableId() {
+	public Integer getTypeTableId() {
 		return typeTableId;
 	}
 
-	public void setTypeTableId(int typeTableId) {
+	public void setTypeTableId(Integer typeTableId) {
 		this.typeTableId = typeTableId;
 	}
 

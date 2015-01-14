@@ -5,16 +5,16 @@ import java.io.Serializable;
 public class WatchDesc implements Serializable {
 	private static final long serialVersionUID = 1L;
 
-	private int id;
+	private Integer id;
 	private String link;
-	private int domainTableId1;
-	private Integer domainTableId2;
-	private Integer domainTableId3;
+	private Integer domainTableId1;
+	private Integer topicTableId1;
+	private Integer topicTableId2;
 	private String watchName;
-	private int price1;
+	private Integer price1;
 	private Integer price2;
 	private String keywords;
-	private String refNol;
+	private String refNo;
 	private String movement;
 	private String caliber;
 	private String watchCondition;
@@ -31,11 +31,11 @@ public class WatchDesc implements Serializable {
 	private String dateCrawled;
 
 	// Getters / Setters
-	public int getId() {
+	public Integer getId() {
 		return id;
 	}
 
-	public void setId(int id) {
+	public void setId(Integer id) {
 		this.id = id;
 	}
 
@@ -47,28 +47,28 @@ public class WatchDesc implements Serializable {
 		this.link = link;
 	}
 
-	public int getDomainTableId1() {
+	public Integer getDomainTableId1() {
 		return domainTableId1;
 	}
 
-	public void setDomainTableId1(int domainTableId1) {
+	public void setDomainTableId1(Integer domainTableId1) {
 		this.domainTableId1 = domainTableId1;
 	}
 
-	public Integer getDomainTableId2() {
-		return domainTableId2;
+	public Integer getTopicTableId1() {
+		return topicTableId1;
 	}
 
-	public void setDomainTableId2(Integer domainTableId2) {
-		this.domainTableId2 = domainTableId2;
+	public void setTopicTableId1(Integer topicTableId1) {
+		this.topicTableId1 = topicTableId1;
 	}
 
-	public Integer getDomainTableId3() {
-		return domainTableId3;
+	public Integer getTopicTableId2() {
+		return topicTableId2;
 	}
 
-	public void setDomainTableId3(Integer domainTableId3) {
-		this.domainTableId3 = domainTableId3;
+	public void setTopicTableId2(Integer topicTableId2) {
+		this.topicTableId2 = topicTableId2;
 	}
 
 	public String getWatchName() {
@@ -79,11 +79,11 @@ public class WatchDesc implements Serializable {
 		this.watchName = watchName;
 	}
 
-	public int getPrice1() {
+	public Integer getPrice1() {
 		return price1;
 	}
 
-	public void setPrice1(int price1) {
+	public void setPrice1(Integer price1) {
 		this.price1 = price1;
 	}
 
@@ -103,12 +103,12 @@ public class WatchDesc implements Serializable {
 		this.keywords = keywords;
 	}
 
-	public String getRefNol() {
-		return refNol;
+	public String getRefNo() {
+		return refNo;
 	}
 
-	public void setRefNol(String refNol) {
-		this.refNol = refNol;
+	public void setRefNo(String refNol) {
+		this.refNo = refNol;
 	}
 
 	public String getMovement() {
@@ -238,16 +238,16 @@ public class WatchDesc implements Serializable {
 
 	@Override
 	public String toString() {
-		return String
-				.format("WatchDesc[id=%d, link=%s, domainTableId1=%d, domainTableId2=%d, domainTableId3=%d, watchName=%s, price1=%d, price2=%d, keywords=%s, refNo=%s, movement=%s, caliber=%s, watchCondition=%s, watchYear=%d, caseMaterial=%s, dialColor=%s, gender=%s, location1=%s, location2=%s, location3=%s, timeCreated=%s, dateCreated=%s, timeCrawled=%s, dateCrawled=%s]",
-						this.id, this.link, this.domainTableId1,
-						this.domainTableId2, this.domainTableId3,
-						this.watchName, this.price1, this.price2,
-						this.keywords, this.refNol, this.movement,
-						this.caliber, this.watchCondition, this.watchYear,
-						this.caseMaterial, this.dialColor, this.gender,
-						this.location1, this.location2, this.location3,
-						this.timeCreated, this.dateCreated, this.timeCrawled,
-						this.dateCrawled);
+		return String.format(
+			"WatchDesc[id=%d, link=%s, domainTableId1=%d, domainTableId2=%d, domainTableId3=%d, watchName=%s, price1=%d, price2=%d, keywords=%s, refNo=%s, movement=%s, caliber=%s, watchCondition=%s, watchYear=%d, caseMaterial=%s, dialColor=%s, gender=%s, location1=%s, location2=%s, location3=%s, timeCreated=%s, dateCreated=%s, timeCrawled=%s, dateCrawled=%s]",
+			this.id, this.link, this.domainTableId1,
+			this.topicTableId1, this.topicTableId2,
+			this.watchName, this.price1, this.price2,
+			this.keywords, this.refNo, this.movement,
+			this.caliber, this.watchCondition, this.watchYear,
+			this.caseMaterial, this.dialColor, this.gender,
+			this.location1, this.location2, this.location3,
+			this.timeCreated, this.dateCreated, this.timeCrawled,
+			this.dateCrawled);
 	}
 }

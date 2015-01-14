@@ -5,15 +5,15 @@ import java.io.Serializable;
 public class ArticleContent implements Serializable {
 	private static final long serialVersionUID = 1L;
 
-	private int articleTableId;
+	private Integer articleTableId;
 	private String content;
 
 	// Getter / Setters
-	public int getArticleTableId() {
+	public Integer getArticleTableId() {
 		return articleTableId;
 	}
 
-	public void setArticleTableId(int articleTableId) {
+	public void setArticleTableId(Integer articleTableId) {
 		this.articleTableId = articleTableId;
 	}
 

@@ -5,32 +5,32 @@ import java.io.Serializable;
 public class ArticleTopic implements Serializable {
 	private static final long serialVersionUID = 1L;
 
-	private int id;
-	private int articleTableId;
-	private int topicTableId;
+	private Integer id;
+	private Integer articleTableId;
+	private Integer topicTableId;
 
 	// Getters / Setters
-	public int getId() {
+	public Integer getId() {
 		return id;
 	}
 
-	public void setId(int id) {
+	public void setId(Integer id) {
 		this.id = id;
 	}
 
-	public int getArticleTableId() {
+	public Integer getArticleTableId() {
 		return articleTableId;
 	}
 
-	public void setArticleTableId(int articleTableId) {
+	public void setArticleTableId(Integer articleTableId) {
 		this.articleTableId = articleTableId;
 	}
 
-	public int getTopicTableId() {
+	public Integer getTopicTableId() {
 		return topicTableId;
 	}
 
-	public void setTopicTableId(int topicTableId) {
+	public void setTopicTableId(Integer topicTableId) {
 		this.topicTableId = topicTableId;
 	}
 

@@ -7,7 +7,6 @@ import java.util.HashSet;
 import java.util.Map;
 
 import newscrawler.Scheduler;
-import dbconnection.MySqlConnection;
 
 public class Globals {
 	public static final boolean DEBUG = true;
@@ -18,6 +17,11 @@ public class Globals {
 	
 	public static final String[] fileExtenstions = { "jpg", "xml", "gif",
 			"pdf", "png", "jpeg" };
+	
+	 public static String username = "root";
+	 public static String password = "";
+	 public static String server = "localhost/";
+	 public static String database = "newscrawlertest";
 
 	// Map between the start url and domain
 	public static Map<String, Domain> startUrlDomainMap;
@@ -34,26 +38,25 @@ public class Globals {
 	public static Map<Integer, String> idDomainMap = null;
 	public static Map<String, Integer> idTopicMap = null;
 	
-	public static LogManager crawlerLogManager = null;
-	public static MySqlConnection con = null;
+	public static LogManager crawlerLogManager = new LogManager("crawlerLog", "crawlerLog");
 	public static Scheduler scheduler = null;
 
 	// Type of links
-	public static enum Type {
+	public static enum TypeValue {
 		HOROLOGY(1);
 
 		public final int value;
 
-		private Type(int value) {
+		private TypeValue(int value) {
 			this.value = value;
 		}
 	};
 
 	// Map between the type and its name as string
-	public static Map<Type, String> typeNameMap;
+	public static Map<TypeValue, String> typeNameMap;
 	static {
-		Map<Type, String> tempMap = new HashMap<Type, String>();
-		tempMap.put(Type.HOROLOGY, "HOROLOGY");
+		Map<TypeValue, String> tempMap = new HashMap<TypeValue, String>();
+		tempMap.put(TypeValue.HOROLOGY, "HOROLOGY");
 		typeNameMap = Collections.unmodifiableMap(tempMap);
 	}
 
@@ -87,7 +90,7 @@ public class Globals {
 	}
 
 	// Map between the type and keywords associated with the type
-	public static Map<Type, String[]> typeTopicMap;
+	public static Map<TypeValue, String[]> typeTopicMap;
 	public static final String[] HOROLOGYTOPICS = { "A.Lange & Sohne",
 			"A.Manzoni & Fils", "Armin Strom", "Arnold & Son",
 			"Audemars Piguet", "Ball", "Balmain", "Baume & Mercier",
@@ -147,8 +150,8 @@ public class Globals {
 					"glashutte", "geneve", "design", "schwarz", "watch"));
 
 	static {
-		Map<Type, String[]> tempMap = new HashMap<Type, String[]>();
-		tempMap.put(Type.HOROLOGY, HOROLOGYTOPICS);
+		Map<TypeValue, String[]> tempMap = new HashMap<TypeValue, String[]>();
+		tempMap.put(TypeValue.HOROLOGY, HOROLOGYTOPICS);
 		typeTopicMap = Collections.unmodifiableMap(tempMap);
 	}
 }

@@ -122,13 +122,4 @@ public class MainCrawler {
 
 		return true;
 	}
-
-	public static void main(String[] args) {
-		if (!MainCrawler.startUpState())
-			return;
-
-		Globals.scheduler = new Scheduler(Globals.crawlerLogManager,
-				Globals.con, Globals.NUMMAXTHREADS, Globals.NUMMAXQUEUE);
-		Globals.scheduler.start();
-	}
 }
