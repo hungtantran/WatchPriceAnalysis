@@ -145,7 +145,7 @@ public class ArticleTopicDAOJDBC implements ArticleTopicDAO {
 	}
 
 	@Override
-	public boolean removeArticleTopicByTopic(ArticleTopic articleTopic) throws SQLException {
+	public boolean removeArticleTopicByArticleTableId(int articleTableId) throws SQLException {
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
 		ResultSet resultSet = null;
@@ -153,7 +153,7 @@ public class ArticleTopicDAOJDBC implements ArticleTopicDAO {
 		try {
 			connection = this.daoFactory.getConnection();
 			
-			Object[] values = { articleTopic.getTopicTableId() };
+			Object[] values = { articleTableId };
 			
 			preparedStatement = DAOUtil.prepareStatement(connection, SQL_DELETE, false, values);
 			
@@ -165,7 +165,7 @@ public class ArticleTopicDAOJDBC implements ArticleTopicDAO {
 			
 			return true;
 		} catch (SQLException e) {
-			Globals.crawlerLogManager.writeLog("Insert article topic " + articleTopic.toString() + " fails");
+			Globals.crawlerLogManager.writeLog("REmove article topic by article table id " + articleTableId + " fails");
 			Globals.crawlerLogManager.writeLog(e.getMessage());
 			
 			return false;

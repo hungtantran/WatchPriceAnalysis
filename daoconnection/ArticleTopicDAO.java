@@ -10,5 +10,5 @@ public interface ArticleTopicDAO {
 	
 	public Integer createArticleTopic(ArticleTopic articleTopic) throws SQLException;
 	
-	public boolean removeArticleTopicByTopic(ArticleTopic articleTopic) throws SQLException;
+	public boolean removeArticleTopicByArticleTableId(int articleTableId) throws SQLException;
 }

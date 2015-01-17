@@ -2,6 +2,7 @@ package newscrawler;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -16,7 +17,14 @@ import commonlib.LogManager;
 import commonlib.NetworkingFunctions;
 import commonlib.NetworkingFunctions.NetPkg;
 import commonlib.TopicComparator;
-import dbconnection.MySqlConnection;
+import daoconnection.DAOFactory;
+import daoconnection.Domain;
+import daoconnection.LinkCrawled;
+import daoconnection.LinkCrawledDAO;
+import daoconnection.LinkCrawledDAOJDBC;
+import daoconnection.LinkQueue;
+import daoconnection.LinkQueueDAO;
+import daoconnection.LinkQueueDAOJDBC;
 
 public abstract class BaseParser {
 	protected final String invalidCharacters[] = { "{", "}", "(", ")", "[",
@@ -24,17 +32,17 @@ public abstract class BaseParser {
 	protected final String invalidWords[] = { "paper", "article", "this",
 			"that", "with" };
 
-	protected MySqlConnection mysqlConnection = null;
 	protected LogManager logManager = null;
 	protected Scheduler scheduler = null;
 
 	protected String link = null;
-	protected String domain = null;
-	protected Globals.Domain domainVal = null;
+	protected Domain domain = null;
 	protected Document doc = null;
 	protected Exception exception = null;
 	protected String timeCreated = null;
 	protected String dateCreated = null;
+	protected LinkQueueDAO linkQueueDAO = null;
+	protected LinkCrawledDAO linkCrawledDAO = null;
 
 	public abstract boolean isArticlePage();
 
@@ -47,36 +55,26 @@ public abstract class BaseParser {
 
 	public abstract boolean isValidLink(String url);
 
-	// public abstract String getLink();
-	// public abstract Globals.Domain[] getDomains();
-	// public abstract String getArticleName();
-	// public abstract Globals.Type[] getTypes();
-	// public abstract String[] getKeywords();
-	// public abstract String[] getTopics();
-	// public abstract String getContent();
-	// public abstract String getTimeCreated();
-	// public abstract String getDateCreated();
-
-	protected BaseParser(String link, String domain, Globals.Domain domainVal,
-			MySqlConnection con, LogManager logManager, Scheduler scheduler) {
+	protected BaseParser(String link, Domain domain, LogManager logManager, Scheduler scheduler, DAOFactory daoFactory) throws SQLException {
 		this.domain = domain;
-		this.domainVal = domainVal;
 
-		if (link.indexOf(this.domain) != 0) {
-			this.link = this.domain;
+		if (link.indexOf(domain.getDomainString()) != 0) {
+			this.link = domain.getDomainString();
 		} else {
 			// Initialize private variable
 			this.link = link;
 		}
 
-		this.mysqlConnection = con;
 		this.logManager = logManager;
 		this.scheduler = scheduler;
+		this.linkQueueDAO = new LinkQueueDAOJDBC(daoFactory);
+		this.linkCrawledDAO = new LinkCrawledDAOJDBC(daoFactory);
 	}
 
 	public boolean setContent(String content) {
-		if (content == null)
+		if (content == null) {
 			return false;
+		}
 
 		this.doc = Jsoup.parse(content);
 
@@ -163,86 +161,92 @@ public abstract class BaseParser {
 		return resultUrls;
 	}
 
-	// Add links in the page into the queue, add current link into the crawled
-	// set
-	// Remove current link from the queue set
-	protected void processLinksInPage(String url) {
+	// Add links in the page into the queue, add current link into the crawled set.
+	// Remove current link from the queue set.
+	protected void processLinksInPage(String url) throws SQLException {
 		if (this.doc == null) {
 			// If the page fails to download for reasons like 404, remove it
 			if (this.exception.getClass() == HttpStatusException.class) {
 				HttpStatusException e = (HttpStatusException) this.exception;
 
 				if (e.getStatusCode() == 404) {
-					this.logManager.writeLog("Remove link " + url
-							+ " because of 404");
-					postProcessUrl(url, this.domainVal.value, null, 0, null);
+					this.logManager.writeLog("Remove link " + url + " because of 404");
+					postProcessUrl(url, this.domain.getId(), null, 0, null);
 				}
 			}
 
 			if (this.exception.getClass() == MalformedURLException.class) {
-				this.logManager.writeLog("Remove link " + url
-						+ " because of malformed url");
-				postProcessUrl(url, this.domainVal.value, null, 0, null);
+				this.logManager.writeLog("Remove link " + url + " because of malformed url");
+				postProcessUrl(url, this.domain.getId(), null, 0, null);
 			}
 
 			if (this.exception.getClass() == IllegalArgumentException.class) {
 				this.logManager.writeLog("Remove link " + url + " because of ");
-				postProcessUrl(url, this.domainVal.value, null, 0, null);
+				postProcessUrl(url, this.domain.getId(), null, 0, null);
 			}
 
 			return;
 		}
 
 		// Parse out all the links from the current page
-		Set<String> linksInPage = BaseParser.parseUrls(this.doc.outerHtml(),
-				this.domain);
+		Set<String> linksInPage = BaseParser.parseUrls(this.doc.outerHtml(), this.domain.getDomainString());
 
 		// Add more urls to the queue
 		Set<String> newStrings = new HashSet<String>();
 		if (linksInPage != null) {
-			if (Globals.DEBUG)
-				this.logManager.writeLog("Found " + linksInPage.size()
-						+ " links in page");
+			if (Globals.DEBUG) {
+				this.logManager.writeLog("Found " + linksInPage.size() + " links in page");
+			}
 
 			for (String linkInPage : linksInPage) {
 				linkInPage = linkInPage.trim();
 
-				if (linkInPage.contains(this.domain)
-						&& !Helper.linkIsFile(linkInPage)
-						&& this.isValidLink(linkInPage)) {
+				if (linkInPage.contains(this.domain.getDomainString()) && !Helper.linkIsFile(linkInPage) && this.isValidLink(linkInPage)) {
 					newStrings.add(linkInPage);
 				}
 			}
 		}
 
-		// Perform tasks like insert link into crawled set, remove it from queue
-		// from sql db
+		// Perform tasks like insert link into crawled set, remove it from queue from sql db
 		Integer priority = TopicComparator.getStringPriority(url);
-		postProcessUrl(url, this.domainVal.value, priority, 0, newStrings);
+		postProcessUrl(url, this.domain.getId(), priority, 0, newStrings);
 	}
 
-	protected void postProcessUrl(String processedlink, int domainId,
-			Integer priority, int persistent, Set<String> newLinks) {
+	protected void postProcessUrl(String processedlink, int domainId, Integer priority, int persistent, Set<String> newLinks) throws SQLException {
 		if (processedlink != null) {
-			this.mysqlConnection.removeFromLinkQueueTable(processedlink,
-					domainId);
-
-			this.mysqlConnection.insertIntoLinkCrawledTable(processedlink,
-					domainId, priority, null, null);
+			this.linkQueueDAO.removeLinkQueue(processedlink);
+			
+			LinkCrawled linkCrawled = new LinkCrawled();
+			linkCrawled.setLink(processedlink);
+			linkCrawled.setDomainTableId1(domainId);
+			linkCrawled.setPriority(priority);
+			linkCrawled.setDateCrawled(null);
+			linkCrawled.setTimeCrawled(null);
+			
+			this.linkCrawledDAO.createLinkCrawled(linkCrawled);
 		}
 
-		if (newLinks == null)
+		if (newLinks == null) {
 			return;
+		}
 
 		for (String newLink : newLinks) {
-			if (!this.scheduler.urlsCrawledContain(newLink)
-					&& !this.scheduler.urlsQueueContain(newLink)) {
-				Integer newLinkPriority = TopicComparator
-						.getStringPriority(newLink);
+			if (!this.scheduler.urlsCrawledContain(newLink) && !this.scheduler.urlsQueueContain(newLink)) {
+				Integer newLinkPriority = TopicComparator.getStringPriority(newLink);
+				
 				this.scheduler.addToUrlsQueue(newLink);
-				if (!this.mysqlConnection.insertIntoLinkQueueTable(newLink,
-						domainId, newLinkPriority, persistent, null, null))
+				
+				LinkQueue linkQueue = new LinkQueue();
+				linkQueue.setLink(newLink);
+				linkQueue.setDomainTableId1(domainId);
+				linkQueue.setPriority(newLinkPriority);
+				linkQueue.setPersistent(persistent);
+				linkQueue.setDateCrawled(null);
+				linkQueue.setTimeCrawled(null);
+				
+				if (this.linkQueueDAO.createLinkQueue(linkQueue) == null) {
 					continue;
+				}
 			}
 		}
 	}

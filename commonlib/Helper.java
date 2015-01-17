@@ -250,10 +250,10 @@ public class Helper {
 
 	// Given a name like an article name or an entry name, etc... and a set of
 	// topic words. Try to identify the topic of the name
-	public static Set<String> identifyTopicOfName(String watchName,
-			String[] topics) {
-		if (watchName == null || topics == null)
+	public static Set<String> identifyTopicOfName(String watchName, String[] topics, Set<String> typeWords) {
+		if (watchName == null || topics == null || typeWords == null) {
 			return null;
+		}
 		
 		Set<String> topicsOfName = new HashSet<String>();
 		String name = new String(Helper.removeAccents(watchName));
@@ -309,10 +309,9 @@ public class Helper {
 			if (!topicsOfName.contains(topic)) {
 				String lowerCaseTopic = topic.toLowerCase();
 				Set<String> topicWords = Helper.splitString(lowerCaseTopic, delimiters);
+				
 				for (String topicWord : topicWords) {
-					if (topicWord.length() > 3
-							&& articleNameWordsSet.contains(topicWord)
-							&& !Globals.HOROLOGYTOPICSSTOPWORDS.contains(topicWord)) {
+					if (topicWord.length() > 3 && articleNameWordsSet.contains(topicWord) && !typeWords.contains(topicWord)) {
 						topicsOfName.add(topic);
 						break;
 					}
@@ -367,41 +366,6 @@ public class Helper {
 		}
 
 		return topicsId;
-	}
-	
-	// Convert domain to domain id
-	public static Integer[] convertDomainToDomainId(Globals.Domain[] domains) {
-		if (Globals.idDomainMap == null)
-			return null;
-		
-		Integer[] domainsId = new Integer[3];
-
-		// Get the id of domains
-		for (int i = 0; i < domains.length; i++)
-			domainsId[i] = domains[i].value;
-
-		for (int i = domains.length; i < 3; i++)
-			domainsId[i] = null;
-
-		return domainsId;
-	}
-	
-	// Convert type to type id
-	public static Integer[] convertTypeToTypeId(Globals.TypeValue[] types) {
-		if (Globals.idTypeMap == null) {
-			return null;
-		}
-		
-		Integer[] typesId = new Integer[3];
-
-		// Get the id of types
-		for (int i = 0; i < types.length; i++)
-			typesId[i] = types[i].value;
-
-		for (int i = types.length; i < 3; i++)
-			typesId[i] = null;
-
-		return typesId;
 	}
 	
 	// Clean up a file name

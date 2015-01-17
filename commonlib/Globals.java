@@ -1,9 +1,5 @@
 package commonlib;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 
 import newscrawler.Scheduler;
@@ -15,8 +11,7 @@ public class Globals {
 	public static int NUMMAXTHREADS = 5;
 	public static int NUMMAXQUEUE = 10;
 	
-	public static final String[] fileExtenstions = { "jpg", "xml", "gif",
-			"pdf", "png", "jpeg" };
+	public static final String[] fileExtenstions = { "jpg", "xml", "gif", "pdf", "png", "jpeg" };
 	
 	public static String username = "root";
 	public static String password = "";

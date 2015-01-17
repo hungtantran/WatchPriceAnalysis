@@ -1,65 +1,61 @@
 package analysis;
 
+import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import newscrawler.ABlogToWatchArticleParser;
 import newscrawler.BaseParser;
 import newscrawler.Chrono24EntryPageParser;
+import newscrawler.CrawlerParserFactory;
 import newscrawler.HodinkeeArticleParser;
 import newscrawler.MainCrawler;
 import newscrawler.WatchReportArticleParser;
 import commonlib.Globals;
 import commonlib.HTMLCompressor;
 import commonlib.Helper;
-import dbconnection.MySqlConnection;
+import daoconnection.*;
 
 public class SanitizeDB {
 	public SanitizeDB() {
 	}
 
-	public boolean isArticleLink(int articleId, String link) {
+	public boolean isArticleLink(int articleId, String link) throws ClassNotFoundException, SQLException {
 		if (link == null)
 			return false;
-
-		String content = this.mysqlConnection.getArticleContent(articleId);
+		
+		ArticleContentDAO articleContentDAO = new ArticleContentDAOJDBC(DAOFactory.getInstance(
+			Globals.username,
+			Globals.password,
+			Globals.server + Globals.database));
+		ArticleContent content = articleContentDAO.getArticleContent(articleId);
 
 		// If there is no content, can't decide whether link is valid or not
 		if (content == null)
 			return true;
 
-		BaseParser parser = null;
-
-		// ABlogToWatch link check
-		if (link.indexOf(Globals.Domain.ABLOGTOWATCH.domain) == 0) {
-			parser = new ABlogToWatchArticleParser(link, null, null, null);
-		}
-
-		// ABlogToWatch link check
-		if (link.indexOf(Globals.Domain.HODINKEE.domain) == 0) {
-			parser = new HodinkeeArticleParser(link, null, null, null);
-		}
-
-		// ABlogToWatch link check
-		if (link.indexOf(Globals.Domain.WATCHREPORT.domain) == 0) {
-			parser = new WatchReportArticleParser(link, null, null, null);
-		}
+		BaseParser parser = CrawlerParserFactory.getParser(link, null, null);
 
 		// Check if link is valid
 		if (parser == null) {
-			if (Globals.DEBUG)
-				System.out
-						.println("Link is invalid because it is not of existing domains");
+			if (Globals.DEBUG) {
+				System.out.println("Link is invalid because it is not of existing domains");
+			}
+			
 			return false;
 		}
 
-		parser.setContent(content);
+		parser.setContent(content.getContent());
 		if (!parser.isArticlePage()) {
-			if (Globals.DEBUG)
-				System.out
-						.println("Link is invalid because it is not article page");
+			if (Globals.DEBUG) {
+				System.out.println("Link is invalid because it is not article page");
+			}
+			
 			return false;
 		}
 
@@ -67,97 +63,70 @@ public class SanitizeDB {
 	}
 
 	// Remove from database articles with bad link
-	public void sanitizeBadLinkArticles() {
-		int lowerBound = 0;
-		int maxNumResult = 500;
-		int articleCount = lowerBound;
-
+	public void sanitizeBadLinkArticles() throws ClassNotFoundException, SQLException {
+		int articleCount = 0;
+		
+		ArticleDAO articleDAO = new ArticleDAOJDBC(DAOFactory.getInstance(Globals.username, Globals.password, Globals.server + Globals.database));
+		ArticleContentDAO articleContentDAO = new ArticleContentDAOJDBC(DAOFactory.getInstance(Globals.username, Globals.password, Globals.server + Globals.database));
+		ArticleTopicDAO articleTopicDAO = new ArticleTopicDAOJDBC(DAOFactory.getInstance(Globals.username, Globals.password, Globals.server + Globals.database));
+		
+		boolean startFromBeginning = true;
+		
 		// Get 2000 articles at a time, until exhaust all the articles
 		while (true) {
-			this.mysqlConnection = new MySqlConnection();
-			ResultSet resultSet = this.mysqlConnection.getArticleInfo(
-					lowerBound, maxNumResult);
-			if (resultSet == null)
-				break;
-
-			try {
-				int count = 0;
-				// Iterate through the result set to populate the information
-				while (resultSet.next()) {
-					count++;
-					articleCount++;
-
-					int articleId = resultSet.getInt(1);
-					String articleLink = resultSet.getString(2).trim();
-					if (Globals.DEBUG)
-						System.out.println("(" + articleCount
-								+ ") Check Article id " + articleId + ": "
-								+ articleLink);
-
-					// Check if link is valid or not. If not, delete the article
-					boolean isValidLink = this.isArticleLink(articleId,
-							articleLink);
-					if (!isValidLink) {
-						if (Globals.DEBUG)
-							System.out
-									.println("Delete Article id " + articleId);
-						this.mysqlConnection.removeArticle(articleId);
-					}
-
-				}
-
-				if (count == 0)
-					break;
-			} catch (Exception e) {
-				e.printStackTrace();
+			Article article = articleDAO.getNextArticle(startFromBeginning);
+			
+			if (startFromBeginning) {
+				startFromBeginning = false;
+			}
+			
+			if (article == null) {
 				break;
 			}
 
-			lowerBound += maxNumResult;
-			// Suggest the garbage collector to run to avoid out of heap space
-			System.gc();
-			Helper.waitSec(2, 5);
+			articleCount++;
+
+			int articleId = article.getId();
+			String articleLink = article.getLink().trim();
+			if (Globals.DEBUG) {
+				System.out.println("(" + articleCount + ") Check Article id " + articleId + ": " + articleLink);
+			}
+
+			// Check if link is valid or not. If not, delete the article
+			boolean isValidLink = this.isArticleLink(articleId, articleLink);
+			if (!isValidLink) {
+				if (Globals.DEBUG) {
+					System.out.println("Delete Article id " + articleId);
+				}
+				
+				articleContentDAO.deleteArticleContent(articleId);
+				articleTopicDAO.removeArticleTopicByArticleTableId(articleId);
+				articleDAO.deleteArticle(articleId);
+			}
 		}
 	}
 
 	public boolean isValidLink(String link) {
-		if (link == null)
+		if (link == null) {
 			return false;
-
-		BaseParser parser = null;
-
-		// ABlogToWatch link check
-		if (link.indexOf(Globals.Domain.ABLOGTOWATCH.domain) == 0) {
-			parser = new ABlogToWatchArticleParser(link, null, null, null);
 		}
 
-		// ABlogToWatch link check
-		if (link.indexOf(Globals.Domain.HODINKEE.domain) == 0) {
-			parser = new HodinkeeArticleParser(link, null, null, null);
-		}
-
-		// ABlogToWatch link check
-		if (link.indexOf(Globals.Domain.WATCHREPORT.domain) == 0) {
-			parser = new WatchReportArticleParser(link, null, null, null);
-		}
-
-		// Chrono24 link check
-		if (link.indexOf(Globals.Domain.CHRONO24.domain) == 0) {
-			parser = new Chrono24EntryPageParser(link, null, null, null);
-		}
+		BaseParser parser = CrawlerParserFactory.getParser(link, null, null);
 
 		// Check if link is valid
 		if (parser == null) {
-			if (Globals.DEBUG)
-				System.out
-						.println("Link is invalid because it is not of existing domains");
+			if (Globals.DEBUG) {
+				System.out.println("Link is invalid because it is not of existing domains");
+			}
+			
 			return false;
 		}
 
 		if (!parser.isValidLink(link)) {
-			if (Globals.DEBUG)
-				System.out
-						.println("Link is invalid because it is not a valid link");
+			if (Globals.DEBUG) {
+				System.out.println("Link is invalid because it is not a valid link");
+			}
+			
 			return false;
 		}
 
@@ -165,80 +134,73 @@ public class SanitizeDB {
 	}
 
 	// Remove from database articles with bad link
-	public void sanitizeInvalidLinks() {
-		this.mysqlConnection = new MySqlConnection();
-		ResultSet resultSet = this.mysqlConnection.getLinkQueue();
-		if (resultSet == null)
+	public void sanitizeInvalidLinks() throws SQLException, ClassNotFoundException {
+		LinkQueueDAO linkQueueDAO = new LinkQueueDAOJDBC(DAOFactory.getInstance(Globals.username, Globals.password, Globals.server + Globals.database));
+		
+		List<LinkQueue> linkQueues = linkQueueDAO.getLinksQueued();
+		
+		if (linkQueues == null) {
 			return;
+		}
+		
+		int count = 0;
+		
+		// Iterate through the result set to populate the information
+		for (LinkQueue linkQueue : linkQueues) {
+			String link = linkQueue.getLink();
 
-		try {
-			int count = 0;
-			// Iterate through the result set to populate the information
-			while (resultSet.next()) {
-				String link = resultSet.getString(1);
-
-				// Check if link is valid or not. If not, delete the article
-				boolean isValidLink = this.isValidLink(link);
-				if (!isValidLink) {
-					count++;
-					System.out.println("("+count+") Delete link " + link);
-					this.mysqlConnection.removeFromLinkQueueTable(link);
-				}
+			// Check if link is valid or not. If not, delete the article
+			boolean isValidLink = this.isValidLink(link);
+			
+			if (!isValidLink) {
+				++count;
+				System.out.println("(" + count + ") Delete link " + link);
+				linkQueueDAO.removeLinkQueue(link);
 			}
-		} catch (Exception e) {
-
 		}
 	}
 
 	// Remove lin-ks with the same html content
-	public void sanitizeDuplicateArticleLink() {
-		int lowerBound = 0;
-		int maxNumResult = 500;
+	public void sanitizeDuplicateArticleLink() throws ClassNotFoundException, SQLException, NoSuchAlgorithmException, UnsupportedEncodingException {
+		ArticleDAO articleDAO = new ArticleDAOJDBC(DAOFactory.getInstance(Globals.username, Globals.password, Globals.server + Globals.database));
+		ArticleContentDAO articleContentDAO = new ArticleContentDAOJDBC(DAOFactory.getInstance(Globals.username, Globals.password, Globals.server + Globals.database));
+		ArticleTopicDAO articleTopicDAO = new ArticleTopicDAOJDBC(DAOFactory.getInstance(Globals.username, Globals.password, Globals.server + Globals.database));
+		
+		boolean startFromBeginning = true;
+		
+		MessageDigest md = MessageDigest.getInstance("MD5");
+		Map<String, Integer> articleIdToHashStringMap = new HashMap<String, Integer>();
 
-		try {
-			MessageDigest md = MessageDigest.getInstance("MD5");
-			Map<String, Integer> articleIdToHashStringMap = new HashMap<String, Integer>();
-
-			// Get maxNumResult articles at a time, until exhaust all the
-			// articles
-			while (true) {
-				this.mysqlConnection = new MySqlConnection();
-				ResultSet resultSet = this.mysqlConnection.getArticleContent(
-						lowerBound, maxNumResult);
-				if (resultSet == null)
-					break;
-
-				int count = 0;
-				// Iterate through the result set to populate the
-				// information
-				while (resultSet.next()) {
-					count++;
-					// Hash the html content
-					byte[] bytesOfMessage = resultSet.getString(2).getBytes(
-							"UTF-8");
-					byte[] thedigest = md.digest(bytesOfMessage);
-					String digestMsg = new String(thedigest);
-
-					if (articleIdToHashStringMap.containsKey(digestMsg)) {
-						Globals.crawlerLogManager.writeLog("Remove article "
-								+ resultSet.getInt(1)
-								+ " has the same html with article "
-								+ articleIdToHashStringMap.get(digestMsg));
-						this.mysqlConnection.removeArticle(resultSet.getInt(1));
-					} else {
-						articleIdToHashStringMap.put(digestMsg,
-								resultSet.getInt(1));
-					}
-				}
-
-				if (count == 0)
-					break;
-
-				lowerBound += maxNumResult;
-				Helper.waitSec(2, 5);
+		// Get maxNumResult articles at a time, until exhaust all the
+		// articles
+		while (true) {
+			ArticleContent articleContent = articleContentDAO.getNextArticleContent(startFromBeginning);
+			
+			if (articleContent == null) {
+				break;
 			}
-		} catch (Exception e) {
-			e.printStackTrace();
+			
+			if (startFromBeginning) {
+				startFromBeginning = false;
+			}
+			
+			// Hash the html content
+			byte[] bytesOfMessage = articleContent.getContent().getBytes("UTF-8");
+			byte[] thedigest = md.digest(bytesOfMessage);
+			String digestMsg = new String(thedigest);
+			
+			Integer articleId = articleContent.getArticleTableId();
+			
+			if (articleIdToHashStringMap.containsKey(digestMsg)) {
+				Globals.crawlerLogManager.writeLog("Remove article " + articleId
+					+ " has the same html with article " + articleIdToHashStringMap.get(digestMsg));
+				
+				articleContentDAO.deleteArticleContent(articleId);
+				articleTopicDAO.removeArticleTopicByArticleTableId(articleId);
+				articleDAO.deleteArticle(articleId);
+			} else {
+				articleIdToHashStringMap.put(digestMsg, articleId);
+			}
 		}
 	}
 
@@ -252,8 +214,7 @@ public class SanitizeDB {
 			// articles
 			while (true) {
 				this.mysqlConnection = new MySqlConnection();
-				ResultSet resultSet = this.mysqlConnection.getArticleContent(
-						lowerBound, maxNumResult);
+				ResultSet resultSet = this.mysqlConnection.getArticleContent(lowerBound, maxNumResult);
 				if (resultSet == null)
 					break;
 
@@ -263,9 +224,7 @@ public class SanitizeDB {
 				while (resultSet.next()) {
 					count++;
 					// Hash the html content
-					Globals.crawlerLogManager
-							.writeLog("Try to compress article id "
-									+ resultSet.getInt(1));
+					Globals.crawlerLogManager.writeLog("Try to compress article id " + resultSet.getInt(1));
 					String originalHtmlContent = resultSet.getString(2);
 					String compressedHtmlContent = HTMLCompressor
 							.compressHtmlContent(originalHtmlContent);
@@ -329,9 +288,8 @@ public class SanitizeDB {
 	}
 
 	public static void main(String[] args) {
-		MainCrawler.startUpState();
-		
-		SanitizeDB sanitizer = new SanitizeDB();
+		// MainCrawler.startUpState();
+		// SanitizeDB sanitizer = new SanitizeDB();
 		// sanitizer.sanitizeInvalidLinks();
 		// sanitizer.sanitizeBadLinkArticles();
 		// sanitizer.sanitizeDuplicateArticleLink();

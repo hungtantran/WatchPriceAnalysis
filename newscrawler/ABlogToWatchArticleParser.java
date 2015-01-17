@@ -6,23 +6,8 @@ import java.util.Set;
 import org.jsoup.select.Elements;
 
 import commonlib.Globals;
-import commonlib.Globals.Domain;
-import commonlib.Globals.Type;
 import commonlib.Helper;
 import commonlib.LogManager;
-
-import dbconnection.MySqlConnection;
-
-/*import edu.stanford.nlp.process.Tokenizer;
- import edu.stanford.nlp.process.TokenizerFactory;
- import edu.stanford.nlp.process.CoreLabelTokenFactory;
- import edu.stanford.nlp.process.DocumentPreprocessor;
- import edu.stanford.nlp.process.PTBTokenizer;
- import edu.stanford.nlp.ling.CoreLabel;
- import edu.stanford.nlp.ling.HasWord;
- import edu.stanford.nlp.ling.Sentence;
- import edu.stanford.nlp.trees.*;
- import edu.stanford.nlp.parser.lexparser.LexicalizedParser;*/
 
 public class ABlogToWatchArticleParser extends BaseParser {
 	private final int numRetryDownloadPage = 2;
@@ -32,10 +17,8 @@ public class ABlogToWatchArticleParser extends BaseParser {
 	private Set<Globals.Type> types = null;
 	private Set<String> topics = null;
 
-	public ABlogToWatchArticleParser(String articleUrl, MySqlConnection con,
-			LogManager logManager, Scheduler scheduler) {
-		super(articleUrl, Globals.Domain.ABLOGTOWATCH.domain, Domain.ABLOGTOWATCH,
-				con, logManager, scheduler);
+	public ABlogToWatchArticleParser(String articleUrl, LogManager logManager, Scheduler scheduler) {
+		super(articleUrl, Globals.Domain.ABLOGTOWATCH.domain, Domain.ABLOGTOWATCH, logManager, scheduler);
 
 		this.keywords = new HashSet<String>();
 		this.types = new HashSet<Globals.Type>();

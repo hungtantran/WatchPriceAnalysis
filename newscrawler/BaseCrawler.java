@@ -1,84 +1,78 @@
 package newscrawler;
 
+import java.sql.SQLException;
+
 import commonlib.Globals;
 import commonlib.Helper;
 import commonlib.LogManager;
-import dbconnection.MySqlConnection;
+
+import daoconnection.DAOFactory;
+import daoconnection.LinkQueueDAO;
+import daoconnection.LinkQueueDAOJDBC;
 
 public class BaseCrawler extends Thread {
-	protected MySqlConnection mysqlConnection = null;
 	protected LogManager logManager = null;
 	protected Scheduler scheduler = null;
 	protected BaseParser parser = null;
 	protected int numRetriesDownloadLink = 2;
 	protected int lowerBoundWaitTimeSec = Globals.DEFAULTLOWERBOUNDWAITTIMESEC;
 	protected int upperBoundWaitTimeSec = Globals.DEFAULTUPPERBOUNDWAITTIMESEC;
-
+	protected LinkQueueDAO linkQueueDAO = null;
+	
 	// Base constructor
-	protected BaseCrawler(MySqlConnection con, LogManager logManager,
-			Scheduler scheduler) {
-		this(Globals.DEFAULTLOWERBOUNDWAITTIMESEC,
-				Globals.DEFAULTUPPERBOUNDWAITTIMESEC, con, logManager,
-				scheduler);
+	protected BaseCrawler(LogManager logManager, Scheduler scheduler) throws ClassNotFoundException, SQLException {
+		this(
+			Globals.DEFAULTLOWERBOUNDWAITTIMESEC,
+			Globals.DEFAULTUPPERBOUNDWAITTIMESEC,
+			logManager,
+			scheduler,
+			DAOFactory.getInstance(Globals.username, Globals.password, Globals.server + Globals.database));
 	}
 
-	protected BaseCrawler(int lowerBoundWaitTimeSec, int upperBoundWaitTimeSec,
-			MySqlConnection con, LogManager logManager, Scheduler scheduler) {
+	protected BaseCrawler(
+		int lowerBoundWaitTimeSec,
+		int upperBoundWaitTimeSec,
+		LogManager logManager,
+		Scheduler scheduler,
+		DAOFactory daoFactory) throws SQLException
+	{
 		this.lowerBoundWaitTimeSec = lowerBoundWaitTimeSec;
 		this.upperBoundWaitTimeSec = upperBoundWaitTimeSec;
-
-		this.mysqlConnection = con;
 		this.logManager = logManager;
 		this.scheduler = scheduler;
-	}
-
-	private BaseParser chooseParser(String url) {
-		if (url == null)
-			return null;
-
-		if (url.indexOf(Globals.Domain.ABLOGTOWATCH.domain) == 0)
-			return new ABlogToWatchArticleParser(url, this.mysqlConnection,
-					this.logManager, this.scheduler);
-
-		if (url.indexOf(Globals.Domain.CHRONO24.domain) == 0)
-			return new Chrono24EntryPageParser(url, this.mysqlConnection,
-					this.logManager, this.scheduler);
-
-		if (url.indexOf(Globals.Domain.HODINKEE.domain) == 0)
-			return new HodinkeeArticleParser(url, this.mysqlConnection,
-					this.logManager, this.scheduler);
-
-		if (url.indexOf(Globals.Domain.WATCHREPORT.domain) == 0)
-			return new WatchReportArticleParser(url, this.mysqlConnection,
-					this.logManager, this.scheduler);
-
-		return null;
+		this.linkQueueDAO = new LinkQueueDAOJDBC(daoFactory);
 	}
 
 	// Function that start the crawling process
-	public void startCrawl(boolean timeOut, long duration,
-			int lowerBoundWaitTimeSec, int upperBoundWaitTimeSec) {
-		if (this.scheduler == null || this.mysqlConnection == null)
+	public void startCrawl(
+		boolean timeOut,
+		long duration,
+		int lowerBoundWaitTimeSec,
+		int upperBoundWaitTimeSec) throws SQLException
+	{
+		if (this.scheduler == null) {
 			return;
+		}
 
 		while (true) {
 			String curUrl = this.scheduler.getNextLinkFromUrlsQueue();
 			System.out.println("Get link "+curUrl);
 			// If for some reason startUrl is null stop right away
-			if (curUrl == null)
+			if (curUrl == null) {
 				return;
+			}
 
-			this.parser = this.chooseParser(curUrl);
+			this.parser = CrawlerParserFactory.getParser(curUrl, this.logManager, this.scheduler);
 			
 			if (this.parser == null) {
 				this.logManager.writeLog("Can't find parser for url "+curUrl);
-				this.mysqlConnection.removeFromLinkQueueTable(curUrl);
+				this.linkQueueDAO.removeLinkQueue(curUrl);
 				continue;
 			}
 			
 			if (!this.parser.isValidLink(curUrl)) {
 				this.logManager.writeLog("Link "+curUrl+" is invalid. Assume already crawled, move on don't process");
-				this.mysqlConnection.removeFromLinkQueueTable(curUrl);
+				this.linkQueueDAO.removeLinkQueue(curUrl);
 			}
 
 			// Process link (e.g. trim, truncate bad part, etc..)
@@ -103,7 +97,15 @@ public class BaseCrawler extends Thread {
 
 	// Execute method for thread
 	public void run() {
-		this.startCrawl(false, 0, this.lowerBoundWaitTimeSec,
+		try {
+			this.startCrawl(
+				false,
+				0,
+				this.lowerBoundWaitTimeSec,
 				this.upperBoundWaitTimeSec);
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 }
