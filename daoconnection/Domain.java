@@ -7,7 +7,17 @@ public class Domain implements Serializable {
 
 	private Integer id;
 	private String domain;
-
+	private String domainString;
+	
+	public Domain() {
+	}
+	
+	public Domain(Integer id, String domain, String domainString) {
+		this.id = id;
+		this.domain = domain;
+		this.domainString = domainString;
+	}
+	
 	// Getters / Setters
 	public Integer getId() {
 		return id;
@@ -23,6 +33,14 @@ public class Domain implements Serializable {
 
 	public void setDomain(String domain) {
 		this.domain = domain;
+	}
+	
+	public String getDomainString() {
+		return domainString;
+	}
+
+	public void setDomainString(String domainString) {
+		this.domainString = domainString;
 	}
 
 	// Object overrides

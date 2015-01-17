@@ -7,7 +7,15 @@ public class Type implements Serializable {
 
 	private Integer id;
 	private String type;
-
+	
+	public Type() {
+	}
+	
+	public Type(Integer id, String type) {
+		this.id = id;
+		this.type = type;
+	}
+	
 	// Getters / Setters
 	public Integer getId() {
 		return id;

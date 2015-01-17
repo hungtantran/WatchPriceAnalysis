@@ -312,8 +312,7 @@ public class Helper {
 				for (String topicWord : topicWords) {
 					if (topicWord.length() > 3
 							&& articleNameWordsSet.contains(topicWord)
-							&& !Globals.HOROLOGYTOPICSSTOPWORDS
-									.contains(topicWord)) {
+							&& !Globals.HOROLOGYTOPICSSTOPWORDS.contains(topicWord)) {
 						topicsOfName.add(topic);
 						break;
 					}
@@ -389,8 +388,9 @@ public class Helper {
 	
 	// Convert type to type id
 	public static Integer[] convertTypeToTypeId(Globals.TypeValue[] types) {
-		if (Globals.idTypeMap == null)
+		if (Globals.idTypeMap == null) {
 			return null;
+		}
 		
 		Integer[] typesId = new Integer[3];
 

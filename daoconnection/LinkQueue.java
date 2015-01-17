@@ -12,7 +12,20 @@ public class LinkQueue implements Serializable {
 	private Integer persistent;
 	private String timeCrawled;
 	private String dateCrawled;
-
+	
+	public LinkQueue() {
+	}
+	
+	public LinkQueue(Integer id, String link, Integer domainTableId1, Integer priority, Integer persistent, String timeCrawled, String dateCrawled) {
+		this.id = id;
+		this.link = link;
+		this.domainTableId1 = domainTableId1;
+		this.priority = priority;
+		this.persistent = persistent;
+		this.timeCrawled = timeCrawled;
+		this.dateCrawled = dateCrawled;
+	}
+	
 	// Getters / Setters
 	public Integer getId() {
 		return id;

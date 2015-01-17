@@ -2,20 +2,20 @@ package daoconnection;
 
 import java.io.Serializable;
 
-public class Topic implements Serializable {
+public class TypeWord implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	private Integer id;
 	private Integer typeTableId;
-	private String topic;
+	private String typeWord;
 	
-	public Topic() {
+	public TypeWord() {
 	}
 	
-	public Topic(Integer id, Integer typeTableId, String topic) {
+	public TypeWord(Integer id, Integer typeTableId, String typeWord) {
 		this.id = id;
 		this.typeTableId = typeTableId;
-		this.topic = topic;
+		this.typeWord = typeWord;
 	}
 	
 	// Getters / Setters
@@ -35,18 +35,18 @@ public class Topic implements Serializable {
 		this.typeTableId = typeTableId;
 	}
 
-	public String getTopic() {
-		return topic;
+	public String getTypeWord() {
+		return typeWord;
 	}
 
-	public void setTopic(String topic) {
-		this.topic = topic;
+	public void setTypeWord(String typeWord) {
+		this.typeWord = typeWord;
 	}
 
 	// Object overrides
 	@Override
 	public boolean equals(Object other) {
-		return (other instanceof Topic) && this.id == ((Topic) other).id;
+		return (other instanceof TypeWord) && this.id == ((TypeWord) other).id;
 	}
 
 	@Override
@@ -57,7 +57,7 @@ public class Topic implements Serializable {
 
 	@Override
 	public String toString() {
-		return String.format("Topic[id=%d, typeTableId=%d, topic=%s]", this.id,
-				this.typeTableId, this.topic);
+		return String.format("TypeWord[id=%d, typeTableId=%d, typeWord=%s]", this.id,
+				this.typeTableId, this.typeWord);
 	}
 }

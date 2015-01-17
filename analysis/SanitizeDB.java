@@ -17,8 +17,6 @@ import commonlib.Helper;
 import dbconnection.MySqlConnection;
 
 public class SanitizeDB {
-	private MySqlConnection mysqlConnection = null;
-
 	public SanitizeDB() {
 	}
 

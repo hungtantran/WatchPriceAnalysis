@@ -13,10 +13,10 @@ public class DomainDAOJDBC implements DomainDAO {
 	private final String SQL_CREATE = 
 		"CREATE TABLE domain_table ("
 		+ "id int unsigned AUTO_INCREMENT not null, "
-		+ "domain char(255) not null, " + "PRIMARY KEY(id), "
-		+ "UNIQUE (id), " + "UNIQUE (domain))";
-	private final String SQL_SELECT_ALL = "SELECT * FROM type_table";
-	private final String SQL_INSERT = "INSERT INTO type_table (id, type) values (?, ?)";
+		+ "domain char(255) not null, domain_string char(255) not null, "
+		+ "PRIMARY KEY(id), UNIQUE (id))";
+	private final String SQL_SELECT_ALL = "SELECT * FROM domain_table";
+	private final String SQL_INSERT = "INSERT INTO domain_table (id, domain, domain_string) values (?, ?, ?)";
 
 	private DAOFactory daoFactory;
 
@@ -32,6 +32,9 @@ public class DomainDAOJDBC implements DomainDAO {
 		
 		domain.setDomain(resultSet.getString("domain"));
 		if (resultSet.wasNull()) domain.setDomain(null);
+		
+		domain.setDomainString(resultSet.getString("domain_string"));
+		if (resultSet.wasNull()) domain.setDomainString(null);
 		
 		return domain;
 	}
@@ -113,7 +116,7 @@ public class DomainDAOJDBC implements DomainDAO {
 
 			return domains;
 		} catch (SQLException e) {
-			Globals.crawlerLogManager.writeLog("Get topics fails");
+			Globals.crawlerLogManager.writeLog("Get domain information fails");
 			Globals.crawlerLogManager.writeLog(e.getMessage());
 			
 			return null;
@@ -133,7 +136,8 @@ public class DomainDAOJDBC implements DomainDAO {
 			
 			Object[] values = {
 				domain.getId(),
-				domain.getDomain()
+				domain.getDomain(),
+				domain.getDomainString(),
 			};
 			
 			preparedStatement = DAOUtil.prepareStatement(connection, SQL_INSERT, true, values);

@@ -8,5 +8,5 @@ public interface DomainDAO {
 	
 	public List<Domain> getDomains() throws SQLException;
 	
-	public Integer createDomain(Domain type) throws SQLException;
+	public Integer createDomain(Domain domain) throws SQLException;
 }
