@@ -18,6 +18,7 @@ public class ArticleContentDAOJDBC implements ArticleContentDAO {
 		+ "FOREIGN KEY (article_table_id) REFERENCES article_table(id))";
 	private final String SQL_SELECT_BY_ARTICLE_TABLE_ID = "SELECT * FROM article_content_table WHERE article_table_id = ?";
 	private final String SQL_INSERT = "INSERT INTO article_content_table (article_table_id, content) values (?, ?)";
+	private final String SQL_UPDATE = "UPDATE article_content_table SET content = ? WHERE article_table_id = ?";
 	private final String SQL_SELECT_LIMIT = "SELECT * FROM article_content_table LIMIT ?, ?";
 	private final String SQL_DELETE = "DELETE FROM article_content_table WHERE article_table_id = ?";
 	
@@ -130,6 +131,39 @@ public class ArticleContentDAOJDBC implements ArticleContentDAO {
 			return true;
 		} catch (SQLException e) {
 			Globals.crawlerLogManager.writeLog("Insert article content " + articleContent.toString() + " fails");
+			Globals.crawlerLogManager.writeLog(e.getMessage());
+			
+			return false;
+		} finally {
+			DAOUtil.close(connection, preparedStatement, resultSet);
+		}
+	}
+	
+	@Override
+	public boolean updateArticleContent(ArticleContent articleContent) throws SQLException {
+		Connection connection = null;
+		PreparedStatement preparedStatement = null;
+		ResultSet resultSet = null;
+		
+		try {
+			connection = this.daoFactory.getConnection();
+			
+			Object[] values = {
+				articleContent.getContent(),
+				articleContent.getArticleTableId()
+			};
+			
+			preparedStatement = DAOUtil.prepareStatement(connection, SQL_UPDATE, false, values);
+			
+			if (Globals.DEBUG) {
+				Globals.crawlerLogManager.writeLog(preparedStatement.toString());
+			}
+			
+			preparedStatement.executeUpdate();
+			
+			return true;
+		} catch (SQLException e) {
+			Globals.crawlerLogManager.writeLog("Update article content " + articleContent.toString() + " fails");
 			Globals.crawlerLogManager.writeLog(e.getMessage());
 			
 			return false;

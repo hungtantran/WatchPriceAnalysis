@@ -41,84 +41,84 @@ public class InitializeDB {
 	}
 
 	// Create all the tables
-	public static void createDB(String username, String password, String server, String database) throws ClassNotFoundException, SQLException {
-		DomainDAO domainDAO = new DomainDAOJDBC(DAOFactory.getInstance(username, password, server + database));
+	public static void createDB(DAOFactory daoFactory) throws ClassNotFoundException, SQLException {
+		DomainDAO domainDAO = new DomainDAOJDBC(daoFactory);
 		domainDAO.createRelation();
 		
-		TypeDAO typeDAO = new TypeDAOJDBC(DAOFactory.getInstance(username, password, server + database));
+		TypeDAO typeDAO = new TypeDAOJDBC(daoFactory);
 		typeDAO.createRelation();
 		
-		TopicDAO topicDAO = new TopicDAOJDBC(DAOFactory.getInstance(username, password, server + database));
+		TopicDAO topicDAO = new TopicDAOJDBC(daoFactory);
 		topicDAO.createRelation();
 		
-		TypeWordDAO typeWordDAO = new TypeWordDAOJDBC(DAOFactory.getInstance(username, password, server + database));
+		TypeWordDAO typeWordDAO = new TypeWordDAOJDBC(daoFactory);
 		typeWordDAO.createRelation();
 		
-		LinkCrawledDAO linkCrawledDAO = new LinkCrawledDAOJDBC(DAOFactory.getInstance(username, password, server + database));
+		LinkCrawledDAO linkCrawledDAO = new LinkCrawledDAOJDBC(daoFactory);
 		linkCrawledDAO.createRelation();
 		
-		LinkQueueDAO linkQueueDAO = new LinkQueueDAOJDBC(DAOFactory.getInstance(username, password, server + database));
+		LinkQueueDAO linkQueueDAO = new LinkQueueDAOJDBC(daoFactory);
 		linkQueueDAO.createRelation();
 		
-		ArticleDAO articleDAO = new ArticleDAOJDBC(DAOFactory.getInstance(username, password, server + database));
+		ArticleDAO articleDAO = new ArticleDAOJDBC(daoFactory);
 		articleDAO.createRelation();
 		
-		ArticleContentDAO articleContentDAO = new ArticleContentDAOJDBC(DAOFactory.getInstance(username, password, server + database));
+		ArticleContentDAO articleContentDAO = new ArticleContentDAOJDBC(daoFactory);
 		articleContentDAO.createRelation();
 		
-		ArticleTopicDAO articleTopicDAO = new ArticleTopicDAOJDBC(DAOFactory.getInstance(username, password, server + database));
+		ArticleTopicDAO articleTopicDAO = new ArticleTopicDAOJDBC(daoFactory);
 		articleTopicDAO.createRelation();
 		
-		WatchDescDAO watchDescDAO = new WatchDescDAOJDBC(DAOFactory.getInstance(username, password, server + database));
+		WatchDescDAO watchDescDAO = new WatchDescDAOJDBC(daoFactory);
 		watchDescDAO.createRelation();
 		
-		WatchPageContentDAO watchPageContentDAO = new WatchPageContentDAOJDBC(DAOFactory.getInstance(username, password, server + database));
+		WatchPageContentDAO watchPageContentDAO = new WatchPageContentDAOJDBC(daoFactory);
 		watchPageContentDAO.createRelation();
 		
-		WatchPriceStatDAO watchPriceStatDAO = new WatchPriceStatDAOJDBC(DAOFactory.getInstance(username, password, server + database));
+		WatchPriceStatDAO watchPriceStatDAO = new WatchPriceStatDAOJDBC(daoFactory);
 		watchPriceStatDAO.createRelation();
 	}
 
 	// Initialize the tables with initial data
-	public static void initializeDomainTable(String username, String password, String server, String database, Set<Domain> initialDomainsSet)
+	public static void initializeDomainTable(DAOFactory daoFactory, Set<Domain> initialDomainsSet)
 			throws ClassNotFoundException, SQLException {
-		DomainDAO domainDAO = new DomainDAOJDBC(DAOFactory.getInstance(username, password, server + database));
+		DomainDAO domainDAO = new DomainDAOJDBC(daoFactory);
 		
 		for (Iterator<Domain> it = initialDomainsSet.iterator(); it.hasNext(); ) {
 			domainDAO.createDomain(it.next());
 		}
 	}
 	
-	public static void initializeTypeTable(String username, String password, String server, String database, Set<Type> initialTypesSet)
+	public static void initializeTypeTable(DAOFactory daoFactory, Set<Type> initialTypesSet)
 			throws ClassNotFoundException, SQLException {
-		TypeDAO typeDAO = new TypeDAOJDBC(DAOFactory.getInstance(username, password, server + database));
+		TypeDAO typeDAO = new TypeDAOJDBC(daoFactory);
 		
 		for (Iterator<Type> it = initialTypesSet.iterator(); it.hasNext(); ) {
 			typeDAO.createType(it.next());
 		}
 	}
 	
-	public static void initializeTopicTable(String username, String password, String server, String database, Set<Topic> initialTopicsSet)
+	public static void initializeTopicTable(DAOFactory daoFactory, Set<Topic> initialTopicsSet)
 			throws ClassNotFoundException, SQLException {
-		TopicDAO topicDAO = new TopicDAOJDBC(DAOFactory.getInstance(username, password, server + database));
+		TopicDAO topicDAO = new TopicDAOJDBC(daoFactory);
 		
 		for (Iterator<Topic> it = initialTopicsSet.iterator(); it.hasNext(); ) {
 			topicDAO.createTopic(it.next());
 		}
 	}
 	
-	public static void initializeTypeWordTable(String username, String password, String server, String database, Set<TypeWord> initialTypeWordsSet)
+	public static void initializeTypeWordTable(DAOFactory daoFactory, Set<TypeWord> initialTypeWordsSet)
 			throws ClassNotFoundException, SQLException {
-		TypeWordDAO typeWordDAO = new TypeWordDAOJDBC(DAOFactory.getInstance(username, password, server + database));
+		TypeWordDAO typeWordDAO = new TypeWordDAOJDBC(daoFactory);
 		
 		for (Iterator<TypeWord> it = initialTypeWordsSet.iterator(); it.hasNext(); ) {
 			typeWordDAO.createTypeWord(it.next());
 		}
 	}
 	
-	public static void initializeLinkQueueTable(String username, String password, String server, String database, Set<LinkQueue> initialLinkQueuesSet)
+	public static void initializeLinkQueueTable(DAOFactory daoFactory, Set<LinkQueue> initialLinkQueuesSet)
 			throws ClassNotFoundException, SQLException {
-		LinkQueueDAO linkQueueDAO = new LinkQueueDAOJDBC(DAOFactory.getInstance(username, password, server + database));
+		LinkQueueDAO linkQueueDAO = new LinkQueueDAOJDBC(daoFactory);
 		
 		for (Iterator<LinkQueue> it = initialLinkQueuesSet.iterator(); it.hasNext(); ) {
 			linkQueueDAO.createLinkQueue(it.next());
@@ -126,12 +126,13 @@ public class InitializeDB {
 	}
 
 	public static void main(String[] args) throws ClassNotFoundException, SQLException {
-		InitializeDB.createDB(Globals.username, Globals.password, Globals.server, Globals.database);
+		DAOFactory daoFactory = DAOFactory.getInstance(Globals.username, Globals.password, Globals.server + Globals.database);
+		InitializeDB.createDB(daoFactory);
 		
-		InitializeDB.initializeDomainTable(Globals.username, Globals.password, Globals.server, Globals.database, InitialValues.initialDomainsSet);
-		InitializeDB.initializeTypeTable(Globals.username, Globals.password, Globals.server, Globals.database, InitialValues.initialTypesSet);
-		InitializeDB.initializeTopicTable(Globals.username, Globals.password, Globals.server, Globals.database, InitialValues.initialTopicsSet);
-		InitializeDB.initializeTypeWordTable(Globals.username, Globals.password, Globals.server, Globals.database, InitialValues.initialTypeWordsSet);
-		InitializeDB.initializeLinkQueueTable(Globals.username, Globals.password, Globals.server, Globals.database, InitialValues.initialLinkQueuesSet);
+		InitializeDB.initializeDomainTable(daoFactory, InitialValues.initialDomainsSet);
+		InitializeDB.initializeTypeTable(daoFactory, InitialValues.initialTypesSet);
+		InitializeDB.initializeTopicTable(daoFactory, InitialValues.initialTopicsSet);
+		InitializeDB.initializeTypeWordTable(daoFactory, InitialValues.initialTypeWordsSet);
+		InitializeDB.initializeLinkQueueTable(daoFactory, InitialValues.initialLinkQueuesSet);
 	}
 }

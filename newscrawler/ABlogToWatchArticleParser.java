@@ -8,17 +8,20 @@ import org.jsoup.select.Elements;
 import commonlib.Globals;
 import commonlib.Helper;
 import commonlib.LogManager;
+import daoconnection.DAOFactory;
+import daoconnection.Type;
 
 public class ABlogToWatchArticleParser extends BaseParser {
+	private final String domainString = "ABLOGTOWATCH";
 	private final int numRetryDownloadPage = 2;
 
 	private String articleName = null;
 	private Set<String> keywords = null;
-	private Set<Globals.Type> types = null;
+	private Set<Type> types = null;
 	private Set<String> topics = null;
 
-	public ABlogToWatchArticleParser(String articleUrl, LogManager logManager, Scheduler scheduler) {
-		super(articleUrl, Globals.Domain.ABLOGTOWATCH.domain, Domain.ABLOGTOWATCH, logManager, scheduler);
+	public ABlogToWatchArticleParser(String articleUrl, LogManager logManager, Scheduler scheduler, DAOFactory daoFactory) {
+		super(articleUrl, logManager, scheduler, daoFactory);
 
 		this.keywords = new HashSet<String>();
 		this.types = new HashSet<Globals.Type>();
@@ -102,12 +105,14 @@ public class ABlogToWatchArticleParser extends BaseParser {
 		this.downloadHtmlContent(this.link, this.numRetryDownloadPage);
 
 		// If the download content fails, return
-		if (this.doc == null)
+		if (this.doc == null) {
 			return false;
+		}
 
 		// If the page is not an article page
-		if (!this.isArticlePage())
+		if (!this.isArticlePage()) {
 			return false;
+		}
 
 		// Parse the name of the article
 		this.parseArticleName();

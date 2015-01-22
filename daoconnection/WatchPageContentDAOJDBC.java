@@ -18,6 +18,7 @@ public class WatchPageContentDAOJDBC implements WatchPageContentDAO {
 		+ "FOREIGN KEY (watch_table_id) REFERENCES watch_desc_table(id))";
 	private final String SQL_SELECT_BY_WATCH_TABLE_ID = "SELECT * FROM watch_page_content_table WHERE watch_table_id = ?";
 	private final String SQL_INSERT = "INSERT INTO watch_page_content_table (watch_table_id, content) values (?, ?)";
+	private final String SQL_UPDATE = "UPDATE watch_page_content_table SET content = ? WHERE watch_table_id = ?";
 	private final String SQL_SELECT_LIMIT = "SELECT * FROM watch_page_content_table LIMIT ?, ?";
 	private final String SQL_DELETE = "DELETE FROM watch_page_content_table WHERE watch_table_id = ?";
 	
@@ -129,6 +130,39 @@ public class WatchPageContentDAOJDBC implements WatchPageContentDAO {
 			return true;
 		} catch (SQLException e) {
 			Globals.crawlerLogManager.writeLog("Insert watch page content " + watchPageContent.toString() + " fails");
+			Globals.crawlerLogManager.writeLog(e.getMessage());
+			
+			return false;
+		} finally {
+			DAOUtil.close(connection, preparedStatement, resultSet);
+		}
+	}
+	
+	@Override
+	public boolean updateWatchPageContent(WatchPageContent watchPageContent) throws SQLException {
+		Connection connection = null;
+		PreparedStatement preparedStatement = null;
+		ResultSet resultSet = null;
+		
+		try {
+			connection = this.daoFactory.getConnection();
+			
+			Object[] values = {
+				watchPageContent.getContent(),
+				watchPageContent.getWatchTableId()
+			};
+			
+			preparedStatement = DAOUtil.prepareStatement(connection, SQL_UPDATE, false, values);
+			
+			if (Globals.DEBUG) {
+				Globals.crawlerLogManager.writeLog(preparedStatement.toString());
+			}
+			
+			preparedStatement.executeUpdate();
+			
+			return true;
+		} catch (SQLException e) {
+			Globals.crawlerLogManager.writeLog("Update watch page content " + watchPageContent.toString() + " fails");
 			Globals.crawlerLogManager.writeLog(e.getMessage());
 			
 			return false;

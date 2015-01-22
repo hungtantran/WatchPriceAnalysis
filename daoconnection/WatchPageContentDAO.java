@@ -11,5 +11,7 @@ public interface WatchPageContentDAO {
 	
 	public boolean createWatchPageContent(WatchPageContent watchPageContent) throws SQLException;
 	
+	public boolean updateWatchPageContent(WatchPageContent watchPageContent) throws SQLException;
+	
 	public boolean deleteWatchPageContent(Integer watchTableId) throws SQLException;
 }

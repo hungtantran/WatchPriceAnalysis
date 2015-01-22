@@ -1,7 +1,5 @@
 package newscrawler;
 
-import java.sql.SQLException;
-
 import commonlib.Globals;
 import commonlib.Helper;
 import commonlib.LogManager;
@@ -11,6 +9,8 @@ import daoconnection.LinkQueueDAO;
 import daoconnection.LinkQueueDAOJDBC;
 
 public class BaseCrawler extends Thread {
+	protected DAOFactory daoFactory = null;
+	protected CrawlerParserFactory parserFactory = null;
 	protected LogManager logManager = null;
 	protected Scheduler scheduler = null;
 	protected BaseParser parser = null;
@@ -20,7 +20,7 @@ public class BaseCrawler extends Thread {
 	protected LinkQueueDAO linkQueueDAO = null;
 	
 	// Base constructor
-	protected BaseCrawler(LogManager logManager, Scheduler scheduler) throws ClassNotFoundException, SQLException {
+	protected BaseCrawler(LogManager logManager, Scheduler scheduler) throws Exception {
 		this(
 			Globals.DEFAULTLOWERBOUNDWAITTIMESEC,
 			Globals.DEFAULTUPPERBOUNDWAITTIMESEC,
@@ -34,13 +34,19 @@ public class BaseCrawler extends Thread {
 		int upperBoundWaitTimeSec,
 		LogManager logManager,
 		Scheduler scheduler,
-		DAOFactory daoFactory) throws SQLException
+		DAOFactory daoFactory) throws Exception
 	{
+		if (this.daoFactory == null) {
+			throw new Exception("Invalid argument, no database connection provided");
+		}
+		
 		this.lowerBoundWaitTimeSec = lowerBoundWaitTimeSec;
 		this.upperBoundWaitTimeSec = upperBoundWaitTimeSec;
 		this.logManager = logManager;
 		this.scheduler = scheduler;
-		this.linkQueueDAO = new LinkQueueDAOJDBC(daoFactory);
+		this.daoFactory = daoFactory;
+		this.linkQueueDAO = new LinkQueueDAOJDBC(this.daoFactory);
+		this.parserFactory = new CrawlerParserFactory(this.daoFactory);
 	}
 
 	// Function that start the crawling process
@@ -48,7 +54,7 @@ public class BaseCrawler extends Thread {
 		boolean timeOut,
 		long duration,
 		int lowerBoundWaitTimeSec,
-		int upperBoundWaitTimeSec) throws SQLException
+		int upperBoundWaitTimeSec) throws Exception
 	{
 		if (this.scheduler == null) {
 			return;
@@ -62,7 +68,7 @@ public class BaseCrawler extends Thread {
 				return;
 			}
 
-			this.parser = CrawlerParserFactory.getParser(curUrl, this.logManager, this.scheduler);
+			this.parser = this.parserFactory.getParser(curUrl, this.logManager, this.scheduler);
 			
 			if (this.parser == null) {
 				this.logManager.writeLog("Can't find parser for url "+curUrl);
@@ -103,7 +109,7 @@ public class BaseCrawler extends Thread {
 				0,
 				this.lowerBoundWaitTimeSec,
 				this.upperBoundWaitTimeSec);
-		} catch (SQLException e) {
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}

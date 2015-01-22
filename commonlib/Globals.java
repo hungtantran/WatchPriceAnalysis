@@ -1,7 +1,5 @@
 package commonlib;
 
-import java.util.Map;
-
 import newscrawler.Scheduler;
 
 public class Globals {
@@ -17,10 +15,6 @@ public class Globals {
 	public static String password = "";
 	public static String server = "localhost/";
 	public static String database = "newscrawlertest";
-
-	public static Map<Integer, String> idTypeMap = null;
-	public static Map<Integer, String> idDomainMap = null;
-	public static Map<String, Integer> idTopicMap = null;
 	
 	public static LogManager crawlerLogManager = new LogManager("crawlerLog", "crawlerLog");
 	public static Scheduler scheduler = null;

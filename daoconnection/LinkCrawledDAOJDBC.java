@@ -12,6 +12,7 @@ import commonlib.Helper;
 
 public class LinkCrawledDAOJDBC implements LinkCrawledDAO {
 	private final String SQL_SELECT_BY_DOMAINID = "SELECT * FROM link_crawled_table WHERE domain_table_id_1 = ?";
+	private final String SQL_SELECT_ALL = "SELECT * FROM link_crawled_table";
 	private final String SQL_INSERT = "INSERT INTO link_crawled_table (link, domain_table_id_1, priority, time_crawled, date_crawled) values (?, ?, ?, ?, ?)";
 	private final String SQL_UPDATE = "UPDATE link_crawled_table SET link = ?, priority = ? WHERE id = ?";
 	private final String SQL_CREATE =
@@ -67,6 +68,34 @@ public class LinkCrawledDAOJDBC implements LinkCrawledDAO {
 		try {
 			connection = this.daoFactory.getConnection();
 			preparedStatement = DAOUtil.prepareStatement(connection, SQL_SELECT_BY_DOMAINID, false, domainId);
+			resultSet = preparedStatement.executeQuery();
+			
+			List<LinkCrawled> linksCrawled = new ArrayList<LinkCrawled>();
+			while (resultSet.next()) {
+				LinkCrawled linkCrawled = this.constructLinkCrawledObject(resultSet);
+				linksCrawled.add(linkCrawled);
+			}
+
+			return linksCrawled;
+		} catch (SQLException e) {
+			Globals.crawlerLogManager.writeLog("Get link_crawled_table fails");
+			Globals.crawlerLogManager.writeLog(e.getMessage());
+			
+			return null;
+		} finally {
+			DAOUtil.close(connection, preparedStatement, resultSet);
+		}
+	}
+	
+	@Override
+	public List<LinkCrawled> get() throws SQLException {
+		Connection connection = null;
+		PreparedStatement preparedStatement = null;
+		ResultSet resultSet = null;
+		
+		try {
+			connection = this.daoFactory.getConnection();
+			preparedStatement = DAOUtil.prepareStatement(connection, SQL_SELECT_ALL, false);
 			resultSet = preparedStatement.executeQuery();
 			
 			List<LinkCrawled> linksCrawled = new ArrayList<LinkCrawled>();

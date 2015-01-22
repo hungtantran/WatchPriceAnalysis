@@ -8,6 +8,8 @@ public interface LinkCrawledDAO {
 	
 	public List<LinkCrawled> get(int domainId) throws SQLException;
 	
+	public List<LinkCrawled> get() throws SQLException;
+	
 	public Integer createLinkCrawled(LinkCrawled linkCrawled) throws SQLException;
 	
 	public boolean update(LinkCrawled linkCrawled) throws SQLException;

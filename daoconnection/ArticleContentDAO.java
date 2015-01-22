@@ -11,5 +11,7 @@ public interface ArticleContentDAO {
 	
 	public boolean createArticleContent(ArticleContent articleContent) throws SQLException;
 	
+	public boolean updateArticleContent(ArticleContent articleContent) throws SQLException;
+	
 	public boolean deleteArticleContent(Integer articleTableId) throws SQLException;
 }

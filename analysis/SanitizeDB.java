@@ -3,23 +3,32 @@ package analysis;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import newscrawler.ABlogToWatchArticleParser;
 import newscrawler.BaseParser;
-import newscrawler.Chrono24EntryPageParser;
 import newscrawler.CrawlerParserFactory;
-import newscrawler.HodinkeeArticleParser;
-import newscrawler.MainCrawler;
-import newscrawler.WatchReportArticleParser;
+
 import commonlib.Globals;
 import commonlib.HTMLCompressor;
-import commonlib.Helper;
-import daoconnection.*;
+
+import daoconnection.Article;
+import daoconnection.ArticleContent;
+import daoconnection.ArticleContentDAO;
+import daoconnection.ArticleContentDAOJDBC;
+import daoconnection.ArticleDAO;
+import daoconnection.ArticleDAOJDBC;
+import daoconnection.ArticleTopicDAO;
+import daoconnection.ArticleTopicDAOJDBC;
+import daoconnection.DAOFactory;
+import daoconnection.LinkQueue;
+import daoconnection.LinkQueueDAO;
+import daoconnection.LinkQueueDAOJDBC;
+import daoconnection.WatchPageContent;
+import daoconnection.WatchPageContentDAO;
+import daoconnection.WatchPageContentDAOJDBC;
 
 public class SanitizeDB {
 	public SanitizeDB() {
@@ -205,85 +214,64 @@ public class SanitizeDB {
 	}
 
 	// Compressed html content
-	public void compressArticleContents() {
-		int lowerBound = 6000;
-		int maxNumResult = 500;
-
-		try {
-			// Get maxNumResult articles at a time, until exhaust all the
-			// articles
-			while (true) {
-				this.mysqlConnection = new MySqlConnection();
-				ResultSet resultSet = this.mysqlConnection.getArticleContent(lowerBound, maxNumResult);
-				if (resultSet == null)
-					break;
-
-				int count = 0;
-				// Iterate through the result set to populate the
-				// information
-				while (resultSet.next()) {
-					count++;
-					// Hash the html content
-					Globals.crawlerLogManager.writeLog("Try to compress article id " + resultSet.getInt(1));
-					String originalHtmlContent = resultSet.getString(2);
-					String compressedHtmlContent = HTMLCompressor
-							.compressHtmlContent(originalHtmlContent);
-
-					if (!this.mysqlConnection.addArticleContent(resultSet.getInt(1), compressedHtmlContent))
-						continue;
-				}
-
-				if (count == 0)
-					break;
-
-				lowerBound += maxNumResult;
-				Helper.waitSec(2, 5);
+	public void compressArticleContents() throws SQLException, ClassNotFoundException {
+		ArticleContentDAO articleContentDAO = new ArticleContentDAOJDBC(DAOFactory.getInstance(Globals.username, Globals.password, Globals.server + Globals.database));
+		
+		boolean startFromBeginning = true;
+		
+		while (true) {
+			ArticleContent articleContent = articleContentDAO.getNextArticleContent(startFromBeginning);
+			
+			if (articleContent == null) {
+				break;
 			}
-		} catch (Exception e) {
-			e.printStackTrace();
+			
+			if (startFromBeginning) {
+				startFromBeginning = false;
+			}
+
+			// Compress the html content
+			Globals.crawlerLogManager.writeLog("Try to compress article id " + articleContent.getArticleTableId());
+			String originalHtmlContent = articleContent.getContent();
+			String compressedHtmlContent = HTMLCompressor.compressHtmlContent(originalHtmlContent);
+
+			articleContent.setContent(compressedHtmlContent);
+			
+			if (!articleContentDAO.updateArticleContent(articleContent)) {
+				Globals.crawlerLogManager.writeLog("Fail to compress article id " + articleContent.getArticleTableId());
+				break;
+			}
 		}
 	}
 
 	// Compressed html content
-	public void compressWatchContents() {
-		int lowerBound = 0;
-		int maxNumResult = 500;
-
-		try {
-			// Get maxNumResult articles at a time, until exhaust all the
-			// articles
-			while (true) {
-				this.mysqlConnection = new MySqlConnection();
-				ResultSet resultSet = this.mysqlConnection.getWatchPageContent(
-						lowerBound, maxNumResult);
-				if (resultSet == null)
-					break;
-
-				int count = 0;
-				// Iterate through the result set to populate the
-				// information
-				while (resultSet.next()) {
-					count++;
-					// Hash the html content
-					Globals.crawlerLogManager
-							.writeLog("Try to compress watch id "
-									+ resultSet.getInt(1));
-					String originalHtmlContent = resultSet.getString(2);
-					String compressedHtmlContent = HTMLCompressor
-							.compressHtmlContent(originalHtmlContent);
-					if (!this.mysqlConnection.addWatchPageContent(
-							resultSet.getInt(1), compressedHtmlContent))
-						continue;
-				}
-
-				if (count == 0)
-					break;
-
-				lowerBound += maxNumResult;
-				Helper.waitSec(2, 5);
+	public void compressWatchContents() throws SQLException, ClassNotFoundException {
+		WatchPageContentDAO watchPageContentDAO = new WatchPageContentDAOJDBC(DAOFactory.getInstance(Globals.username, Globals.password, Globals.server + Globals.database));
+			
+		boolean startFromBeginning = true;
+		
+		while (true) {
+			WatchPageContent watchPageContent = watchPageContentDAO.getNextWatchPageContent(startFromBeginning);
+			
+			if (watchPageContent == null) {
+				break;
 			}
-		} catch (Exception e) {
-			e.printStackTrace();
+			
+			if (startFromBeginning) {
+				startFromBeginning = false;
+			}
+			
+			// Hash the html content
+			Globals.crawlerLogManager.writeLog("Try to compress watch id " + watchPageContent.getWatchTableId());
+			String originalHtmlContent = watchPageContent.getContent();
+			String compressedHtmlContent = HTMLCompressor.compressHtmlContent(originalHtmlContent);
+			
+			watchPageContent.setContent(compressedHtmlContent);
+			
+			if (!watchPageContentDAO.updateWatchPageContent(watchPageContent)) {
+				Globals.crawlerLogManager.writeLog("Fail to compress watch id " + watchPageContent.getWatchTableId());
+				continue;
+			}
 		}
 	}
 

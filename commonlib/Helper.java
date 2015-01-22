@@ -353,21 +353,6 @@ public class Helper {
 		}
 	}
 	
-	// Convert topic to topic id
-	public static Integer[] convertTopicToTopicId(String[] topics) {
-		if (Globals.idTopicMap == null)
-			return null;
-		
-		Integer[] topicsId = new Integer[topics.length];
-
-		// Get the id of topics
-		for (int i = 0; i < topics.length; i++) {
-			topicsId[i] = Globals.idTopicMap.get(topics[i]);
-		}
-
-		return topicsId;
-	}
-	
 	// Clean up a file name
 	public static String sanitizeFileDirectoryName(String fileName) {
 		if (fileName == null)

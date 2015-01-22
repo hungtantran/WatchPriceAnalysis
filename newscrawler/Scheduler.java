@@ -1,96 +1,98 @@
 package newscrawler;
 
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.PriorityBlockingQueue;
-import java.util.concurrent.locks.ReentrantLock;
 
 import commonlib.Helper;
 import commonlib.LogManager;
 import commonlib.TopicComparator;
 
-import dbconnection.MySqlConnection;
+import daoconnection.DAOFactory;
+import daoconnection.LinkCrawled;
+import daoconnection.LinkCrawledDAO;
+import daoconnection.LinkCrawledDAOJDBC;
+import daoconnection.LinkQueue;
+import daoconnection.LinkQueueDAO;
+import daoconnection.LinkQueueDAOJDBC;
 
 public class Scheduler {
 	protected Random rand = null;
 	protected Set<String> urlsCrawled = null;
 	protected PriorityBlockingQueue<String>[] urlsQueue = null;
 	protected LogManager logManager = null;
-	protected MySqlConnection con = null;
 	protected BaseCrawler[] crawlers = null;
 	protected int maxCrawlers = 0;
 	protected int numQueue = 0;
-
-	private final ReentrantLock mutex = new ReentrantLock();
+	protected DAOFactory daoFactory = null;
 
 	@SuppressWarnings("unchecked")
-	public Scheduler(LogManager logManager, MySqlConnection con,
-			int maxCrawlers, int numQueue) {
-		if (numQueue <= 0 || maxCrawlers <= 0)
-			return;
+	public Scheduler(DAOFactory daoFactory, LogManager logManager, int maxCrawlers, int numQueue) throws Exception {
+		if (numQueue <= 0 || maxCrawlers <= 0 || daoFactory == null) {
+			throw new Exception("Invalid arguments");
+		}
 		
 		this.rand = new Random();
 		this.urlsQueue = new PriorityBlockingQueue[numQueue];
 		this.numQueue = numQueue;
-
+		
 		for (int i = 0; i < numQueue; i++) {
-			this.urlsQueue[i] = new PriorityBlockingQueue<String>(100,
-					new TopicComparator());
+			this.urlsQueue[i] = new PriorityBlockingQueue<String>(100, new TopicComparator());
 		}
 
 		this.urlsCrawled = Collections.synchronizedSet(new HashSet<String>());
 
 		this.logManager = logManager;
-		this.con = con;
 		this.maxCrawlers = maxCrawlers;
 		this.crawlers = new BaseCrawler[this.maxCrawlers];
+		this.daoFactory = daoFactory;
 	}
 
-	public boolean startUp() {
+	public boolean startUp() throws SQLException {
 		this.logManager.writeLog("Begin start up scheduler");
 
 		// Populate the queue with previous links in the queue
-		try {
-			ResultSet queue = this.con.getLinkQueue();
-			while (queue.next()) {
-				this.forceAddToUrlsQueue(queue.getString(1));
-			}
-			
-			for (int i = 0; i < this.numQueue; i++) {
-				this.logManager.writeLog("Urls in Queue "+i+" : "
-						+ this.urlsQueue[i].size());
-			}
-
-			ResultSet crawled = this.con.getLinkCrawled();
-			while (crawled.next()) {
-				this.urlsCrawled.add(crawled.getString(1));
-			}
-
-			this.logManager.writeLog("Urls in Crawled Set : "
-					+ this.getUrlsCrawledSize());
-
-			return true;
-		} catch (SQLException e) {
-			this.logManager.writeLog(e.getMessage());
+		LinkQueueDAO linkQueueDAO = new LinkQueueDAOJDBC(this.daoFactory);
+		List<LinkQueue> linkQueueList = linkQueueDAO.getLinksQueued();
+		
+		for (LinkQueue linkQueue : linkQueueList) {
+			this.forceAddToUrlsQueue(linkQueue.getLink());
+		}
+		
+		for (int i = 0; i < this.numQueue; i++) {
+			this.logManager.writeLog("Urls in Queue " + i + " : " + this.urlsQueue[i].size());
+		}
+		
+		LinkCrawledDAO linkCrawledDAO = new LinkCrawledDAOJDBC(this.daoFactory);
+		List<LinkCrawled> linkCrawledList = linkCrawledDAO.get();
+		
+		for (LinkCrawled linkCrawled : linkCrawledList) {
+			this.urlsCrawled.add(linkCrawled.getLink());
 		}
 
-		return false;
+		this.logManager.writeLog("Urls in Crawled Set : " + this.getUrlsCrawledSize());
+		
+		this.logManager.writeLog("Finish start up scheduler");
+
+		return true;
 	}
 
 	private boolean isValidLink(String url) {
-		if (url == null)
+		if (url == null) {
 			return false;
+		}
 
 		return true;
 	}
 
 	public boolean addToUrlsQueue(String url) {
-		if (!this.isValidLink(url))
+		if (!this.isValidLink(url)) {
 			return false;
+		}
 
 		int index = Helper.hashStringToInt(url) % this.numQueue;
 
@@ -108,8 +110,9 @@ public class Scheduler {
 	}
 
 	public boolean forceAddToUrlsQueue(String url) {
-		if (url == null)
+		if (url == null) {
 			return false;
+		}
 
 		int hash = Helper.hashStringToInt(url);
 		this.urlsQueue[hash % this.numQueue].add(url);
@@ -118,8 +121,9 @@ public class Scheduler {
 	}
 
 	public boolean addToUrlsCrawled(String url) {
-		if (!this.isValidLink(url))
+		if (!this.isValidLink(url)) {
 			return false;
+		}
 
 		this.urlsCrawled.add(url);
 
@@ -162,8 +166,9 @@ public class Scheduler {
 	}
 
 	public boolean urlsQueueContain(String url) {
-		if (!this.isValidLink(url))
+		if (!this.isValidLink(url)) {
 			return false;
+		}
 
 		int index = Helper.hashStringToInt(url) % this.numQueue;
 
@@ -171,20 +176,21 @@ public class Scheduler {
 	}
 
 	public boolean urlsCrawledContain(String url) {
-		if (!this.isValidLink(url))
+		if (!this.isValidLink(url)) {
 			return false;
+		}
 
 		return this.urlsCrawled.contains(url);
 	}
 
-	public void start() {
+	public void start() throws ClassNotFoundException, SQLException {
 		if (!this.startUp()) {
 			this.logManager.writeLog("Start up scheduler fails");
 			return;
 		}
 
 		for (int i = 0; i < this.maxCrawlers; i++) {
-			this.crawlers[i] = new BaseCrawler(this.con, this.logManager, this);
+			this.crawlers[i] = new BaseCrawler(this.logManager, this);
 		}
 
 		this.logManager.writeLog("Run threads for scheduler");

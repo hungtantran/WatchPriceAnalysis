@@ -55,9 +55,7 @@ public abstract class BaseParser {
 
 	public abstract boolean isValidLink(String url);
 
-	protected BaseParser(String link, Domain domain, LogManager logManager, Scheduler scheduler, DAOFactory daoFactory) throws SQLException {
-		this.domain = domain;
-
+	protected BaseParser(String link, LogManager logManager, Scheduler scheduler, DAOFactory daoFactory) throws SQLException {
 		if (link.indexOf(domain.getDomainString()) != 0) {
 			this.link = domain.getDomainString();
 		} else {
