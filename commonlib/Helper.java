@@ -319,21 +319,20 @@ public class Helper {
 			}
 		}
 
-		// Combine a topic'words into 1 word and try to find that word in the
-		// name
+		// Combine a topic'words into 1 word and try to find that word in the name
 		for (String topic : topics) {
 			if (!topicsOfName.contains(topic)) {
 				String topicWord = topic.replace(" ", "");
 				topicWord = topicWord.trim().toLowerCase();
-				if (topicWord.length() > 3
-						&& articleNameWordsSet.contains(topicWord)) {
+				if (topicWord.length() > 3 && articleNameWordsSet.contains(topicWord)) {
 					topicsOfName.add(topic);
 				}
 			}
 		}
 
-		if (Globals.DEBUG)
+		if (Globals.DEBUG) {
 			Globals.crawlerLogManager.writeLog("Topics = " + topicsOfName);
+		}
 
 		return topicsOfName;
 	}

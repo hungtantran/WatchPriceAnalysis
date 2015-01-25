@@ -1,6 +1,7 @@
 package newscrawler;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.jsoup.select.Elements;
@@ -8,46 +9,58 @@ import org.jsoup.select.Elements;
 import commonlib.Globals;
 import commonlib.Helper;
 import commonlib.LogManager;
-import daoconnection.DAOFactory;
+import daoconnection.Domain;
 import daoconnection.Type;
 
 public class ABlogToWatchArticleParser extends BaseParser {
-	private final String domainString = "ABLOGTOWATCH";
+	private static final String domainString = "ABLOGTOWATCH";
+	private static final String typeString = "HOROLOGY";
 	private final int numRetryDownloadPage = 2;
 
 	private String articleName = null;
 	private Set<String> keywords = null;
-	private Set<Type> types = null;
 	private Set<String> topics = null;
 
-	public ABlogToWatchArticleParser(String articleUrl, LogManager logManager, Scheduler scheduler, DAOFactory daoFactory) {
-		super(articleUrl, logManager, scheduler, daoFactory);
+	public ABlogToWatchArticleParser(
+		String articleUrl,
+		BaseCrawler crawler,
+		LogManager logManager,
+		Scheduler scheduler,
+		String[] topicList,
+		Set<String> typeWordList,
+		Map<String, Domain> domainStringToDomainMap,
+		Map<String, Type> typeStringToTypeMap) throws Exception
+	{
+		super(
+			articleUrl,
+			crawler,
+			logManager,
+			scheduler,
+			topicList,
+			typeWordList,
+			domainStringToDomainMap,
+			typeStringToTypeMap,
+			ABlogToWatchArticleParser.domainString,
+			ABlogToWatchArticleParser.typeString);
 
 		this.keywords = new HashSet<String>();
-		this.types = new HashSet<Globals.Type>();
-		this.types.add(Type.HOROLOGY);
 		this.topics = new HashSet<String>();
-		this.timeCreated = "00:00:00";
 	}
 
 	// Return true if the articleUrl is a valid article page of ABlogToWatch,
 	// false if not
-	public boolean isArticlePage() {
-		if (!this.isValidLink(this.link))
+	public boolean isContentLink() {
+		if (!this.isValidLink(this.link)) {
 			return false;
+		}
 		
-		if (this.doc == null)
+		if (this.doc == null) {
 			return false;
+		}
 
 		String content = this.doc.outerHtml();
 
 		return (content != null && content.indexOf("article:published_time") != -1);
-	}
-
-	// Get domains of the article
-	public Globals.Domain[] getDomains() {
-		Globals.Domain[] domains = { Domain.ABLOGTOWATCH };
-		return domains;
 	}
 
 	// Get the name of the article
@@ -55,25 +68,11 @@ public class ABlogToWatchArticleParser extends BaseParser {
 		return this.articleName;
 	}
 
-	// Get the types of the article
-	public Globals.Type[] getTypes() {
-		if (this.types == null)
-			return null;
-
-		Globals.Type[] typesArray = new Globals.Type[this.types.size()];
-		int count = 0;
-		for (Globals.Type type : this.types) {
-			typesArray[count] = type;
-			count++;
-		}
-
-		return typesArray;
-	}
-
 	// Get the keywords of the article
 	public String[] getKeywords() {
-		if (this.keywords == null)
+		if (this.keywords == null) {
 			return null;
+		}
 
 		String[] keywordsArray = new String[this.keywords.size()];
 		int count = 0;
@@ -87,8 +86,9 @@ public class ABlogToWatchArticleParser extends BaseParser {
 
 	// Get the topics of the article
 	public String[] getTopics() {
-		if (this.topics == null)
+		if (this.topics == null) {
 			return null;
+		}
 
 		String[] topicsArray = new String[this.topics.size()];
 		int count = 0;
@@ -110,7 +110,7 @@ public class ABlogToWatchArticleParser extends BaseParser {
 		}
 
 		// If the page is not an article page
-		if (!this.isArticlePage()) {
+		if (!this.isContentLink()) {
 			return false;
 		}
 
@@ -137,9 +137,9 @@ public class ABlogToWatchArticleParser extends BaseParser {
 			articleNameText = articleNameText.trim();
 			this.articleName = articleNameText;
 
-			if (Globals.DEBUG)
-				Globals.crawlerLogManager.writeLog("Article Name = "
-						+ this.articleName);
+			if (Globals.DEBUG) {
+				Globals.crawlerLogManager.writeLog("Article Name = " + this.articleName);
+			}
 		}
 	}
 
@@ -151,8 +151,7 @@ public class ABlogToWatchArticleParser extends BaseParser {
 
 	// Parse the topics of the article
 	private void parseTopics() {
-		Set<String> topicsOfName = Helper.identifyTopicOfName(this.articleName,
-				Globals.HOROLOGYTOPICS);
+		Set<String> topicsOfName = Helper.identifyTopicOfName(this.articleName, this.topicList, this.typeWordList);
 
 		if (topicsOfName != null) {
 			for (String topic : topicsOfName) {
@@ -173,16 +172,17 @@ public class ABlogToWatchArticleParser extends BaseParser {
 					dateCreatedText.indexOf('T'));
 			this.dateCreated = dateCreatedText;
 
-			if (Globals.DEBUG)
-				Globals.crawlerLogManager.writeLog("Date Created = "
-						+ this.dateCreated);
+			if (Globals.DEBUG) {
+				Globals.crawlerLogManager.writeLog("Date Created = " + this.dateCreated);
+			}
 		}
 	}
 
 	// Process link (e.g. trim, truncate bad part, etc..)
-	protected String processLink(String url) {
-		if (url == null)
+	public String sanitizeLink(String url) {
+		if (url == null) {
 			return url;
+		}
 
 		url = url.trim();
 
@@ -191,52 +191,46 @@ public class ABlogToWatchArticleParser extends BaseParser {
 
 	// Check if current url is valid or not
 	public boolean isValidLink(String url) {
-		if (url == null)
+		if (url == null) {
 			return false;
+		}
 
-		if (url.indexOf(this.domain) != 0)
+		if (url.indexOf(this.domain.getDomainString()) != 0) {
 			return false;
+		}
 
-		if (url.indexOf("?attachment_id") != -1)
+		if (url.indexOf("?attachment_id") != -1) {
 			return false;
+		}
 
 		// If the link is a file, not a web page, skip it and continue to
 		// the next link in the queue
-		if (Helper.linkIsFile(url))
+		if (Helper.linkIsFile(url)) {
 			return false;
+		}
 
 		return true;
 	}
 
-	protected void checkDocumentUrl(String url) {
-		// If the page is an article page, parse it
-		this.parseDoc();
+	@Override
+	public boolean addCurrentContentToDatabase() {
+		String link = this.getLink();
+		String articleName = this.getArticleName();
+		String[] keywords = this.getKeywords();
+		String[] topics = this.getTopics();
+		String content = this.getContent();
+		String timeCreated = this.getTimeCreated();
+		String dateCreated = this.getDateCreated();
 
-		if (this.isArticlePage() && this.doc != null) {
-			String link = this.getLink();
-			Globals.Domain[] domains = this.getDomains();
-			String articleName = this.getArticleName();
-			Globals.Type[] types = this.getTypes();
-			String[] keywords = this.getKeywords();
-			String[] topics = this.getTopics();
-			String content = this.doc.outerHtml();
-			String timeCreated = this.getTimeCreated();
-			String dateCreated = this.getDateCreated();
-
-			// Calculated the time the article is crawled
-			String timeCrawled = Helper.getCurrentTime();
-			String dateCrawled = Helper.getCurrentDate();
-
-			this.mysqlConnection.addArticle(link, domains, articleName, types,
-					keywords, topics, timeCreated, dateCreated, timeCrawled,
-					dateCrawled, content);
-		}
+		// Calculated the time the article is crawled
+		String timeCrawled = Helper.getCurrentTime();
+		String dateCrawled = Helper.getCurrentDate();
 		
-		// Remove current link from queue, add it to crawl set
-		// Adds all links in page to queue
-		this.processLinksInPage(url);
+		return this.crawler.addArticle(link, this.domain, articleName, this.type,
+			keywords, topics, timeCreated, dateCreated, timeCrawled,
+			dateCrawled, content);
 	}
-
+	
 	public static void main(String[] args) {
 		// ABlogToWatchArticleParser parser = new ABlogToWatchArticleParser(
 		// "http://www.ablogtowatch.com/charlie-sheen-father-debut-in-patek-philippe-watch-ad/");

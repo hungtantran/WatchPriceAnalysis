@@ -30,8 +30,9 @@ public class NetworkingFunctions {
 	
 	// Download the html content into a private Document variable "doc"
 	public static NetPkg downloadHtmlContent(String url, int numRetries) {
-		if (url == null)
+		if (url == null) {
 			return null;
+		}
 		
 		Exception result = null;
 		Document doc = null;

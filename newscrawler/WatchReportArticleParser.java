@@ -1,92 +1,76 @@
 package newscrawler;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.jsoup.select.Elements;
 
 import commonlib.Globals;
-import commonlib.Globals.Domain;
-import commonlib.Globals.Type;
 import commonlib.Helper;
 import commonlib.LogManager;
-
-import dbconnection.MySqlConnection;
-
-/*import edu.stanford.nlp.process.Tokenizer;
- import edu.stanford.nlp.process.TokenizerFactory;
- import edu.stanford.nlp.process.CoreLabelTokenFactory;
- import edu.stanford.nlp.process.DocumentPreprocessor;
- import edu.stanford.nlp.process.PTBTokenizer;
- import edu.stanford.nlp.ling.CoreLabel;
- import edu.stanford.nlp.ling.HasWord;
- import edu.stanford.nlp.ling.Sentence;
- import edu.stanford.nlp.trees.*;
- import edu.stanford.nlp.parser.lexparser.LexicalizedParser;*/
+import daoconnection.Domain;
+import daoconnection.Type;
 
 public class WatchReportArticleParser extends BaseParser {
+	private static final String domainString = "WATCHREPORT";
+	private static final String typeString = "HOROLOGY";
 	private final int numRetryDownloadPage = 2;
 
 	private String articleName = null;
 	private Set<String> keywords = null;
-	private Set<Globals.Type> types = null;
 	private Set<String> topics = null;
 
-	public WatchReportArticleParser(String articleUrl, MySqlConnection con,
-			LogManager logManager, Scheduler scheduler) {
-		super(articleUrl, Globals.Domain.WATCHREPORT.domain, Domain.WATCHREPORT,
-				con, logManager, scheduler);
+	public WatchReportArticleParser(
+		String articleUrl,
+		BaseCrawler crawler,
+		LogManager logManager,
+		Scheduler scheduler,
+		String[] topicList,
+		Set<String> typeWordList,
+		Map<String, Domain> domainStringToDomainMap,
+		Map<String, Type> typeStringToTypeMap) throws Exception
+	{
+		super(
+			articleUrl,
+			crawler,
+			logManager,
+			scheduler,
+			topicList,
+			typeWordList,
+			domainStringToDomainMap,
+			typeStringToTypeMap,
+			WatchReportArticleParser.domainString,
+			WatchReportArticleParser.typeString);
 
 		this.keywords = new HashSet<String>();
-		this.types = new HashSet<Globals.Type>();
-		this.types.add(Type.HOROLOGY);
 		this.topics = new HashSet<String>();
-		this.timeCreated = "00:00:00";
 	}
 
 	// Return true if the articleUrl is a valid article page of WatchReport,
 	// false if not
-	public boolean isArticlePage() {
-		if (!this.isValidLink(this.link))
+	public boolean isContentLink() {
+		if (!this.isValidLink(this.link)) {
 			return false;
+		}
 		
-		if (this.doc == null)
+		if (this.doc == null) {
 			return false;
+		}
 
 		String content = this.doc.outerHtml();
 
-		return (this.link.indexOf(this.domain) == 0
-				&& content != null
-				&& content.indexOf("property=\"og:type\" content=\"article\"") != -1
-				&& content.indexOf("<h1") != -1
-				&& content.indexOf("<p class=\"post-meta\">") != -1 && Helper
-					.numOccurance(this.link, "/") == 4);
-	}
-
-	// Get domains of the article
-	public Globals.Domain[] getDomains() {
-		Globals.Domain[] domains = { Domain.WATCHREPORT };
-		return domains;
+		return (this.link.indexOf(this.domain.getDomainString()) == 0
+			&& content != null
+			&& content.indexOf("property=\"og:type\" content=\"article\"") != -1
+			&& content.indexOf("<h1") != -1
+			&& content.indexOf("<p class=\"post-meta\">") != -1 && Helper
+				.numOccurance(this.link, "/") == 4);
 	}
 
 	// Get the name of the article
 	public String getArticleName() {
 		return this.articleName;
-	}
-
-	// Get the types of the article
-	public Globals.Type[] getTypes() {
-		if (this.types == null)
-			return null;
-
-		Globals.Type[] typesArray = new Globals.Type[this.types.size()];
-		int count = 0;
-		for (Globals.Type type : this.types) {
-			typesArray[count] = type;
-			count++;
-		}
-
-		return typesArray;
 	}
 
 	// Get the keywords of the article
@@ -124,8 +108,9 @@ public class WatchReportArticleParser extends BaseParser {
 		this.downloadHtmlContent(this.link, this.numRetryDownloadPage);
 
 		// If the download content fails, return
-		if (this.doc == null)
+		if (this.doc == null) {
 			return false;
+		}
 
 		// Parse the name of the article
 		this.parseArticleName();
@@ -150,9 +135,9 @@ public class WatchReportArticleParser extends BaseParser {
 			articleNameText = articleNameText.trim();
 			this.articleName = articleNameText;
 
-			if (Globals.DEBUG)
-				Globals.crawlerLogManager.writeLog("Article Name = "
-						+ this.articleName);
+			if (Globals.DEBUG) {
+				Globals.crawlerLogManager.writeLog("Article Name = " + this.articleName);
+			}
 		}
 	}
 
@@ -164,8 +149,7 @@ public class WatchReportArticleParser extends BaseParser {
 
 	// Parse the topics of the article
 	private void parseTopics() {
-		Set<String> topicsOfName = Helper.identifyTopicOfName(this.articleName,
-				Globals.HOROLOGYTOPICS);
+		Set<String> topicsOfName = Helper.identifyTopicOfName(this.articleName, this.topicList, this.typeWordList);
 
 		if (topicsOfName != null) {
 			for (String topic : topicsOfName) {
@@ -185,17 +169,18 @@ public class WatchReportArticleParser extends BaseParser {
 				dateCreatedText = dateCreatedText.trim();
 				this.dateCreated = Helper.formatDate(dateCreatedText);
 
-				if (Globals.DEBUG)
-					Globals.crawlerLogManager.writeLog("Date Created = "
-							+ this.dateCreated);
+				if (Globals.DEBUG) {
+					Globals.crawlerLogManager.writeLog("Date Created = " + this.dateCreated);
+				}
 			}
 		}
 	}
 
 	// Process link (e.g. trim, truncate bad part, etc..)
-	protected String processLink(String url) {
-		if (url == null)
+	public String sanitizeLink(String url) {
+		if (url == null) {
 			return url;
+		}
 
 		url = url.trim();
 
@@ -204,49 +189,43 @@ public class WatchReportArticleParser extends BaseParser {
 
 	// Check if current url is valid or not
 	public boolean isValidLink(String url) {
-		if (url == null)
+		if (url == null) {
 			return false;
+		}
 
-		if (url.indexOf(this.domain) != 0)
+		if (url.indexOf(this.domain.getDomainString()) != 0) {
 			return false;
+		}
 
-		if (url.indexOf("?") != -1)
+		if (url.indexOf("?") != -1) {
 			return false;
+		}
 
 		// If the link is a file, not a web page, skip it and continue to
 		// the next link in the queue
-		if (Helper.linkIsFile(url))
+		if (Helper.linkIsFile(url)) {
 			return false;
+		}
 
 		return true;
 	}
 
-	protected void checkDocumentUrl(String url) {
-		this.parseDoc();
+	public boolean addCurrentContentToDatabase() {
+		String link = this.getLink();
+		String articleName = this.getArticleName();
+		String[] keywords = this.getKeywords();
+		String[] topics = this.getTopics();
+		String content = this.doc.outerHtml();
+		String timeCreated = this.getTimeCreated();
+		String dateCreated = this.getDateCreated();
 
-		if (this.isArticlePage() && this.doc != null) {
-			String link = this.getLink();
-			Globals.Domain[] domains = this.getDomains();
-			String articleName = this.getArticleName();
-			Globals.Type[] types = this.getTypes();
-			String[] keywords = this.getKeywords();
-			String[] topics = this.getTopics();
-			String content = this.doc.outerHtml();
-			String timeCreated = this.getTimeCreated();
-			String dateCreated = this.getDateCreated();
+		// Calculated the time the article is crawled
+		String timeCrawled = Helper.getCurrentTime();
+		String dateCrawled = Helper.getCurrentDate();
 
-			// Calculated the time the article is crawled
-			String timeCrawled = Helper.getCurrentTime();
-			String dateCrawled = Helper.getCurrentDate();
-
-			this.mysqlConnection.addArticle(link, domains, articleName, types,
-					keywords, topics, timeCreated, dateCreated, timeCrawled,
-					dateCrawled, content);
-		}
-
-		// Remove current link from queue, add it to crawl set
-		// Adds all links in page to queue
-		this.processLinksInPage(url);
+		return this.crawler.addArticle(link, this.domain, articleName, this.type,
+			keywords, topics, timeCreated, dateCreated, timeCrawled,
+			dateCrawled, content);
 	}
 
 	public static void main(String[] args) {

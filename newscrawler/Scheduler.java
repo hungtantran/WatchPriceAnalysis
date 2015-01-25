@@ -11,7 +11,6 @@ import java.util.concurrent.PriorityBlockingQueue;
 import commonlib.Helper;
 import commonlib.LogManager;
 import commonlib.TopicComparator;
-
 import daoconnection.DAOFactory;
 import daoconnection.LinkCrawled;
 import daoconnection.LinkCrawledDAO;
@@ -29,10 +28,17 @@ public class Scheduler {
 	protected int maxCrawlers = 0;
 	protected int numQueue = 0;
 	protected DAOFactory daoFactory = null;
-
+	protected CrawlerParserFactory crawlerParserFactory = null;
+	
 	@SuppressWarnings("unchecked")
-	public Scheduler(DAOFactory daoFactory, LogManager logManager, int maxCrawlers, int numQueue) throws Exception {
-		if (numQueue <= 0 || maxCrawlers <= 0 || daoFactory == null) {
+	public Scheduler(
+		DAOFactory daoFactory,
+		LogManager logManager,
+		CrawlerParserFactory crawlerParserFactory,
+		int maxCrawlers,
+		int numQueue) throws Exception
+	{
+		if (numQueue <= 0 || maxCrawlers <= 0 || daoFactory == null || crawlerParserFactory == null) {
 			throw new Exception("Invalid arguments");
 		}
 		
@@ -50,6 +56,7 @@ public class Scheduler {
 		this.maxCrawlers = maxCrawlers;
 		this.crawlers = new BaseCrawler[this.maxCrawlers];
 		this.daoFactory = daoFactory;
+		this.crawlerParserFactory = crawlerParserFactory;
 	}
 
 	public boolean startUp() throws SQLException {
@@ -183,14 +190,14 @@ public class Scheduler {
 		return this.urlsCrawled.contains(url);
 	}
 
-	public void start() throws ClassNotFoundException, SQLException {
+	public void start() throws Exception {
 		if (!this.startUp()) {
 			this.logManager.writeLog("Start up scheduler fails");
 			return;
 		}
 
 		for (int i = 0; i < this.maxCrawlers; i++) {
-			this.crawlers[i] = new BaseCrawler(this.logManager, this);
+			this.crawlers[i] = new BaseCrawler(this.logManager, this, this.daoFactory, this.crawlerParserFactory);
 		}
 
 		this.logManager.writeLog("Run threads for scheduler");

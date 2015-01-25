@@ -4,8 +4,6 @@ import static org.junit.Assert.assertEquals;
 
 import java.net.UnknownHostException;
 
-import newscrawler.MainCrawler;
-
 import org.jsoup.HttpStatusException;
 import org.junit.Test;
 
@@ -15,7 +13,6 @@ import commonlib.NetworkingFunctions.NetPkg;
 public class NetworkingTest {
 	@Test
 	public void test() {
-		MainCrawler.startUpState();
 		testNetworkingError();
 	}
 	

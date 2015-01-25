@@ -1,29 +1,21 @@
 package newscrawler;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import commonlib.Globals;
-import commonlib.Globals.Domain;
 import commonlib.Helper;
 import commonlib.LogManager;
-
-import dbconnection.MySqlConnection;
-
-/*import edu.stanford.nlp.process.Tokenizer;
- import edu.stanford.nlp.process.TokenizerFactory;
- import edu.stanford.nlp.process.DocumentPreprocessor;
- import edu.stanford.nlp.process.PTBTokenizer;
- import edu.stanford.nlp.ling.CoreLabel;
- import edu.stanford.nlp.ling.HasWord;
- import edu.stanford.nlp.ling.Sentence;
- import edu.stanford.nlp.trees.*;
- import edu.stanford.nlp.parser.lexparser.LexicalizedParser;*/
+import daoconnection.Domain;
+import daoconnection.Type;
 
 public class Chrono24EntryPageParser extends BaseParser {
+	private static final String domainString = "CHRONO24";
+	private static final String typeString = "HOROLOGY";
 	private final int numRetryDownloadPage = 3;
 
 	private String watchName = null;
@@ -40,39 +32,50 @@ public class Chrono24EntryPageParser extends BaseParser {
 	private String dialColor = null;
 	private String location = null;
 
-	public Chrono24EntryPageParser(String articleUrl, MySqlConnection con,
-			LogManager logManager, Scheduler scheduler) {
-		super(articleUrl, Globals.Domain.CHRONO24.domain, Domain.CHRONO24, con,
-				logManager, scheduler);
+	public Chrono24EntryPageParser(String articleUrl,
+		BaseCrawler crawler,
+		LogManager logManager,
+		Scheduler scheduler,
+		String[] topicList,
+		Set<String> typeWordList,
+		Map<String, Domain> domainStringToDomainMap,
+		Map<String, Type> typeStringToTypeMap) throws Exception
+	{
+		super(
+			articleUrl,
+			crawler,
+			logManager,
+			scheduler,
+			topicList,
+			typeWordList,
+			domainStringToDomainMap,
+			typeStringToTypeMap,
+			Chrono24EntryPageParser.domainString,
+			Chrono24EntryPageParser.typeString);
 
 		this.prices = new int[2];
 		this.prices[0] = -1;
 		this.prices[1] = -1;
 		this.keywords = new HashSet<String>();
 		this.topics = new HashSet<String>();
-		this.timeCreated = "00:00:00";
 	}
 
 	// Return true if the articleUrl is a valid watch entry page of chrono24,
 	// false if not
-	public boolean isArticlePage() {
-		if (!this.isValidLink(this.link))
+	public boolean isContentLink() {
+		if (!this.isValidLink(this.link)) {
 			return false;
+		}
 		
-		return (this.link.indexOf(this.domain) == 0 && this.link
-				.indexOf("--id") != -1);
-	}
-
-	// Get domains of the article
-	public Globals.Domain[] getDomains() {
-		Globals.Domain[] domains = { Domain.CHRONO24 };
-		return domains;
+		return (this.link.indexOf(this.domain.getDomainString()) == 0 &&
+				this.link.indexOf("--id") != -1);
 	}
 
 	// Get the topics of the article
 	public String[] getTopics() {
-		if (this.topics == null)
+		if (this.topics == null) {
 			return null;
+		}
 
 		String[] topicsArray = new String[this.topics.size()];
 		int count = 0;
@@ -177,8 +180,9 @@ public class Chrono24EntryPageParser extends BaseParser {
 		if (this.doc == null)
 			return false;
 		
-		if (!this.isArticlePage())
+		if (!this.isContentLink()) {
 			return false;
+		}
 
 		// Parse the name of the watch
 		this.parseWatchName();
@@ -209,23 +213,25 @@ public class Chrono24EntryPageParser extends BaseParser {
 			articleNameText = articleNameText.trim();
 			this.watchName = articleNameText;
 
-			if (Globals.DEBUG)
-				this.logManager.writeLog("Watch Name = "
-						+ this.watchName);
+			if (Globals.DEBUG) {
+				this.logManager.writeLog("Watch Name = " + this.watchName);
+			}
 		}
 	}
 
 	private int extractIntFromString(String string) {
 		int result = 0;
 
-		if (string == null)
+		if (string == null) {
 			return result;
+		}
 
 		for (int i = 0; i < string.length(); i++) {
 			char curChar = string.charAt(i);
 
-			if (curChar >= '0' && curChar <= '9')
+			if (curChar >= '0' && curChar <= '9') {
 				result = result * 10 + (curChar - '0');
+			}
 		}
 
 		return result;
@@ -239,9 +245,9 @@ public class Chrono24EntryPageParser extends BaseParser {
 			priceText = priceText.trim();
 			this.prices[0] = this.extractIntFromString(priceText);
 
-			if (Globals.DEBUG)
-				this.logManager.writeLog("Watch Price = "
-						+ this.prices[0]);
+			if (Globals.DEBUG) {
+				this.logManager.writeLog("Watch Price = " + this.prices[0]);
+			}
 		}
 	}
 
@@ -253,8 +259,7 @@ public class Chrono24EntryPageParser extends BaseParser {
 
 	// Parse the topics of the watch entry page
 	private void parseTopics() {
-		Set<String> topicsOfName = Helper.identifyTopicOfName(this.watchName,
-				Globals.HOROLOGYTOPICS);
+		Set<String> topicsOfName = Helper.identifyTopicOfName(this.watchName, this.topicList, this.typeWordList);
 
 		if (topicsOfName != null) {
 			for (String topic : topicsOfName) {
@@ -377,9 +382,10 @@ public class Chrono24EntryPageParser extends BaseParser {
 	}
 
 	// Process link (e.g. trim, truncate bad part, etc..)
-	protected String processLink(String url) {
-		if (url == null)
+	public String sanitizeLink(String url) {
+		if (url == null) {
 			return url;
+		}
 
 		url = url.trim();
 
@@ -397,83 +403,79 @@ public class Chrono24EntryPageParser extends BaseParser {
 
 	// Check if current url is valid or not
 	public boolean isValidLink(String url) {
-		if (url == null)
+		if (url == null) {
 			return false;
+		}
 
-		if (url.indexOf(this.domain) != 0)
+		if (url.indexOf(this.domain.getDomainString()) != 0) {
 			return false;
+		}
 
-		if (url.indexOf("?") != -1)
+		if (url.indexOf("?") != -1) {
 			return false;
+		}
 		
 		// For chrono24, realize that for number of '/' < 4 is garbage link
 		int numOccurenceOfSlashes = Helper.numOccurance(url, "/"); 
-		if (numOccurenceOfSlashes < 4 && !url.equals(this.domain))
+		if (numOccurenceOfSlashes < 4 && !url.equals(this.domain)) {
 			return false;
+		}
 
 		// If the link is a file, not a web page, skip it and continue to
 		// the next link in the queue
-		if (Helper.linkIsFile(url))
+		if (Helper.linkIsFile(url)) {
 			return false;
+		}
 
 		return true;
 	}
 
-	protected void checkDocumentUrl(String url) {
-		this.parseDoc();
-		
-		// If the page is an watch entry page, parse it
-		if (this.isArticlePage() && this.doc != null) {
-			String link = this.getLink();
-			Globals.Domain[] domains = this.getDomains();
-			String[] topics = this.getTopics();
-			String watchName = this.getWatchName();
-			int[] prices = this.getPrices();
-			String[] keywords = this.getKeywords();
-			String content = this.doc.outerHtml();
-			String timeCreated = this.getTimeCreated();
-			String dateCreated = this.getDateCreated();
+	public boolean addCurrentContentToDatabase() {
+		String link = this.getLink();
+		String[] topics = this.getTopics();
+		String watchName = this.getWatchName();
+		int[] prices = this.getPrices();
+		String[] keywords = this.getKeywords();
+		String content = this.doc.outerHtml();
+		String timeCreated = this.getTimeCreated();
+		String dateCreated = this.getDateCreated();
 
-			// Calculated the time the article is crawled
-			String timeCrawled = Helper.getCurrentTime();
-			String dateCrawled = Helper.getCurrentDate();
+		// Calculated the time the article is crawled
+		String timeCrawled = Helper.getCurrentTime();
+		String dateCrawled = Helper.getCurrentDate();
 
-			// Get spec of the watch
-			String refNo = this.getRefNo();
-			String movement = this.getMovement();
-			String caliber = this.getCaliber();
-			String watchCondition = this.getWatchCondition();
-			int watchYear = this.getWatchYear();
-			String caseMaterial = this.getCaseMaterial();
-			String dialColor = this.getDialColor();
-			String gender = this.getGender();
+		// Get spec of the watch
+		String refNo = this.getRefNo();
+		String movement = this.getMovement();
+		String caliber = this.getCaliber();
+		String watchCondition = this.getWatchCondition();
+		int watchYear = this.getWatchYear();
+		String caseMaterial = this.getCaseMaterial();
+		String dialColor = this.getDialColor();
+		String gender = this.getGender();
 
-			// Split location into parts
-			String location = this.getLocation();
-			if (location == null)
-				return;
-			String[] locations = Helper.splitString(location, ",");
-
-			String location1 = null;
-			String location2 = null;
-			String location3 = null;
-			if (locations.length >= 1)
-				location1 = locations[0].trim();
-			if (locations.length >= 2)
-				location2 = locations[1].trim();
-			if (locations.length >= 3)
-				location3 = locations[2].trim();
-
-			this.mysqlConnection.addWatchEntry(link, domains, watchName,
-					prices, keywords, topics, timeCreated, dateCreated,
-					timeCrawled, dateCrawled, content, refNo, movement,
-					caliber, watchCondition, watchYear, caseMaterial,
-					dialColor, gender, location1, location2, location3);
+		// Split location into parts
+		String location = this.getLocation();
+		if (location == null) {
+			return false;
 		}
+		String[] locations = Helper.splitString(location, ",");
 
-		// Remove current link from queue, add it to crawl set
-		// Adds all links in page to queue
-		this.processLinksInPage(url);
+		String location1 = null;
+		String location2 = null;
+		String location3 = null;
+		if (locations.length >= 1)
+			location1 = locations[0].trim();
+		if (locations.length >= 2)
+			location2 = locations[1].trim();
+		if (locations.length >= 3)
+			location3 = locations[2].trim();
+
+		return this.crawler.addWatchEntry(link, this.domain, watchName,
+			prices, keywords, topics, timeCreated, dateCreated,
+			timeCrawled, dateCrawled, content, refNo, movement,
+			caliber, watchCondition, watchYear, caseMaterial,
+			dialColor, gender, location1, location2, location3);
 	}
 
 	public static void main(String[] args) {

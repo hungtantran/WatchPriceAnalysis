@@ -1,10 +1,9 @@
 package unitTest;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.PriorityQueue;
-
-import newscrawler.MainCrawler;
 
 import org.junit.Test;
 
@@ -14,7 +13,6 @@ public class TopicComparatorTest {
 
 	@Test
 	public void test() {
-		MainCrawler.startUpState();
 		TestgetStringPriority();
 		TestComparator();
 	}

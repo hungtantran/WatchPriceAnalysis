@@ -7,8 +7,6 @@ import java.sql.Statement;
 
 import commonlib.Globals;
 
-import dbconnection.MySqlConnection;
-
 public class FixWatchReportLinks {
 	public static void main(String[] args) throws Exception {
 //		MySqlConnection mysqlConnection = new MySqlConnection();

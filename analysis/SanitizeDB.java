@@ -10,10 +10,8 @@ import java.util.Map;
 
 import newscrawler.BaseParser;
 import newscrawler.CrawlerParserFactory;
-
 import commonlib.Globals;
 import commonlib.HTMLCompressor;
-
 import daoconnection.Article;
 import daoconnection.ArticleContent;
 import daoconnection.ArticleContentDAO;
@@ -34,21 +32,27 @@ public class SanitizeDB {
 	public SanitizeDB() {
 	}
 
-	public boolean isArticleLink(int articleId, String link) throws ClassNotFoundException, SQLException {
-		if (link == null)
+	public boolean isArticleLink(int articleId, String link) throws Exception {
+		if (link == null) {
 			return false;
+		}
 		
-		ArticleContentDAO articleContentDAO = new ArticleContentDAOJDBC(DAOFactory.getInstance(
+		DAOFactory daoFactory = DAOFactory.getInstance(
 			Globals.username,
 			Globals.password,
-			Globals.server + Globals.database));
+			Globals.server + Globals.database);
+		
+		ArticleContentDAO articleContentDAO = new ArticleContentDAOJDBC(daoFactory);
 		ArticleContent content = articleContentDAO.getArticleContent(articleId);
 
 		// If there is no content, can't decide whether link is valid or not
-		if (content == null)
+		if (content == null) {
 			return true;
-
-		BaseParser parser = CrawlerParserFactory.getParser(link, null, null);
+		}
+		
+		CrawlerParserFactory parserFactory = new CrawlerParserFactory(daoFactory);
+	
+		BaseParser parser = parserFactory.getParser(link, null /* crawler */, null /* logManager */, null /* scheduler */);
 
 		// Check if link is valid
 		if (parser == null) {
@@ -60,7 +64,7 @@ public class SanitizeDB {
 		}
 
 		parser.setContent(content.getContent());
-		if (!parser.isArticlePage()) {
+		if (!parser.isContentLink()) {
 			if (Globals.DEBUG) {
 				System.out.println("Link is invalid because it is not article page");
 			}
@@ -72,7 +76,7 @@ public class SanitizeDB {
 	}
 
 	// Remove from database articles with bad link
-	public void sanitizeBadLinkArticles() throws ClassNotFoundException, SQLException {
+	public void sanitizeBadLinkArticles() throws Exception {
 		int articleCount = 0;
 		
 		ArticleDAO articleDAO = new ArticleDAOJDBC(DAOFactory.getInstance(Globals.username, Globals.password, Globals.server + Globals.database));
@@ -115,12 +119,18 @@ public class SanitizeDB {
 		}
 	}
 
-	public boolean isValidLink(String link) {
+	public boolean isValidLink(String link) throws Exception {
 		if (link == null) {
 			return false;
 		}
-
-		BaseParser parser = CrawlerParserFactory.getParser(link, null, null);
+		
+		DAOFactory daoFactory = DAOFactory.getInstance(
+			Globals.username,
+			Globals.password,
+			Globals.server + Globals.database);
+		
+		CrawlerParserFactory parserFactory = new CrawlerParserFactory(daoFactory);
+		BaseParser parser = parserFactory.getParser(link, null /* crawler */, null /* logManager */, null /* scheduler */);
 
 		// Check if link is valid
 		if (parser == null) {
@@ -143,7 +153,7 @@ public class SanitizeDB {
 	}
 
 	// Remove from database articles with bad link
-	public void sanitizeInvalidLinks() throws SQLException, ClassNotFoundException {
+	public void sanitizeInvalidLinks() throws Exception {
 		LinkQueueDAO linkQueueDAO = new LinkQueueDAOJDBC(DAOFactory.getInstance(Globals.username, Globals.password, Globals.server + Globals.database));
 		
 		List<LinkQueue> linkQueues = linkQueueDAO.getLinksQueued();

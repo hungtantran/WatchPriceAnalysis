@@ -13,8 +13,6 @@ import java.util.Map.Entry;
 
 import commonlib.Globals;
 import commonlib.TopicComparator;
-import commonlib.Globals.Domain;
-import dbconnection.MySqlConnection;
 
 public class InsertLinksIntoLinkTable {
 	@SuppressWarnings("unchecked")
