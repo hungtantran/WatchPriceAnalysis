@@ -195,7 +195,7 @@ public class Scheduler {
 			this.logManager.writeLog("Start up scheduler fails");
 			return;
 		}
-
+		
 		for (int i = 0; i < this.maxCrawlers; i++) {
 			this.crawlers[i] = new BaseCrawler(this.logManager, this, this.daoFactory, this.crawlerParserFactory);
 		}

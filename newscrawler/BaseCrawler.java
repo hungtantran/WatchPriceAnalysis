@@ -48,7 +48,7 @@ public class BaseCrawler extends Thread {
 		DAOFactory daoFactory,
 		CrawlerParserFactory parserFactory) throws Exception
 	{
-		if (this.daoFactory == null) {
+		if (daoFactory == null) {
 			throw new Exception("Invalid argument, no database connection provided");
 		}
 		
@@ -117,16 +117,16 @@ public class BaseCrawler extends Thread {
 		boolean parseResult = parser.parseDoc();
 		if (!parseResult) {
 			this.logManager.writeLog("Fail to parse link " + link);
-		}
-		
-		boolean isContentLink = parser.isContentLink();
-		if (!isContentLink) {
-			this.logManager.writeLog("Link " + link + " is not a content link");
-		}
-		
-		boolean populateDatabaseResult = parser.addCurrentContentToDatabase();
-		if (!populateDatabaseResult) {
-			this.logManager.writeLog("Fail to populate database with current content from link " + link);
+		} else {
+			boolean isContentLink = parser.isContentLink();
+			if (!isContentLink) {
+				this.logManager.writeLog("Link " + link + " is not a content link");
+			} else {
+				boolean populateDatabaseResult = parser.addCurrentContentToDatabase();
+				if (!populateDatabaseResult) {
+					this.logManager.writeLog("Fail to populate database with current content from link " + link);
+				}
+			}
 		}
 		
 		// Remove current link from queue, add it to crawl set
@@ -140,6 +140,9 @@ public class BaseCrawler extends Thread {
 			String dateCreated, String timeCrawled, String dateCrawled,
 			String content) {
 		// TODO Auto-generated method stub
+		
+		System.out.println("Try to add article to database\n\n\n");
+		
 		return false;
 	}
 	
@@ -152,6 +155,9 @@ public class BaseCrawler extends Thread {
 		String location1, String location2, String location3) 
 	{
 		// TODO Auto-generated method stub
+		
+		System.out.println("Try to add watch entry to database\n\n\n");
+		
 		return false;
 	}
 

@@ -20,6 +20,17 @@ public class TopicComparatorTest {
 	public void TestgetStringPriority() {
 		Integer result = null;
 		
+		// Article links are the most important, get priority 0
+		result = TopicComparator.getStringPriority("http://www.hodinkee.com/blog/introducing-the-rotonde-de-cartier-chronograph");
+		assertTrue(result != null && result == 0);
+		
+		result = TopicComparator.getStringPriority("http://www.ablogtowatch.com/richard-mille-rm-19-02-tourbillon-fleur-watch-hands/");
+		assertTrue(result != null && result == 0);
+		
+		result = TopicComparator.getStringPriority("http://watchreport.com/szanto-5103-watch-review/");
+		assertTrue(result != null && result == 0);
+		
+		// Watch entry links are less important, get priority depends on topic detected like rolex, omega, etc.. are more important
 		result = TopicComparator.getStringPriority("http://www.chrono24.com/en/rolex/rolex-seadweller-deepsea-116660--neu--verklebt--id1997638.htm");
 		assertTrue(result != null && result == 1);
 		

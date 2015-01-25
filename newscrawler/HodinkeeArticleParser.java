@@ -65,13 +65,14 @@ public class HodinkeeArticleParser extends BaseParser {
 			return false;
 		}
 		
-		return (this.link.indexOf(this.domain + "blog/") == 0);
+		return (this.link.indexOf(this.domain.getDomain() + "blog/") == 0);
 	}
 
 	// Get the keywords of the article
 	public String[] getKeywords() {
-		if (this.keywords == null)
+		if (this.keywords == null) {
 			return null;
+		}
 
 		String[] keywordsArray = new String[this.keywords.size()];
 		int count = 0;
