@@ -8,19 +8,19 @@ public class Domain implements Serializable {
 	private Integer id;
 	private String domain;
 	private String domainString;
-	
+
 	public Domain() {
 	}
-	
+
 	public Domain(Integer id, String domain, String domainString) {
 		this.id = id;
 		this.domain = domain;
 		this.domainString = domainString;
 	}
-	
+
 	// Getters / Setters
 	public Integer getId() {
-		return id;
+		return this.id;
 	}
 
 	public void setId(Integer id) {
@@ -28,15 +28,15 @@ public class Domain implements Serializable {
 	}
 
 	public String getDomain() {
-		return domain;
+		return this.domain;
 	}
 
 	public void setDomain(String domain) {
 		this.domain = domain;
 	}
-	
+
 	public String getDomainString() {
-		return domainString;
+		return this.domainString;
 	}
 
 	public void setDomainString(String domainString) {
@@ -57,6 +57,6 @@ public class Domain implements Serializable {
 
 	@Override
 	public String toString() {
-		return String.format("Domain[id=%d, domain=%d]", this.id, this.domain);
+		return String.format("Domain[id=%d, domain=%s]", this.id, this.domain);
 	}
 }
