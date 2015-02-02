@@ -9,6 +9,7 @@ import org.jsoup.select.Elements;
 import commonlib.Globals;
 import commonlib.Helper;
 import commonlib.LogManager;
+
 import daoconnection.Domain;
 import daoconnection.Topic;
 import daoconnection.Type;
@@ -24,7 +25,7 @@ public class Chrono24EntryPageParser extends BaseParser {
 	private String movement = null;
 	private String caliber = null;
 	private String watchCondition = null;
-	private int watchYear = -1;
+	private int watchYear = 0;
 	private String caseMaterial = null;
 	private String gender = null;
 	private String dialColor = null;
@@ -61,11 +62,12 @@ public class Chrono24EntryPageParser extends BaseParser {
 
 	// Return true if the articleUrl is a valid watch entry page of chrono24,
 	// false if not
+	@Override
 	public boolean isContentLink() {
 		if (!this.isValidLink(this.link)) {
 			return false;
 		}
-		
+
 		return (this.link.indexOf(this.domain.getDomainString()) == 0 &&
 				this.link.indexOf("--id") != -1);
 	}
@@ -77,8 +79,9 @@ public class Chrono24EntryPageParser extends BaseParser {
 
 	// Get the types of the article
 	public int[] getPrices() {
-		if (this.prices == null)
+		if (this.prices == null) {
 			return null;
+		}
 
 		int[] typesArray = null;
 		if (this.prices[0] < 0) {
@@ -97,8 +100,9 @@ public class Chrono24EntryPageParser extends BaseParser {
 
 	// Get the keywords of the article
 	public String[] getKeywords() {
-		if (this.keywords == null)
+		if (this.keywords == null) {
 			return null;
+		}
 
 		String[] keywordsArray = new String[this.keywords.size()];
 		int count = 0;
@@ -155,14 +159,16 @@ public class Chrono24EntryPageParser extends BaseParser {
 		return this.location;
 	}
 
+	@Override
 	public boolean parseDoc() {
 		// Download the html content into a private variable
 		this.downloadHtmlContent(this.link, this.numRetryDownloadPage);
 
 		// If the download content fails, return
-		if (this.doc == null)
+		if (this.doc == null) {
 			return false;
-		
+		}
+
 		if (!this.isContentLink()) {
 			return false;
 		}
@@ -190,7 +196,7 @@ public class Chrono24EntryPageParser extends BaseParser {
 
 	// Parse the name of the watch
 	private void parseWatchName() {
-		Elements artcileNameElems = doc.select("h2");
+		Elements artcileNameElems = this.doc.select("h2");
 		if (artcileNameElems.size() == 1) {
 			String articleNameText = new String(artcileNameElems.get(0).text());
 			articleNameText = articleNameText.trim();
@@ -222,7 +228,7 @@ public class Chrono24EntryPageParser extends BaseParser {
 
 	// Parse the price of the watch
 	private void parsePrices() {
-		Elements priceElems = doc.select("div[class=bold price-cell]");
+		Elements priceElems = this.doc.select("div[class=bold price-cell]");
 		if (priceElems.size() == 1) {
 			String priceText = new String(priceElems.get(0).text());
 			priceText = priceText.trim();
@@ -261,7 +267,7 @@ public class Chrono24EntryPageParser extends BaseParser {
 
 	// Parse the spec of the watch
 	private void parseSpec() {
-		Elements specElems = doc.select("div[class=spec]");
+		Elements specElems = this.doc.select("div[class=spec]");
 
 		if (specElems.size() == 1) {
 			Element specElem = specElems.get(0);
@@ -278,29 +284,35 @@ public class Chrono24EntryPageParser extends BaseParser {
 					String tdValue = tdElems.get(1).text().trim();
 
 					// Ref No
-					if (tdName.equals("Ref. No."))
+					if (tdName.equals("Ref. No.")) {
 						this.refNo = tdValue;
+					}
 
 					// Movement
-					if (tdName.equals("Movement"))
+					if (tdName.equals("Movement")) {
 						this.movement = tdValue;
+					}
 
 					// Caliber
-					if (tdName.contains("Caliber"))
+					if (tdName.contains("Caliber")) {
 						this.caliber = tdValue;
+					}
 
 					// Condition
-					if (tdName.equals("Condition"))
+					if (tdName.equals("Condition")) {
 						this.watchCondition = ""
 								+ this.extractIntFromString(tdValue);
+					}
 
 					// Year
-					if (tdName.equals("Year"))
+					if (tdName.equals("Year")) {
 						this.watchYear = this.extractIntFromString(tdValue);
+					}
 
 					// Case material
-					if (tdName.equals("Case Material"))
+					if (tdName.equals("Case Material")) {
 						this.caseMaterial = tdValue;
+					}
 
 					// Gender
 					if (tdName.equals("Gender")) {
@@ -309,27 +321,32 @@ public class Chrono24EntryPageParser extends BaseParser {
 								|| tdValue.indexOf("Ladies") != -1
 								|| tdValue.indexOf("Lady") != -1) {
 							this.gender = "Women";
-						} else
+						} else {
 							this.gender = "Men";
+						}
 					}
 
 					// Dial color
-					if (tdName.equals("Dial"))
+					if (tdName.equals("Dial")) {
 						this.dialColor = tdValue;
+					}
 
 					// Location
-					if (tdName.equals("Location"))
+					if (tdName.equals("Location")) {
 						this.location = tdValue;
+					}
 				}
 			}
 		}
 
 		// Last attempt to use name to identify gender of the target of the
 		// watch
-		if (this.gender == null)
+		if (this.gender == null) {
 			if (this.watchName.indexOf("Women") != -1
-					|| this.watchName.indexOf("Woman") != -1)
+					|| this.watchName.indexOf("Woman") != -1) {
 				this.gender = "Women";
+			}
+		}
 
 		if (Globals.DEBUG) {
 			StringBuilder builder = new StringBuilder();
@@ -365,6 +382,7 @@ public class Chrono24EntryPageParser extends BaseParser {
 	}
 
 	// Process link (e.g. trim, truncate bad part, etc..)
+	@Override
 	public String sanitizeLink(String url) {
 		if (url == null) {
 			return url;
@@ -385,6 +403,7 @@ public class Chrono24EntryPageParser extends BaseParser {
 	}
 
 	// Check if current url is valid or not
+	@Override
 	public boolean isValidLink(String url) {
 		if (url == null) {
 			return false;
@@ -397,9 +416,9 @@ public class Chrono24EntryPageParser extends BaseParser {
 		if (url.indexOf("?") != -1) {
 			return false;
 		}
-		
+
 		// For chrono24, realize that for number of '/' < 4 is garbage link
-		int numOccurenceOfSlashes = Helper.numOccurance(url, "/"); 
+		int numOccurenceOfSlashes = Helper.numOccurance(url, "/");
 		if (numOccurenceOfSlashes < 4 && !url.equals(this.domain)) {
 			return false;
 		}
@@ -413,7 +432,8 @@ public class Chrono24EntryPageParser extends BaseParser {
 		return true;
 	}
 
-	public boolean addCurrentContentToDatabase() throws Exception {
+	@Override
+	public boolean addCurrentContentToDatabase() {
 		String link = this.getLink();
 		int[] topics = this.getTopics();
 		String watchName = this.getWatchName();
@@ -447,18 +467,30 @@ public class Chrono24EntryPageParser extends BaseParser {
 		String location1 = null;
 		String location2 = null;
 		String location3 = null;
-		if (locations.length >= 1)
+		if (locations.length >= 1) {
 			location1 = locations[0].trim();
-		if (locations.length >= 2)
+		}
+		if (locations.length >= 2) {
 			location2 = locations[1].trim();
-		if (locations.length >= 3)
+		}
+		if (locations.length >= 3) {
 			location3 = locations[2].trim();
+		}
 
-		return this.crawler.addWatchEntry(link, this.domain, watchName,
-			prices, keywords, topics, timeCreated, dateCreated,
-			timeCrawled, dateCrawled, content, refNo, movement,
-			caliber, watchCondition, watchYear, caseMaterial,
-			dialColor, gender, location1, location2, location3);
+		boolean addWatchEntryResult = false;
+
+		try {
+			addWatchEntryResult = this.crawler.addWatchEntry(link, this.domain, watchName,
+				prices, keywords, topics, timeCreated, dateCreated,
+				timeCrawled, dateCrawled, content, refNo, movement,
+				caliber, watchCondition, watchYear, caseMaterial,
+				dialColor, gender, location1, location2, location3);
+		} catch (Exception e) {
+			this.logManager.writeLog("Fail to add new watch entry to database");
+			e.printStackTrace();
+		}
+
+		return addWatchEntryResult;
 	}
 
 	public static void main(String[] args) {

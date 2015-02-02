@@ -8,6 +8,7 @@ import commonlib.Globals;
 import commonlib.Helper;
 import commonlib.LogManager;
 import commonlib.TopicComparator;
+
 import daoconnection.Article;
 import daoconnection.ArticleContent;
 import daoconnection.ArticleContentDAO;
@@ -41,7 +42,7 @@ public class BaseCrawler extends Thread {
 	protected int numRetriesDownloadLink = 2;
 	protected int lowerBoundWaitTimeSec = Globals.DEFAULTLOWERBOUNDWAITTIMESEC;
 	protected int upperBoundWaitTimeSec = Globals.DEFAULTUPPERBOUNDWAITTIMESEC;
-	
+
 	protected LinkQueueDAO linkQueueDAO = null;
 	protected LinkCrawledDAO linkCrawledDAO = null;
 	protected ArticleDAO articleDAO = null;
@@ -49,7 +50,7 @@ public class BaseCrawler extends Thread {
 	protected ArticleTopicDAO articleTopicDAO = null;
 	protected WatchDescDAO watchDescDAO = null;
 	protected WatchPageContentDAO watchPageContentDAO = null;
-	
+
 	// Base constructor
 	protected BaseCrawler(LogManager logManager, Scheduler scheduler, DAOFactory daoFactory, CrawlerParserFactory parserFactory) throws Exception {
 		this(
@@ -72,13 +73,13 @@ public class BaseCrawler extends Thread {
 		if (daoFactory == null) {
 			throw new Exception("Invalid argument, no database connection provided");
 		}
-		
+
 		this.lowerBoundWaitTimeSec = lowerBoundWaitTimeSec;
 		this.upperBoundWaitTimeSec = upperBoundWaitTimeSec;
 		this.logManager = logManager;
 		this.scheduler = scheduler;
 		this.parserFactory = parserFactory;
-		
+
 		this.daoFactory = daoFactory;
 		this.linkQueueDAO = new LinkQueueDAOJDBC(this.daoFactory);
 		this.linkCrawledDAO = new LinkCrawledDAOJDBC(this.daoFactory);
@@ -109,13 +110,13 @@ public class BaseCrawler extends Thread {
 			}
 
 			IParser parser = this.parserFactory.getParser(curUrl, this, this.logManager, this.scheduler);
-			
+
 			if (parser == null) {
 				this.logManager.writeLog("Can't find parser for url "+curUrl);
 				this.linkQueueDAO.removeLinkQueue(curUrl);
 				continue;
 			}
-			
+
 			if (!parser.isValidLink(curUrl)) {
 				this.logManager.writeLog("Link " + curUrl + " is invalid. Assume already crawled, move on don't process");
 				this.linkQueueDAO.removeLinkQueue(curUrl);
@@ -135,11 +136,11 @@ public class BaseCrawler extends Thread {
 		if (parser == null) {
 			throw new Exception("Can't find parser");
 		}
-		
+
 		String link = parser.getLink();
-		
+
 		this.scheduler.addToUrlsCrawled(link);
-		
+
 		// Parse the page
 		boolean parseResult = parser.parseDoc();
 		if (!parseResult) {
@@ -155,12 +156,12 @@ public class BaseCrawler extends Thread {
 				}
 			}
 		}
-		
+
 		// Remove current link from queue, add it to crawl set
 		// Adds all links in page to queue
 		this.processLinksInPage(parser);
 	}
-	
+
 	// Add an article to the database with all its relevant information
 	public boolean addArticle(String link, Domain domain, String articleName,
 		Type type, String[] keywords, int[] topics, String timeCreated,
@@ -176,7 +177,7 @@ public class BaseCrawler extends Thread {
 		article.setArticleName(articleName);
 		article.setTypeTable1(type.getId());
 		article.setTypeTable2(null);
-		
+
 		String keyWordStr = null;
 		if (keywords != null) {
 			for (String keyword : keywords) {
@@ -184,85 +185,85 @@ public class BaseCrawler extends Thread {
 			}
 		}
 		article.setKeywords(keyWordStr);
-		
+
 		article.setTimeCreated(timeCreated);
 		article.setDateCreated(dateCreated);
 		article.setTimeCrawled(timeCrawled);
 		article.setDateCrawled(dateCrawled);
-		
+
 		Integer articleID = this.articleDAO.createArticle(article);
-		
+
 		if (articleID == null) {
 			throw new Exception("Can't insert article into database");
 		}
-				
+
 		this.logManager.writeLog("Try to add article content from link " + link + " to database");
 		ArticleContent articleContent = new ArticleContent();
 		articleContent.setArticleTableId(articleID);
 		articleContent.setContent(content);
-		
+
 		boolean createContentResult = this.articleContentDAO.createArticleContent(articleContent);
-		
+
 		if (!createContentResult) {
 			throw new Exception("Can't insert article content into database");
 		}
-		
+
 		this.logManager.writeLog("Try to add article topic from link " + link + " to database");
-		
+
 		for (int topic : topics) {
 			ArticleTopic articleTopic = new ArticleTopic();
 			articleTopic.setArticleTableId(articleID);
 			articleTopic.setTopicTableId(topic);
-			
+
 			Integer articleTopicId = this.articleTopicDAO.createArticleTopic(articleTopic);
-			
+
 			if (articleTopicId == null) {
 				throw new Exception("Can't insert article topic into database");
 			}
 		}
-		
+
 		return true;
 	}
-	
+
 	public boolean addWatchEntry(String link, Domain domain, String watchName,
 		int[] prices, String[] keywords, int[] topics,
 		String timeCreated, String dateCreated, String timeCrawled,
 		String dateCrawled, String content, String refNo, String movement,
 		String caliber, String watchCondition, int watchYear,
 		String caseMaterial, String dialColor, String gender,
-		String location1, String location2, String location3) throws Exception 
+		String location1, String location2, String location3) throws Exception
 	{
 		this.logManager.writeLog("Try to add watch description from link " + link + " to database");
 		WatchDesc watchDesc = new WatchDesc();
 		watchDesc.setLink(link);
 		watchDesc.setDomainTableId1(domain.getId());
-		
+
 		if (topics != null && topics.length > 0) {
 			watchDesc.setTopicTableId1(topics[0]);
 		} else {
 			watchDesc.setTopicTableId1(null);
 		}
-		
+
 		if (topics != null && topics.length > 1) {
 			watchDesc.setTopicTableId2(topics[1]);
 		} else {
 			watchDesc.setTopicTableId2(null);
 		}
-		
+
 		watchDesc.setWatchName(watchName);
-		
+
 		if (prices != null && prices.length > 0) {
 			watchDesc.setPrice1(prices[0]);
 		} else {
 			watchDesc.setPrice1(null);
 		}
-		
+
 		if (prices != null && prices.length > 1) {
 			watchDesc.setPrice2(prices[1]);
 		} else {
 			watchDesc.setPrice2(null);
 		}
-		
+
 		String keyWordStr = null;
 		if (keywords != null) {
 			for (String keyword : keywords) {
@@ -270,7 +271,7 @@ public class BaseCrawler extends Thread {
 			}
 		}
 		watchDesc.setKeywords(keyWordStr);
-		
+
 		watchDesc.setRefNo(refNo);
 		watchDesc.setMovement(movement);
 		watchDesc.setCaliber(caliber);
@@ -282,28 +283,28 @@ public class BaseCrawler extends Thread {
 		watchDesc.setLocation1(location1);
 		watchDesc.setLocation2(location2);
 		watchDesc.setLocation3(location3);
+		watchDesc.setTimeCreated(timeCreated);
+		watchDesc.setDateCreated(dateCreated);
 		watchDesc.setTimeCrawled(timeCrawled);
 		watchDesc.setDateCrawled(dateCrawled);
-		watchDesc.setTimeCrawled(timeCrawled);
-		watchDesc.setDateCrawled(dateCrawled);
-		
+
 		Integer watchID = this.watchDescDAO.createWatchDesc(watchDesc);
-		
+
 		if (watchID == null) {
 			throw new Exception("Can't insert watch description into database");
 		}
-				
+
 		this.logManager.writeLog("Try to add watch content from link " + link + " to database");
 		WatchPageContent watchPageContent = new WatchPageContent();
 		watchPageContent.setWatchTableId(watchID);
 		watchPageContent.setContent(content);
-		
+
 		boolean createContentResult = this.watchPageContentDAO.createWatchPageContent(watchPageContent);
-		
+
 		if (!createContentResult) {
 			throw new Exception("Can't insert article content into database");
 		}
-		
+
 		return true;
 	}
 
@@ -313,13 +314,13 @@ public class BaseCrawler extends Thread {
 		String link = parser.getLink();
 		Domain domain = parser.getDomain();
 		String content = parser.getContent();
-		
+
 		if (content == null) {
 			this.logManager.writeLog("Remove link " + link + " because of failure to retrieve content");
-			
+
 			this.postProcessUrl(link, domain.getId(), null, 0, null);
 		}
-			
+
 		// If the page fails to download for reasons like 404, remove it
 		/* if (this.exception.getClass() == HttpStatusException.class) {
 			HttpStatusException e = (HttpStatusException) this.exception;
@@ -369,14 +370,14 @@ public class BaseCrawler extends Thread {
 	protected void postProcessUrl(String processedlink, int domainId, Integer priority, int persistent, Set<String> newLinks) throws SQLException {
 		if (processedlink != null) {
 			this.linkQueueDAO.removeLinkQueue(processedlink);
-			
+
 			LinkCrawled linkCrawled = new LinkCrawled();
 			linkCrawled.setLink(processedlink);
 			linkCrawled.setDomainTableId1(domainId);
 			linkCrawled.setPriority(priority);
 			linkCrawled.setDateCrawled(null);
 			linkCrawled.setTimeCrawled(null);
-			
+
 			this.linkCrawledDAO.createLinkCrawled(linkCrawled);
 		}
 
@@ -387,9 +388,9 @@ public class BaseCrawler extends Thread {
 		for (String newLink : newLinks) {
 			if (!this.scheduler.urlsCrawledContain(newLink) && !this.scheduler.urlsQueueContain(newLink)) {
 				Integer newLinkPriority = TopicComparator.getStringPriority(newLink);
-				
+
 				this.scheduler.addToUrlsQueue(newLink);
-				
+
 				LinkQueue linkQueue = new LinkQueue();
 				linkQueue.setLink(newLink);
 				linkQueue.setDomainTableId1(domainId);
@@ -397,7 +398,7 @@ public class BaseCrawler extends Thread {
 				linkQueue.setPersistent(persistent);
 				linkQueue.setDateCrawled(null);
 				linkQueue.setTimeCrawled(null);
-				
+
 				if (this.linkQueueDAO.createLinkQueue(linkQueue) == null) {
 					continue;
 				}
@@ -406,6 +407,7 @@ public class BaseCrawler extends Thread {
 	}
 
 	// Execute method for thread
+	@Override
 	public void run() {
 		try {
 			this.startCrawl(

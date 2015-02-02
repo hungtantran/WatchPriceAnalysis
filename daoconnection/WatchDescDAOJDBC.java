@@ -9,7 +9,7 @@ import java.util.List;
 import commonlib.Globals;
 
 public class WatchDescDAOJDBC implements WatchDescDAO {
-	private final String SQL_CREATE = 
+	private final String SQL_CREATE =
 		"CREATE TABLE watch_desc_table ("
 		+ "id int unsigned AUTO_INCREMENT not null, "
 		+ "link char(255) not null, "
@@ -52,118 +52,166 @@ public class WatchDescDAOJDBC implements WatchDescDAO {
 	private final String SQL_SELECT_BY_WATCH_DESC_ID = "SELECT * FROM watch_desc_table WHERE id = ?";
 	private final String SQL_DELETE = "DELETE FROM watch_desc_table WHERE id = ?";
 	private final String SQL_SELECT_LIMIT = "SELECT * FROM watch_desc_table LIMIT ?, ?";
-	
+
 	private final int maxResultReturned = 10;
-	
-	private DAOFactory daoFactory;
-	private List<WatchDesc> watchDescs = null;
+
+	private final DAOFactory daoFactory;
+	private final List<WatchDesc> watchDescs = null;
 	private int numWatchDescReturned = 0;
 	private int watchDescIndex = 0;
-	
+
 	public WatchDescDAOJDBC(DAOFactory daoFactory) throws SQLException {
 		this.daoFactory = daoFactory;
 	}
-	
+
 	private WatchDesc constructWatchDescObject(ResultSet resultSet) throws SQLException {
 		WatchDesc watchDesc = new WatchDesc();
-		
+
 		watchDesc.setId(resultSet.getInt("id"));
-		if (resultSet.wasNull()) watchDesc.setId(null);
-		
+		if (resultSet.wasNull()) {
+			watchDesc.setId(null);
+		}
+
 		watchDesc.setLink(resultSet.getString("link"));
-		if (resultSet.wasNull()) watchDesc.setLink(null);
-		
+		if (resultSet.wasNull()) {
+			watchDesc.setLink(null);
+		}
+
 		watchDesc.setDomainTableId1(resultSet.getInt("domain_table_id_1"));
-		if (resultSet.wasNull()) watchDesc.setDomainTableId1(null);
-		
+		if (resultSet.wasNull()) {
+			watchDesc.setDomainTableId1(null);
+		}
+
 		watchDesc.setTopicTableId1(resultSet.getInt("topic_table_id_1"));
-		if (resultSet.wasNull()) watchDesc.setTopicTableId1(null);
-		
+		if (resultSet.wasNull()) {
+			watchDesc.setTopicTableId1(null);
+		}
+
 		watchDesc.setTopicTableId2(resultSet.getInt("topic_table_id_2"));
-		if (resultSet.wasNull()) watchDesc.setLink(null);
-		
+		if (resultSet.wasNull()) {
+			watchDesc.setLink(null);
+		}
+
 		watchDesc.setWatchName(resultSet.getString("watch_name"));
-		if (resultSet.wasNull()) watchDesc.setWatchName(null);
-		
+		if (resultSet.wasNull()) {
+			watchDesc.setWatchName(null);
+		}
+
 		watchDesc.setPrice1(resultSet.getInt("price_1"));
-		if (resultSet.wasNull()) watchDesc.setPrice1(null);
-		
+		if (resultSet.wasNull()) {
+			watchDesc.setPrice1(null);
+		}
+
 		watchDesc.setPrice2(resultSet.getInt("price_2"));
-		if (resultSet.wasNull()) watchDesc.setPrice2(null);
-		
+		if (resultSet.wasNull()) {
+			watchDesc.setPrice2(null);
+		}
+
 		watchDesc.setKeywords(resultSet.getString("keywords"));
-		if (resultSet.wasNull()) watchDesc.setKeywords(null);
-		
+		if (resultSet.wasNull()) {
+			watchDesc.setKeywords(null);
+		}
+
 		watchDesc.setRefNo(resultSet.getString("ref_no"));
-		if (resultSet.wasNull()) watchDesc.setRefNo(null);
-		
+		if (resultSet.wasNull()) {
+			watchDesc.setRefNo(null);
+		}
+
 		watchDesc.setMovement(resultSet.getString("movement"));
-		if (resultSet.wasNull()) watchDesc.setMovement(null);
-		
+		if (resultSet.wasNull()) {
+			watchDesc.setMovement(null);
+		}
+
 		watchDesc.setCaliber(resultSet.getString("caliber"));
-		if (resultSet.wasNull()) watchDesc.setCaliber(null);
-		
+		if (resultSet.wasNull()) {
+			watchDesc.setCaliber(null);
+		}
+
 		watchDesc.setWatchCondition(resultSet.getString("watch_condition"));
-		if (resultSet.wasNull()) watchDesc.setWatchCondition(null);
-		
+		if (resultSet.wasNull()) {
+			watchDesc.setWatchCondition(null);
+		}
+
 		watchDesc.setWatchYear(resultSet.getInt("watch_year"));
-		if (resultSet.wasNull()) watchDesc.setWatchYear(null);
-		
+		if (resultSet.wasNull()) {
+			watchDesc.setWatchYear(null);
+		}
+
 		watchDesc.setCaseMaterial(resultSet.getString("case_material"));
-		if (resultSet.wasNull()) watchDesc.setCaseMaterial(null);
-		
+		if (resultSet.wasNull()) {
+			watchDesc.setCaseMaterial(null);
+		}
+
 		watchDesc.setDialColor(resultSet.getString("dial_color"));
-		if (resultSet.wasNull()) watchDesc.setDialColor(null);
-		
+		if (resultSet.wasNull()) {
+			watchDesc.setDialColor(null);
+		}
+
 		watchDesc.setGender(resultSet.getString("gender"));
-		if (resultSet.wasNull()) watchDesc.setGender(null);
-		
+		if (resultSet.wasNull()) {
+			watchDesc.setGender(null);
+		}
+
 		watchDesc.setLocation1(resultSet.getString("location_1"));
-		if (resultSet.wasNull()) watchDesc.setLocation1(null);
-		
+		if (resultSet.wasNull()) {
+			watchDesc.setLocation1(null);
+		}
+
 		watchDesc.setLocation2(resultSet.getString("location_2"));
-		if (resultSet.wasNull()) watchDesc.setLocation2(null);
-		
+		if (resultSet.wasNull()) {
+			watchDesc.setLocation2(null);
+		}
+
 		watchDesc.setLocation3(resultSet.getString("location_3"));
-		if (resultSet.wasNull()) watchDesc.setLocation3(null);
-		
+		if (resultSet.wasNull()) {
+			watchDesc.setLocation3(null);
+		}
+
 		watchDesc.setTimeCreated(resultSet.getString("time_created"));
-		if (resultSet.wasNull()) watchDesc.setTimeCreated(null);
-		
+		if (resultSet.wasNull()) {
+			watchDesc.setTimeCreated(null);
+		}
+
 		watchDesc.setDateCreated(resultSet.getString("date_created"));
-		if (resultSet.wasNull()) watchDesc.setDateCreated(null);
-		
+		if (resultSet.wasNull()) {
+			watchDesc.setDateCreated(null);
+		}
+
 		watchDesc.setTimeCrawled(resultSet.getString("time_crawled"));
-		if (resultSet.wasNull()) watchDesc.setTimeCrawled(null);
-		
+		if (resultSet.wasNull()) {
+			watchDesc.setTimeCrawled(null);
+		}
+
 		watchDesc.setDateCrawled(resultSet.getString("date_crawled"));
-		if (resultSet.wasNull()) watchDesc.setDateCrawled(null);
-		
+		if (resultSet.wasNull()) {
+			watchDesc.setDateCrawled(null);
+		}
+
 		return watchDesc;
 	}
-	
+
 	@Override
 	public boolean createRelation() throws SQLException {
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
 		ResultSet resultSet = null;
-		
+
 		try {
 			connection = this.daoFactory.getConnection();
-			
-			preparedStatement = DAOUtil.prepareStatement(connection, SQL_CREATE, false);
-			
+
+			preparedStatement = DAOUtil.prepareStatement(connection, this.SQL_CREATE, false);
+
 			if (Globals.DEBUG) {
 				Globals.crawlerLogManager.writeLog(preparedStatement.toString());
 			}
-			
+
 			preparedStatement.executeUpdate();
-			
+
 			return true;
 		} catch (SQLException e) {
 			Globals.crawlerLogManager.writeLog("Create watch description relation fails");
 			Globals.crawlerLogManager.writeLog(e.getMessage());
-			
+
 			return false;
 		} finally {
 			DAOUtil.close(connection, preparedStatement, resultSet);
@@ -175,14 +223,14 @@ public class WatchDescDAOJDBC implements WatchDescDAO {
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
 		ResultSet resultSet = null;
-		
+
 		try {
 			Object[] values = { watchDescId };
-			
+
 			connection = this.daoFactory.getConnection();
-			preparedStatement = DAOUtil.prepareStatement(connection, SQL_SELECT_BY_WATCH_DESC_ID, false, values);
+			preparedStatement = DAOUtil.prepareStatement(connection, this.SQL_SELECT_BY_WATCH_DESC_ID, false, values);
 			resultSet = preparedStatement.executeQuery();
-			
+
 			WatchDesc watchDesc = null;
 			if (resultSet.next()) {
 				watchDesc = this.constructWatchDescObject(resultSet);
@@ -192,21 +240,22 @@ public class WatchDescDAOJDBC implements WatchDescDAO {
 		} catch (SQLException e) {
 			Globals.crawlerLogManager.writeLog("Get watch description fails");
 			Globals.crawlerLogManager.writeLog(e.getMessage());
-			
+
 			return null;
 		} finally {
 			DAOUtil.close(connection, preparedStatement, resultSet);
 		}
 	}
 
+	@Override
 	public Integer createWatchDesc(WatchDesc watchDesc) throws SQLException {
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
 		ResultSet resultSet = null;
-		
+
 		try {
 			connection = this.daoFactory.getConnection();
-			
+
 			Object[] values = {
 				watchDesc.getLink(),
 				watchDesc.getDomainTableId1(),
@@ -217,7 +266,6 @@ public class WatchDescDAOJDBC implements WatchDescDAO {
 				watchDesc.getPrice2(),
 				watchDesc.getKeywords(),
 				watchDesc.getRefNo(),
-				watchDesc.getMovement(),
 				watchDesc.getMovement(),
 				watchDesc.getCaliber(),
 				watchDesc.getWatchCondition(),
@@ -233,56 +281,56 @@ public class WatchDescDAOJDBC implements WatchDescDAO {
 				watchDesc.getTimeCrawled(),
 				watchDesc.getDateCrawled()
 			};
-			
-			preparedStatement = DAOUtil.prepareStatement(connection, SQL_INSERT, true, values);
-			
+
+			preparedStatement = DAOUtil.prepareStatement(connection, this.SQL_INSERT, true, values);
+
 			if (Globals.DEBUG) {
 				Globals.crawlerLogManager.writeLog(preparedStatement.toString());
 			}
-			
+
 			preparedStatement.executeUpdate();
-			
+
 			ResultSet result = preparedStatement.getGeneratedKeys();
 			Integer genereatedKey = null;
 			if (result != null && result.next()) {
 				genereatedKey = result.getInt(1);
 			}
-			
+
 			return genereatedKey;
 		} catch (SQLException e) {
 			Globals.crawlerLogManager.writeLog("Insert watch description " + watchDesc.toString() + " fails");
 			Globals.crawlerLogManager.writeLog(e.getMessage());
-			
+
 			return null;
 		} finally {
 			DAOUtil.close(connection, preparedStatement, resultSet);
 		}
 	}
-	
+
 	@Override
 	public boolean deleteWatchDesc(Integer watchDescId) throws SQLException {
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
 		ResultSet resultSet = null;
-		
+
 		try {
 			connection = this.daoFactory.getConnection();
-			
+
 			Object[] values = { watchDescId };
-			
-			preparedStatement = DAOUtil.prepareStatement(connection, SQL_DELETE, false, values);
-			
+
+			preparedStatement = DAOUtil.prepareStatement(connection, this.SQL_DELETE, false, values);
+
 			if (Globals.DEBUG) {
 				Globals.crawlerLogManager.writeLog(preparedStatement.toString());
 			}
-			
+
 			preparedStatement.executeUpdate();
-			
+
 			return true;
 		} catch (SQLException e) {
 			Globals.crawlerLogManager.writeLog("Delete watch description with id " + watchDescId + " fails");
 			Globals.crawlerLogManager.writeLog(e.getMessage());
-			
+
 			return false;
 		} finally {
 			DAOUtil.close(connection, preparedStatement, resultSet);
@@ -296,34 +344,34 @@ public class WatchDescDAOJDBC implements WatchDescDAO {
 			this.watchDescIndex = 0;
 			this.watchDescs.clear();
 		}
-		
+
 		if (this.watchDescIndex < this.numWatchDescReturned) {
 			WatchDesc watchPageContent = this.watchDescs.get(this.watchDescIndex % this.maxResultReturned);
 			++this.watchDescIndex;
-			return watchPageContent; 
+			return watchPageContent;
 		}
-		
+
 		this.watchDescs.clear();
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
 		ResultSet resultSet = null;
-		
+
 		try {
 			Object[] values = { this.watchDescIndex + 1, this.maxResultReturned };
-			
+
 			connection = this.daoFactory.getConnection();
-			preparedStatement = DAOUtil.prepareStatement(connection, SQL_SELECT_LIMIT, false, values);
+			preparedStatement = DAOUtil.prepareStatement(connection, this.SQL_SELECT_LIMIT, false, values);
 			resultSet = preparedStatement.executeQuery();
-			
+
 			int numFound = 0;
-			
+
 			while (resultSet.next()) {
 				WatchDesc watchDesc = this.constructWatchDescObject(resultSet);
 				this.watchDescs.add(watchDesc);
 				++this.numWatchDescReturned;
 				++numFound;
 			}
-			
+
 			if (numFound == 0) {
 				return null;
 			} else {
@@ -332,7 +380,7 @@ public class WatchDescDAOJDBC implements WatchDescDAO {
 		} catch (SQLException e) {
 			Globals.crawlerLogManager.writeLog("Get watch page content fails");
 			Globals.crawlerLogManager.writeLog(e.getMessage());
-			
+
 			return null;
 		} finally {
 			DAOUtil.close(connection, preparedStatement, resultSet);

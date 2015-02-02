@@ -47,11 +47,12 @@ public class WatchReportArticleParser extends BaseParser {
 
 	// Return true if the articleUrl is a valid article page of WatchReport,
 	// false if not
+	@Override
 	public boolean isContentLink() {
 		if (!this.isValidLink(this.link)) {
 			return false;
 		}
-		
+
 		if (this.doc == null) {
 			return false;
 		}
@@ -73,8 +74,9 @@ public class WatchReportArticleParser extends BaseParser {
 
 	// Get the keywords of the article
 	public String[] getKeywords() {
-		if (this.keywords == null)
+		if (this.keywords == null) {
 			return null;
+		}
 
 		String[] keywordsArray = new String[this.keywords.size()];
 		int count = 0;
@@ -86,6 +88,7 @@ public class WatchReportArticleParser extends BaseParser {
 		return keywordsArray;
 	}
 
+	@Override
 	public boolean parseDoc() {
 		// Download the html content into a private variable
 		this.downloadHtmlContent(this.link, this.numRetryDownloadPage);
@@ -112,7 +115,7 @@ public class WatchReportArticleParser extends BaseParser {
 
 	// Parse the name of the article
 	private void parseArticleName() {
-		Elements artcileNameElems = doc.select("h1");
+		Elements artcileNameElems = this.doc.select("h1");
 		if (artcileNameElems.size() == 1) {
 			String articleNameText = new String(artcileNameElems.get(0).text());
 			articleNameText = articleNameText.trim();
@@ -143,7 +146,7 @@ public class WatchReportArticleParser extends BaseParser {
 
 	// Parse the date created the article
 	private void parseDateCreated() {
-		Elements postMetaElems = doc.select("p[class=post-meta]");
+		Elements postMetaElems = this.doc.select("p[class=post-meta]");
 		if (postMetaElems.size() == 1) {
 			Elements metaElems = postMetaElems.get(0).select("span");
 
@@ -160,6 +163,7 @@ public class WatchReportArticleParser extends BaseParser {
 	}
 
 	// Process link (e.g. trim, truncate bad part, etc..)
+	@Override
 	public String sanitizeLink(String url) {
 		if (url == null) {
 			return url;
@@ -171,6 +175,7 @@ public class WatchReportArticleParser extends BaseParser {
 	}
 
 	// Check if current url is valid or not
+	@Override
 	public boolean isValidLink(String url) {
 		if (url == null) {
 			return false;
@@ -193,6 +198,7 @@ public class WatchReportArticleParser extends BaseParser {
 		return true;
 	}
 
+	@Override
 	public boolean addCurrentContentToDatabase() throws Exception {
 		String link = this.getLink();
 		String articleName = this.getArticleName();
