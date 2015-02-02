@@ -25,6 +25,7 @@ import daoconnection.TypeWordDAOJDBC;
 public class CrawlerParserFactory {
 	private Set<String> typeWords = null;
 	private String[] topics = null;
+	private Map<String, Topic> topicStringToTopicMap = null;
 	private Map<String, Domain> domainStringToDomainMap = null;
 	private Map<String, Type> typeStringToTypeMap = null;
 	
@@ -43,9 +44,11 @@ public class CrawlerParserFactory {
 		List<Domain> domainList = domainDAO.getDomains();
 		List<Type> typeList = typeDAO.getTypes();
 		
+		this.topicStringToTopicMap = new HashMap<String, Topic>();
 		this.topics = new String[topicList.size()];
 		for (int i = 0; i < topics.length; ++i) {
 			this.topics[i] = topicList.get(i).getTopic();
+			this.topicStringToTopicMap.put(topicList.get(i).getTopic(), topicList.get(i));
 		}
 		
 		this.typeWords = new HashSet<String>();
@@ -73,19 +76,19 @@ public class CrawlerParserFactory {
 		}
 		
 		if (link.indexOf("http://www.ablogtowatch.com") == 0) {
-			parser = new ABlogToWatchArticleParser(link, crawler, logManager, scheduler, this.topics, this.typeWords, this.domainStringToDomainMap, this.typeStringToTypeMap);
+			parser = new ABlogToWatchArticleParser(link, crawler, logManager, scheduler, this.topics, this.topicStringToTopicMap, this.typeWords, this.domainStringToDomainMap, this.typeStringToTypeMap);
 		}
 		
 		if (link.indexOf("http://www.hodinkee.com") == 0) {
-			parser = new HodinkeeArticleParser(link, crawler, logManager, scheduler, this.topics, this.typeWords, this.domainStringToDomainMap, this.typeStringToTypeMap);
+			parser = new HodinkeeArticleParser(link, crawler, logManager, scheduler, this.topics, this.topicStringToTopicMap, this.typeWords, this.domainStringToDomainMap, this.typeStringToTypeMap);
 		}
 
 		if (link.indexOf("http://watchreport.com") == 0) {
-			parser = new WatchReportArticleParser(link, crawler, logManager, scheduler, this.topics, this.typeWords, this.domainStringToDomainMap, this.typeStringToTypeMap);
+			parser = new WatchReportArticleParser(link, crawler, logManager, scheduler, this.topics, this.topicStringToTopicMap, this.typeWords, this.domainStringToDomainMap, this.typeStringToTypeMap);
 		}
 		
 		if (link.indexOf("http://www.chrono24.com") == 0) {
-			parser = new Chrono24EntryPageParser(link, crawler, logManager, scheduler, this.topics, this.typeWords, this.domainStringToDomainMap, this.typeStringToTypeMap);
+			parser = new Chrono24EntryPageParser(link, crawler, logManager, scheduler, this.topics, this.topicStringToTopicMap, this.typeWords, this.domainStringToDomainMap, this.typeStringToTypeMap);
 		}
 		
 		return parser;

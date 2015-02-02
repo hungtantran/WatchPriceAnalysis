@@ -14,6 +14,7 @@ import commonlib.LogManager;
 import commonlib.NetworkingFunctions;
 import commonlib.NetworkingFunctions.NetPkg;
 import daoconnection.Domain;
+import daoconnection.Topic;
 import daoconnection.Type;
 
 public abstract class BaseParser implements IParser {
@@ -25,8 +26,13 @@ public abstract class BaseParser implements IParser {
 	protected BaseCrawler crawler = null;
 	protected LogManager logManager = null;
 	protected Scheduler scheduler = null;
+	protected Map<String, Topic> topicStringToTopicMap = null;
+	
 	protected String[] topicList = null;
 	protected Set<String> typeWordList = null;
+	
+	protected Set<String> keywords = null;
+	protected Set<String> topics = null;
 	
 	protected String link = null;
 	protected Domain domain = null;
@@ -45,7 +51,7 @@ public abstract class BaseParser implements IParser {
 	
 	public abstract boolean isContentLink();
 	
-	public abstract boolean addCurrentContentToDatabase();
+	public abstract boolean addCurrentContentToDatabase() throws Exception;
 
 	protected BaseParser(
 		String link,
@@ -56,6 +62,7 @@ public abstract class BaseParser implements IParser {
 		Set<String> typeWordList,
 		Map<String, Domain> domainStringToDomainMap,
 		Map<String, Type> typeStringToTypeMap,
+		Map<String, Topic> topicStringToTopicMap,
 		String domainString,
 		String typeString) throws Exception
 	{
@@ -71,19 +78,22 @@ public abstract class BaseParser implements IParser {
 		this.typeWordList = typeWordList;
 		this.timeCreated = "00:00:00";
 		
-		if (domainStringToDomainMap == null || !domainStringToDomainMap.containsKey(domainString))
-		{
+		if (domainStringToDomainMap == null || !domainStringToDomainMap.containsKey(domainString)) {
 			throw new Exception("Fail to resolve domain of parser");
 		}
 		
 		this.domain = domainStringToDomainMap.get(domainString);
 		
-		if (typeStringToTypeMap == null || !typeStringToTypeMap.containsKey(typeString))
-		{
+		if (typeStringToTypeMap == null || !typeStringToTypeMap.containsKey(typeString)) {
 			throw new Exception("Fail to resolve type of parser");
 		}
 		
+		this.topicStringToTopicMap = topicStringToTopicMap;
+		
 		this.type = typeStringToTypeMap.get(typeString);
+		
+		this.keywords = new HashSet<String>();
+		this.topics = new HashSet<String>();
 	}
 
 	public boolean setContent(String content) {
@@ -136,6 +146,24 @@ public abstract class BaseParser implements IParser {
 	// Get time created
 	public String getTimeCreated() {
 		return this.timeCreated;
+	}
+	
+	// Get the topics of the article
+	public int[] getTopics() {
+		if (this.topics == null) {
+			return null;
+		}
+
+		int[] topicsArray = new int[this.topics.size()];
+		int count = 0;
+		for (String topic : this.topics) {
+			if (this.topicStringToTopicMap.containsKey(topic)) {
+				topicsArray[count] = this.topicStringToTopicMap.get(topic).getId();
+				++count;
+			}
+		}
+
+		return topicsArray;
 	}
 
 	// Get date created

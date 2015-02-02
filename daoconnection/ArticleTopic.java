@@ -11,47 +11,47 @@ public class ArticleTopic implements Serializable {
 
 	// Getters / Setters
 	public Integer getId() {
-		return id;
+	    return this.id;
 	}
 
 	public void setId(Integer id) {
-		this.id = id;
+	    this.id = id;
 	}
 
 	public Integer getArticleTableId() {
-		return articleTableId;
+	    return this.articleTableId;
 	}
 
 	public void setArticleTableId(Integer articleTableId) {
-		this.articleTableId = articleTableId;
+	    this.articleTableId = articleTableId;
 	}
 
 	public Integer getTopicTableId() {
-		return topicTableId;
+	    return this.topicTableId;
 	}
 
 	public void setTopicTableId(Integer topicTableId) {
-		this.topicTableId = topicTableId;
+	    this.topicTableId = topicTableId;
 	}
 
 	// Object overrides
 	@Override
 	public boolean equals(Object other) {
-		return (other instanceof ArticleTopic)
-				&& this.articleTableId == ((ArticleTopic) other).articleTableId
-				&& this.topicTableId == ((ArticleTopic) other).topicTableId;
+	    return (other instanceof ArticleTopic)
+		    && this.articleTableId == ((ArticleTopic) other).articleTableId
+		    && this.topicTableId == ((ArticleTopic) other).topicTableId;
 	}
 
 	@Override
 	public int hashCode() {
-		Integer id = this.id;
-		return this.getClass().hashCode() + id.hashCode();
+	    Integer id = this.id;
+	    return this.getClass().hashCode() + id.hashCode();
 	}
 
 	@Override
 	public String toString() {
-		return String.format(
-				"ArticleTopic[id=%d, articleTableId=%d, topicTableId=%d]",
-				this.id, this.articleTableId, this.toString());
+	    return String.format(
+		"ArticleTopic[id=%d, articleTableId=%d, topicTableId=%d]",
+		this.id, this.articleTableId, this.topicTableId);
 	}
 }

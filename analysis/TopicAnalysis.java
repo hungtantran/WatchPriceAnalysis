@@ -5,13 +5,10 @@ import java.util.Set;
 
 import commonlib.Globals;
 import commonlib.Helper;
-import dbconnection.MySqlConnection;
+import daoconnection.DAOFactory;
 
 public class TopicAnalysis {
-	private MySqlConnection mysqlConnection = null;
-
 	public TopicAnalysis() {
-		this.mysqlConnection = new MySqlConnection();
 	}
 
 	// Go through existing article, try to identify topic of them
@@ -19,13 +16,18 @@ public class TopicAnalysis {
 		int lowerBound = 0;
 		int maxNumResult = 2000;
 		int articleCount = lowerBound;
+		
+		DAOFactory daoFactory = DAOFactory.getInstance(
+			Globals.username,
+			Globals.password,
+			Globals.server + Globals.database);
 
 		// Get 2000 articles at a time, until exhaust all the articles
 		while (true) {
-			ResultSet resultSet = this.mysqlConnection.getArticleInfo(
-					lowerBound, maxNumResult);
-			if (resultSet == null)
+			ResultSet resultSet = this.mysqlConnection.getArticleInfo(lowerBound, maxNumResult);
+			if (resultSet == null) {
 				break;
+			}
 
 			try {
 				int count = 0;
@@ -36,12 +38,11 @@ public class TopicAnalysis {
 
 					int articleId = resultSet.getInt(1);
 					String articleName = resultSet.getString(6).trim();
-					if (Globals.DEBUG)
-						System.out.println("(" + articleCount + ") Article id "
-								+ articleId + ": " + articleName);
+					if (Globals.DEBUG) {
+						System.out.println("(" + articleCount + ") Article id " + articleId + ": " + articleName);
+					}
 
-					Set<String> topicsOfName = Helper.identifyTopicOfName(
-							articleName, Globals.HOROLOGYTOPICS);
+					Set<String> topicsOfName = Helper.identifyTopicOfName(articleName, Globals.HOROLOGYTOPICS);
 					String[] topics = new String[topicsOfName.size()];
 
 					int index = 0;
@@ -52,15 +53,15 @@ public class TopicAnalysis {
 
 					Integer[] topicsId = Helper.convertTopicToTopicId(topics);
 
-					if (Globals.DEBUG)
-						System.out.println("Topics " + topics.toString() + ": "
-								+ topicsId.toString());
+					if (Globals.DEBUG) {
+						System.out.println("Topics " + topics.toString() + ": " + topicsId.toString());
+					}
 
 					// Insert into article_topic_table table
 					for (int topicId : topicsId) {
-						if (!this.mysqlConnection.addArticleTopicRelationship(
-								articleId, topicId))
+						if (!this.mysqlConnection.addArticleTopicRelationship(articleId, topicId)) {
 							continue;
+						}
 					}
 				}
 
@@ -87,11 +88,9 @@ public class TopicAnalysis {
 			ResultSet resultSet = null;
 
 			if (fullPopulate) {
-				resultSet = this.mysqlConnection.getWatchInfo(0, lowerBound,
-						maxNumResult);
+				resultSet = this.mysqlConnection.getWatchInfo(0, lowerBound, maxNumResult);
 			} else {
-				resultSet = this.mysqlConnection.getWatchInfo(null, lowerBound,
-						maxNumResult);
+				resultSet = this.mysqlConnection.getWatchInfo(null, lowerBound, maxNumResult);
 			}
 
 			if (resultSet == null)
@@ -106,12 +105,11 @@ public class TopicAnalysis {
 
 					int watchId = resultSet.getInt(1);
 					String watchName = resultSet.getString(6).trim();
-					if (Globals.DEBUG)
-						System.out.println("(" + watchCount + ") Watch id "
-								+ watchId + ": " + watchName);
+					if (Globals.DEBUG) {
+						System.out.println("(" + watchCount + ") Watch id " + watchId + ": " + watchName);
+					}
 
-					Set<String> topicsOfName = Helper.identifyTopicOfName(
-							watchName, Globals.HOROLOGYTOPICS);
+					Set<String> topicsOfName = Helper.identifyTopicOfName(watchName, Globals.HOROLOGYTOPICS);
 					String[] topics = new String[topicsOfName.size()];
 
 					int index = 0;
@@ -122,29 +120,29 @@ public class TopicAnalysis {
 
 					Integer[] topicsId = Helper.convertTopicToTopicId(topics);
 
-					if (Globals.DEBUG)
-						System.out.println("Topics " + topics.toString() + ": "
-								+ topicsId.toString());
+					if (Globals.DEBUG) {
+						System.out.println("Topics " + topics.toString() + ": " + topicsId.toString());
+					}
 
 					// Insert into article_topic_table table
-					result = this.mysqlConnection.updateWatchTopic(watchId,
-							topicsId);
+					result = this.mysqlConnection.updateWatchTopic(watchId, topicsId);
 
-					if (!result && Globals.DEBUG)
-						System.out
-								.println("Fail to insert new topic for watch id "
-										+ watchId + ": " + watchName);
+					if (!result && Globals.DEBUG) {
+						System.out.println("Fail to insert new topic for watch id " + watchId + ": " + watchName);
+					}
 				}
 
-				if (count == 0)
+				if (count == 0) {
 					break;
+				}
 			} catch (Exception e) {
 				e.printStackTrace();
 				break;
 			}
 
-			if (!result)
+			if (!result) {
 				break;
+			}
 			lowerBound += maxNumResult;
 		}
 	}

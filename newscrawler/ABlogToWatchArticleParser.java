@@ -1,6 +1,5 @@
 package newscrawler;
 
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -10,6 +9,7 @@ import commonlib.Globals;
 import commonlib.Helper;
 import commonlib.LogManager;
 import daoconnection.Domain;
+import daoconnection.Topic;
 import daoconnection.Type;
 
 public class ABlogToWatchArticleParser extends BaseParser {
@@ -18,8 +18,6 @@ public class ABlogToWatchArticleParser extends BaseParser {
 	private final int numRetryDownloadPage = 2;
 
 	private String articleName = null;
-	private Set<String> keywords = null;
-	private Set<String> topics = null;
 
 	public ABlogToWatchArticleParser(
 		String articleUrl,
@@ -27,6 +25,7 @@ public class ABlogToWatchArticleParser extends BaseParser {
 		LogManager logManager,
 		Scheduler scheduler,
 		String[] topicList,
+		Map<String, Topic> topicStringToTopicMap,
 		Set<String> typeWordList,
 		Map<String, Domain> domainStringToDomainMap,
 		Map<String, Type> typeStringToTypeMap) throws Exception
@@ -40,11 +39,9 @@ public class ABlogToWatchArticleParser extends BaseParser {
 			typeWordList,
 			domainStringToDomainMap,
 			typeStringToTypeMap,
+			topicStringToTopicMap,
 			ABlogToWatchArticleParser.domainString,
 			ABlogToWatchArticleParser.typeString);
-
-		this.keywords = new HashSet<String>();
-		this.topics = new HashSet<String>();
 	}
 
 	// Return true if the articleUrl is a valid article page of ABlogToWatch,
@@ -82,22 +79,6 @@ public class ABlogToWatchArticleParser extends BaseParser {
 		}
 
 		return keywordsArray;
-	}
-
-	// Get the topics of the article
-	public String[] getTopics() {
-		if (this.topics == null) {
-			return null;
-		}
-
-		String[] topicsArray = new String[this.topics.size()];
-		int count = 0;
-		for (String topic : this.topics) {
-			topicsArray[count] = topic;
-			count++;
-		}
-
-		return topicsArray;
 	}
 
 	public boolean parseDoc() {
@@ -217,7 +198,7 @@ public class ABlogToWatchArticleParser extends BaseParser {
 		String link = this.getLink();
 		String articleName = this.getArticleName();
 		String[] keywords = this.getKeywords();
-		String[] topics = this.getTopics();
+		int[] topics = this.getTopics();
 		String content = this.getContent();
 		String timeCreated = this.getTimeCreated();
 		String dateCreated = this.getDateCreated();
@@ -226,9 +207,17 @@ public class ABlogToWatchArticleParser extends BaseParser {
 		String timeCrawled = Helper.getCurrentTime();
 		String dateCrawled = Helper.getCurrentDate();
 		
-		return this.crawler.addArticle(link, this.domain, articleName, this.type,
-			keywords, topics, timeCreated, dateCreated, timeCrawled,
-			dateCrawled, content);
+		boolean addArticleResult = false;
+		
+		try {
+			addArticleResult = this.crawler.addArticle(link, this.domain, articleName, this.type,
+				keywords, topics, timeCreated, dateCreated, timeCrawled,
+				dateCrawled, content);
+		} catch (Exception e) {
+			this.logManager.writeLog("Can't add current content to database");
+		}
+		
+		return addArticleResult;
 	}
 	
 	public static void main(String[] args) {

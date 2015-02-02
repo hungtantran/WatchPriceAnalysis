@@ -27,5 +27,5 @@ public interface IParser {
 	Domain getDomain();
 	
 	// Add content currently inside the parser into the database
-	boolean addCurrentContentToDatabase();
+	boolean addCurrentContentToDatabase() throws Exception;
 }

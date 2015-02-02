@@ -6,13 +6,8 @@ import java.util.Arrays;
 
 import commonlib.Globals;
 
-import dbconnection.MySqlConnection;
-
 public class WatchPriceStatAnalysis {
-	private MySqlConnection mysqlConnection = null;
-
 	public WatchPriceStatAnalysis() {
-		this.mysqlConnection = new MySqlConnection();
 	}
 
 	// Calculate all watch topics statistics
@@ -33,8 +28,9 @@ public class WatchPriceStatAnalysis {
 			mean += arr[i];
 		}
 
-		if (arr.length > 0)
+		if (arr.length > 0) {
 			mean = mean / (float) arr.length;
+		}
 
 		return mean;
 	}
@@ -43,17 +39,18 @@ public class WatchPriceStatAnalysis {
 	public static int findMedianOfSortedArray(Integer[] arr) {
 		int median = 0;
 
-		if (arr.length > 0)
+		if (arr.length > 0) {
 			median = arr[arr.length / 2];
+		}
 
 		return median;
 	}
 
 	// Find the 20 points of 1/20 distribution of a sorted array
-	public static void findDistributionOfSortedArray(Integer[] arr,
-			int[] values, int[] numbers, float mean, float median, float std) {
-		if (arr.length == 0 || values.length < 20 || numbers.length < 20)
+	public static void findDistributionOfSortedArray(Integer[] arr, int[] values, int[] numbers, float mean, float median, float std) {
+		if (arr.length == 0 || values.length < 20 || numbers.length < 20) {
 			return;
+		}
 		
 		float middlePoint = mean;
 		float distanceDown = Math.min(std, middlePoint)/10;
@@ -84,6 +81,7 @@ public class WatchPriceStatAnalysis {
 		for (int i = 0; i < 10; i++) {
 			values[i] = Math.max(Math.round(middlePoint-distanceDown*(10-i)), 0);
 		}
+		
 		for (int i = 0; i < 9; i++) {
 			values[i+10] = Math.round(middlePoint+distanceUp*i);
 		}
@@ -126,14 +124,12 @@ public class WatchPriceStatAnalysis {
 		int lowestPrice = 0;
 		int highestPrice = 0;
 		int numWatches = 0;
-		int numArticles = this.mysqlConnection
-				.getNumArticleWithTopicId(topicId);
+		int numArticles = this.mysqlConnection.getNumArticleWithTopicId(topicId);
 
 		int[] values = new int[20];
 		int[] numbers = new int[20];
 
-		ResultSet resultSet = this.mysqlConnection
-				.getWatchInfo(topicId, -1, -1);
+		ResultSet resultSet = this.mysqlConnection.getWatchInfo(topicId, -1, -1);
 
 		if (resultSet != null) {
 			ArrayList<Integer> watchPrice = new ArrayList<Integer>();
@@ -142,8 +138,9 @@ public class WatchPriceStatAnalysis {
 				while (resultSet.next()) {
 					Integer price = resultSet.getInt(7);
 
-					if (price != null)
+					if (price != null) {
 						watchPrice.add(price);
+					}
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -159,8 +156,7 @@ public class WatchPriceStatAnalysis {
 			// of the priceLists array
 			mean = WatchPriceStatAnalysis.findMeanOfArray(priceLists);
 			median = WatchPriceStatAnalysis.findMedianOfSortedArray(priceLists);
-			std = WatchPriceStatAnalysis
-					.findStandardDeviationOfArray(priceLists);
+			std = WatchPriceStatAnalysis.findStandardDeviationOfArray(priceLists);
 
 			if (priceLists.length > 0) {
 				lowestPrice = priceLists[0];
@@ -182,20 +178,23 @@ public class WatchPriceStatAnalysis {
 		System.out.println("Median " + median);
 		System.out.println("Standard Deviation " + std);
 		System.out.println("Values: ");
-		for (int i = 0; i < values.length; i++)
+		for (int i = 0; i < values.length; i++) {
 			System.out.print(values[i] + " ");
+		}
 		System.out.println();
 		System.out.println("Numbers: ");
-		for (int i = 0; i < numbers.length; i++)
+		for (int i = 0; i < numbers.length; i++) {
 			System.out.print(numbers[i] + " ");
+		}
 		System.out.println();
 		System.out.println();
 
 		// Insert the new statistic into the database
 		if (!this.mysqlConnection.addWatchPriceStat(topicId, numArticles,
 				numWatches, lowestPrice, highestPrice, mean, median, std,
-				values, numbers))
+				values, numbers)) {
 			return;
+		}
 	}
 
 	public static void main(String[] args) {

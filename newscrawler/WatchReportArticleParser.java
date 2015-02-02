@@ -1,6 +1,5 @@
 package newscrawler;
 
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -9,7 +8,9 @@ import org.jsoup.select.Elements;
 import commonlib.Globals;
 import commonlib.Helper;
 import commonlib.LogManager;
+
 import daoconnection.Domain;
+import daoconnection.Topic;
 import daoconnection.Type;
 
 public class WatchReportArticleParser extends BaseParser {
@@ -18,8 +19,6 @@ public class WatchReportArticleParser extends BaseParser {
 	private final int numRetryDownloadPage = 2;
 
 	private String articleName = null;
-	private Set<String> keywords = null;
-	private Set<String> topics = null;
 
 	public WatchReportArticleParser(
 		String articleUrl,
@@ -27,6 +26,7 @@ public class WatchReportArticleParser extends BaseParser {
 		LogManager logManager,
 		Scheduler scheduler,
 		String[] topicList,
+		Map<String, Topic> topicStringToTopicMap,
 		Set<String> typeWordList,
 		Map<String, Domain> domainStringToDomainMap,
 		Map<String, Type> typeStringToTypeMap) throws Exception
@@ -40,11 +40,9 @@ public class WatchReportArticleParser extends BaseParser {
 			typeWordList,
 			domainStringToDomainMap,
 			typeStringToTypeMap,
+			topicStringToTopicMap,
 			WatchReportArticleParser.domainString,
 			WatchReportArticleParser.typeString);
-
-		this.keywords = new HashSet<String>();
-		this.topics = new HashSet<String>();
 	}
 
 	// Return true if the articleUrl is a valid article page of WatchReport,
@@ -86,21 +84,6 @@ public class WatchReportArticleParser extends BaseParser {
 		}
 
 		return keywordsArray;
-	}
-
-	// Get the topics of the article
-	public String[] getTopics() {
-		if (this.topics == null)
-			return null;
-
-		String[] topicsArray = new String[this.topics.size()];
-		int count = 0;
-		for (String topic : this.topics) {
-			topicsArray[count] = topic;
-			count++;
-		}
-
-		return topicsArray;
 	}
 
 	public boolean parseDoc() {
@@ -210,11 +193,11 @@ public class WatchReportArticleParser extends BaseParser {
 		return true;
 	}
 
-	public boolean addCurrentContentToDatabase() {
+	public boolean addCurrentContentToDatabase() throws Exception {
 		String link = this.getLink();
 		String articleName = this.getArticleName();
 		String[] keywords = this.getKeywords();
-		String[] topics = this.getTopics();
+		int[] topics = this.getTopics();
 		String content = this.doc.outerHtml();
 		String timeCreated = this.getTimeCreated();
 		String dateCreated = this.getDateCreated();

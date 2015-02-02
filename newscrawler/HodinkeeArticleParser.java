@@ -1,6 +1,5 @@
 package newscrawler;
 
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -9,7 +8,9 @@ import org.jsoup.select.Elements;
 import commonlib.Globals;
 import commonlib.Helper;
 import commonlib.LogManager;
+
 import daoconnection.Domain;
+import daoconnection.Topic;
 import daoconnection.Type;
 
 /*import edu.stanford.nlp.process.Tokenizer;
@@ -29,15 +30,14 @@ public class HodinkeeArticleParser extends BaseParser {
 	private final int numRetryDownloadPage = 2;
 
 	private String articleName = null;
-	private Set<String> keywords = null;
-	private Set<String> topics = null;
-
+	
 	public HodinkeeArticleParser(
 		String articleUrl,
 		BaseCrawler crawler,
 		LogManager logManager,
 		Scheduler scheduler,
 		String[] topicList,
+		Map<String, Topic> topicStringToTopicMap,
 		Set<String> typeWordList,
 		Map<String, Domain> domainStringToDomainMap,
 		Map<String, Type> typeStringToTypeMap) throws Exception
@@ -51,11 +51,9 @@ public class HodinkeeArticleParser extends BaseParser {
 			typeWordList,
 			domainStringToDomainMap,
 			typeStringToTypeMap,
+			topicStringToTopicMap,
 			HodinkeeArticleParser.domainString,
 			HodinkeeArticleParser.typeString);
-
-		this.keywords = new HashSet<String>();
-		this.topics = new HashSet<String>();
 	}
 	
 	// Return true if the articleUrl is a valid article page of Hodinkee, false
@@ -87,21 +85,6 @@ public class HodinkeeArticleParser extends BaseParser {
 	// Get the name of the article
 	public String getArticleName() {
 		return this.articleName;
-	}
-
-	// Get the topics of the article
-	public String[] getTopics() {
-		if (this.topics == null)
-			return null;
-
-		String[] topicsArray = new String[this.topics.size()];
-		int count = 0;
-		for (String topic : this.topics) {
-			topicsArray[count] = topic;
-			count++;
-		}
-
-		return topicsArray;
 	}
 
 	public boolean parseDoc() {
@@ -216,11 +199,11 @@ public class HodinkeeArticleParser extends BaseParser {
 	}
 
 	@Override
-	public boolean addCurrentContentToDatabase() {
+	public boolean addCurrentContentToDatabase() throws Exception {
 		String link = this.getLink();
 		String articleName = this.getArticleName();
 		String[] keywords = this.getKeywords();
-		String[] topics = this.getTopics();
+		int[] topics = this.getTopics();
 		String content = this.doc.outerHtml();
 		String timeCreated = this.getTimeCreated();
 		String dateCreated = this.getDateCreated();

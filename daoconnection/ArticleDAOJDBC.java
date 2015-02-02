@@ -20,7 +20,7 @@ public class ArticleDAOJDBC implements ArticleDAO {
 		+ "article_name char(255) not null, "
 		+ "type_table_1 int unsigned not null, "
 		+ "type_table_2 int unsigned, "
-		+ "keywords char(255) not null, "
+		+ "keywords char(255), "
 		+ "time_created char(128) not null, "
 		+ "date_created char(128) not null, "
 		+ "time_crawled char(128) not null, "

@@ -8,6 +8,15 @@ import commonlib.Globals;
 import commonlib.Helper;
 import commonlib.LogManager;
 import commonlib.TopicComparator;
+import daoconnection.Article;
+import daoconnection.ArticleContent;
+import daoconnection.ArticleContentDAO;
+import daoconnection.ArticleContentDAOJDBC;
+import daoconnection.ArticleDAO;
+import daoconnection.ArticleDAOJDBC;
+import daoconnection.ArticleTopic;
+import daoconnection.ArticleTopicDAO;
+import daoconnection.ArticleTopicDAOJDBC;
 import daoconnection.DAOFactory;
 import daoconnection.Domain;
 import daoconnection.LinkCrawled;
@@ -17,6 +26,12 @@ import daoconnection.LinkQueue;
 import daoconnection.LinkQueueDAO;
 import daoconnection.LinkQueueDAOJDBC;
 import daoconnection.Type;
+import daoconnection.WatchDesc;
+import daoconnection.WatchDescDAO;
+import daoconnection.WatchDescDAOJDBC;
+import daoconnection.WatchPageContent;
+import daoconnection.WatchPageContentDAO;
+import daoconnection.WatchPageContentDAOJDBC;
 
 public class BaseCrawler extends Thread {
 	protected DAOFactory daoFactory = null;
@@ -26,8 +41,14 @@ public class BaseCrawler extends Thread {
 	protected int numRetriesDownloadLink = 2;
 	protected int lowerBoundWaitTimeSec = Globals.DEFAULTLOWERBOUNDWAITTIMESEC;
 	protected int upperBoundWaitTimeSec = Globals.DEFAULTUPPERBOUNDWAITTIMESEC;
+	
 	protected LinkQueueDAO linkQueueDAO = null;
 	protected LinkCrawledDAO linkCrawledDAO = null;
+	protected ArticleDAO articleDAO = null;
+	protected ArticleContentDAO articleContentDAO = null;
+	protected ArticleTopicDAO articleTopicDAO = null;
+	protected WatchDescDAO watchDescDAO = null;
+	protected WatchPageContentDAO watchPageContentDAO = null;
 	
 	// Base constructor
 	protected BaseCrawler(LogManager logManager, Scheduler scheduler, DAOFactory daoFactory, CrawlerParserFactory parserFactory) throws Exception {
@@ -56,10 +77,16 @@ public class BaseCrawler extends Thread {
 		this.upperBoundWaitTimeSec = upperBoundWaitTimeSec;
 		this.logManager = logManager;
 		this.scheduler = scheduler;
+		this.parserFactory = parserFactory;
+		
 		this.daoFactory = daoFactory;
 		this.linkQueueDAO = new LinkQueueDAOJDBC(this.daoFactory);
 		this.linkCrawledDAO = new LinkCrawledDAOJDBC(this.daoFactory);
-		this.parserFactory = parserFactory;
+		this.articleDAO = new ArticleDAOJDBC(this.daoFactory);
+		this.articleContentDAO = new ArticleContentDAOJDBC(this.daoFactory);
+		this.articleTopicDAO = new ArticleTopicDAOJDBC(this.daoFactory);
+		this.watchDescDAO = new WatchDescDAOJDBC(this.daoFactory);
+		this.watchPageContentDAO = new WatchPageContentDAOJDBC(this.daoFactory);
 	}
 
 	// Function that start the crawling process
@@ -136,29 +163,148 @@ public class BaseCrawler extends Thread {
 	
 	// Add an article to the database with all its relevant information
 	public boolean addArticle(String link, Domain domain, String articleName,
-			Type type, String[] keywords, String[] topics, String timeCreated,
-			String dateCreated, String timeCrawled, String dateCrawled,
-			String content) {
-		// TODO Auto-generated method stub
+		Type type, String[] keywords, int[] topics, String timeCreated,
+		String dateCreated, String timeCrawled, String dateCrawled,
+		String content) throws Exception
+	{
+		this.logManager.writeLog("Try to add article from link " + link + " to database");
+		Article article = new Article();
+		article.setLink(link);
+		article.setDomainTableId1(domain.getId());
+		article.setDomainTableId2(null);
+		article.setDomainTableId3(null);
+		article.setArticleName(articleName);
+		article.setTypeTable1(type.getId());
+		article.setTypeTable2(null);
 		
-		System.out.println("Try to add article to database\n\n\n");
+		String keyWordStr = null;
+		if (keywords != null) {
+			for (String keyword : keywords) {
+				keyWordStr += keyword + "|";
+			}
+		}
+		article.setKeywords(keyWordStr);
 		
-		return false;
+		article.setTimeCreated(timeCreated);
+		article.setDateCreated(dateCreated);
+		article.setTimeCrawled(timeCrawled);
+		article.setDateCrawled(dateCrawled);
+		
+		Integer articleID = this.articleDAO.createArticle(article);
+		
+		if (articleID == null) {
+			throw new Exception("Can't insert article into database");
+		}
+				
+		this.logManager.writeLog("Try to add article content from link " + link + " to database");
+		ArticleContent articleContent = new ArticleContent();
+		articleContent.setArticleTableId(articleID);
+		articleContent.setContent(content);
+		
+		boolean createContentResult = this.articleContentDAO.createArticleContent(articleContent);
+		
+		if (!createContentResult) {
+			throw new Exception("Can't insert article content into database");
+		}
+		
+		this.logManager.writeLog("Try to add article topic from link " + link + " to database");
+		
+		for (int topic : topics) {
+			ArticleTopic articleTopic = new ArticleTopic();
+			articleTopic.setArticleTableId(articleID);
+			articleTopic.setTopicTableId(topic);
+			
+			Integer articleTopicId = this.articleTopicDAO.createArticleTopic(articleTopic);
+			
+			if (articleTopicId == null) {
+				throw new Exception("Can't insert article topic into database");
+			}
+		}
+		
+		return true;
 	}
 	
 	public boolean addWatchEntry(String link, Domain domain, String watchName,
-		int[] prices, String[] keywords, String[] topics,
+		int[] prices, String[] keywords, int[] topics,
 		String timeCreated, String dateCreated, String timeCrawled,
 		String dateCrawled, String content, String refNo, String movement,
 		String caliber, String watchCondition, int watchYear,
 		String caseMaterial, String dialColor, String gender,
-		String location1, String location2, String location3) 
+		String location1, String location2, String location3) throws Exception 
 	{
-		// TODO Auto-generated method stub
+		this.logManager.writeLog("Try to add watch description from link " + link + " to database");
+		WatchDesc watchDesc = new WatchDesc();
+		watchDesc.setLink(link);
+		watchDesc.setDomainTableId1(domain.getId());
 		
-		System.out.println("Try to add watch entry to database\n\n\n");
+		if (topics != null && topics.length > 0) {
+			watchDesc.setTopicTableId1(topics[0]);
+		} else {
+			watchDesc.setTopicTableId1(null);
+		}
 		
-		return false;
+		if (topics != null && topics.length > 1) {
+			watchDesc.setTopicTableId2(topics[1]);
+		} else {
+			watchDesc.setTopicTableId2(null);
+		}
+		
+		watchDesc.setWatchName(watchName);
+		
+		if (prices != null && prices.length > 0) {
+			watchDesc.setPrice1(prices[0]);
+		} else {
+			watchDesc.setPrice1(null);
+		}
+		
+		if (prices != null && prices.length > 1) {
+			watchDesc.setPrice2(prices[1]);
+		} else {
+			watchDesc.setPrice2(null);
+		}
+		
+		String keyWordStr = null;
+		if (keywords != null) {
+			for (String keyword : keywords) {
+				keyWordStr += keyword + "|";
+			}
+		}
+		watchDesc.setKeywords(keyWordStr);
+		
+		watchDesc.setRefNo(refNo);
+		watchDesc.setMovement(movement);
+		watchDesc.setCaliber(caliber);
+		watchDesc.setWatchCondition(watchCondition);
+		watchDesc.setWatchYear(watchYear);
+		watchDesc.setCaseMaterial(caseMaterial);
+		watchDesc.setDialColor(dialColor);
+		watchDesc.setGender(gender);
+		watchDesc.setLocation1(location1);
+		watchDesc.setLocation2(location2);
+		watchDesc.setLocation3(location3);
+		watchDesc.setTimeCrawled(timeCrawled);
+		watchDesc.setDateCrawled(dateCrawled);
+		watchDesc.setTimeCrawled(timeCrawled);
+		watchDesc.setDateCrawled(dateCrawled);
+		
+		Integer watchID = this.watchDescDAO.createWatchDesc(watchDesc);
+		
+		if (watchID == null) {
+			throw new Exception("Can't insert watch description into database");
+		}
+				
+		this.logManager.writeLog("Try to add watch content from link " + link + " to database");
+		WatchPageContent watchPageContent = new WatchPageContent();
+		watchPageContent.setWatchTableId(watchID);
+		watchPageContent.setContent(content);
+		
+		boolean createContentResult = this.watchPageContentDAO.createWatchPageContent(watchPageContent);
+		
+		if (!createContentResult) {
+			throw new Exception("Can't insert article content into database");
+		}
+		
+		return true;
 	}
 
 	//Add links in the page into the queue, add current link into the crawled set.

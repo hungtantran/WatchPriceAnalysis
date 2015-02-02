@@ -10,7 +10,7 @@ import java.util.List;
 import commonlib.Globals;
 
 public class TypeDAOJDBC implements TypeDAO {
-	private final String SQL_CREATE = 
+	private final String SQL_CREATE =
 		"CREATE TABLE type_table ("
 		+ "id int unsigned AUTO_INCREMENT not null, "
 		+ "type char(255) not null, " + "PRIMARY KEY(id), "
@@ -18,24 +18,28 @@ public class TypeDAOJDBC implements TypeDAO {
 	private final String SQL_SELECT_ALL = "SELECT * FROM type_table";
 	private final String SQL_INSERT = "INSERT INTO type_table (id, type) values (?, ?)";
 
-	private DAOFactory daoFactory;
+	private final DAOFactory daoFactory;
 
 	public TypeDAOJDBC(DAOFactory daoFactory) throws SQLException {
 		this.daoFactory = daoFactory;
 	}
-	
+
 	private Type constructTypeObject(ResultSet resultSet) throws SQLException {
 		Type type = new Type();
-		
+
 		type.setId(resultSet.getInt("id"));
-		if (resultSet.wasNull()) type.setId(null);
-		
+		if (resultSet.wasNull()) {
+		    type.setId(null);
+		}
+
 		type.setType(resultSet.getString("type"));
-		if (resultSet.wasNull()) type.setType(null);
-		
+		if (resultSet.wasNull()) {
+		    type.setType(null);
+		}
+
 		return type;
 	}
-	
+
 	// Insert all the types into the type tables
 //	private static void initializeTypeTable() {
 //		try {
@@ -63,29 +67,29 @@ public class TypeDAOJDBC implements TypeDAO {
 //			}
 //		}
 //	}
-	
+
 	@Override
 	public boolean createRelation() throws SQLException {
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
 		ResultSet resultSet = null;
-		
+
 		try {
 			connection = this.daoFactory.getConnection();
-			
-			preparedStatement = DAOUtil.prepareStatement(connection, SQL_CREATE, false);
-			
+
+			preparedStatement = DAOUtil.prepareStatement(connection, this.SQL_CREATE, false);
+
 			if (Globals.DEBUG) {
 				Globals.crawlerLogManager.writeLog(preparedStatement.toString());
 			}
-			
+
 			preparedStatement.executeUpdate();
-			
+
 			return true;
 		} catch (SQLException e) {
 			Globals.crawlerLogManager.writeLog("Create type relation fails");
 			Globals.crawlerLogManager.writeLog(e.getMessage());
-			
+
 			return false;
 		} finally {
 			DAOUtil.close(connection, preparedStatement, resultSet);
@@ -97,12 +101,12 @@ public class TypeDAOJDBC implements TypeDAO {
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
 		ResultSet resultSet = null;
-		
+
 		try {
 			connection = this.daoFactory.getConnection();
-			preparedStatement = DAOUtil.prepareStatement(connection, SQL_SELECT_ALL, false);
+			preparedStatement = DAOUtil.prepareStatement(connection, this.SQL_SELECT_ALL, false);
 			resultSet = preparedStatement.executeQuery();
-			
+
 			List<Type> types = new ArrayList<Type>();
 			while (resultSet.next()) {
 				Type type = this.constructTypeObject(resultSet);
@@ -113,7 +117,7 @@ public class TypeDAOJDBC implements TypeDAO {
 		} catch (SQLException e) {
 			Globals.crawlerLogManager.writeLog("Get topics fails");
 			Globals.crawlerLogManager.writeLog(e.getMessage());
-			
+
 			return null;
 		} finally {
 			DAOUtil.close(connection, preparedStatement, resultSet);
@@ -125,34 +129,34 @@ public class TypeDAOJDBC implements TypeDAO {
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
 		ResultSet resultSet = null;
-		
+
 		try {
 			connection = this.daoFactory.getConnection();
-			
+
 			Object[] values = {
 				type.getId(),
 				type.getType()
 			};
-			
-			preparedStatement = DAOUtil.prepareStatement(connection, SQL_INSERT, true, values);
-			
+
+			preparedStatement = DAOUtil.prepareStatement(connection, this.SQL_INSERT, true, values);
+
 			if (Globals.DEBUG) {
 				Globals.crawlerLogManager.writeLog(preparedStatement.toString());
 			}
-			
+
 			preparedStatement.executeUpdate();
-			
+
 			ResultSet result = preparedStatement.getGeneratedKeys();
 			Integer genereatedKey = null;
 			if (result != null && result.next()) {
 				genereatedKey = result.getInt(1);
 			}
-			
+
 			return genereatedKey;
 		} catch (SQLException e) {
 			Globals.crawlerLogManager.writeLog("Insert type " + type.toString() + " fails");
 			Globals.crawlerLogManager.writeLog(e.getMessage());
-			
+
 			return null;
 		} finally {
 			DAOUtil.close(connection, preparedStatement, resultSet);

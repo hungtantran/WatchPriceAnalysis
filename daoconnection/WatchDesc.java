@@ -107,8 +107,8 @@ public class WatchDesc implements Serializable {
 		return refNo;
 	}
 
-	public void setRefNo(String refNol) {
-		this.refNo = refNol;
+	public void setRefNo(String refNo) {
+		this.refNo = refNo;
 	}
 
 	public String getMovement() {

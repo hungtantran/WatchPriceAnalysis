@@ -114,7 +114,6 @@ public class ArticleTopicDAOJDBC implements ArticleTopicDAO {
 			connection = this.daoFactory.getConnection();
 			
 			Object[] values = {
-				articleTopic.getId(),
 				articleTopic.getArticleTableId(),
 				articleTopic.getTopicTableId()
 			};

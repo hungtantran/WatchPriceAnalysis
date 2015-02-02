@@ -1,6 +1,5 @@
 package newscrawler;
 
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -11,6 +10,7 @@ import commonlib.Globals;
 import commonlib.Helper;
 import commonlib.LogManager;
 import daoconnection.Domain;
+import daoconnection.Topic;
 import daoconnection.Type;
 
 public class Chrono24EntryPageParser extends BaseParser {
@@ -20,8 +20,6 @@ public class Chrono24EntryPageParser extends BaseParser {
 
 	private String watchName = null;
 	private int[] prices = null;
-	private Set<String> keywords = null;
-	private Set<String> topics = null;
 	private String refNo = null;
 	private String movement = null;
 	private String caliber = null;
@@ -32,11 +30,13 @@ public class Chrono24EntryPageParser extends BaseParser {
 	private String dialColor = null;
 	private String location = null;
 
-	public Chrono24EntryPageParser(String articleUrl,
+	public Chrono24EntryPageParser(
+		String articleUrl,
 		BaseCrawler crawler,
 		LogManager logManager,
 		Scheduler scheduler,
 		String[] topicList,
+		Map<String, Topic> topicStringToTopicMap,
 		Set<String> typeWordList,
 		Map<String, Domain> domainStringToDomainMap,
 		Map<String, Type> typeStringToTypeMap) throws Exception
@@ -50,14 +50,13 @@ public class Chrono24EntryPageParser extends BaseParser {
 			typeWordList,
 			domainStringToDomainMap,
 			typeStringToTypeMap,
+			topicStringToTopicMap,
 			Chrono24EntryPageParser.domainString,
 			Chrono24EntryPageParser.typeString);
 
 		this.prices = new int[2];
 		this.prices[0] = -1;
 		this.prices[1] = -1;
-		this.keywords = new HashSet<String>();
-		this.topics = new HashSet<String>();
 	}
 
 	// Return true if the articleUrl is a valid watch entry page of chrono24,
@@ -69,22 +68,6 @@ public class Chrono24EntryPageParser extends BaseParser {
 		
 		return (this.link.indexOf(this.domain.getDomainString()) == 0 &&
 				this.link.indexOf("--id") != -1);
-	}
-
-	// Get the topics of the article
-	public String[] getTopics() {
-		if (this.topics == null) {
-			return null;
-		}
-
-		String[] topicsArray = new String[this.topics.size()];
-		int count = 0;
-		for (String topic : this.topics) {
-			topicsArray[count] = topic;
-			count++;
-		}
-
-		return topicsArray;
 	}
 
 	// Get the name of the watch
@@ -430,9 +413,9 @@ public class Chrono24EntryPageParser extends BaseParser {
 		return true;
 	}
 
-	public boolean addCurrentContentToDatabase() {
+	public boolean addCurrentContentToDatabase() throws Exception {
 		String link = this.getLink();
-		String[] topics = this.getTopics();
+		int[] topics = this.getTopics();
 		String watchName = this.getWatchName();
 		int[] prices = this.getPrices();
 		String[] keywords = this.getKeywords();
