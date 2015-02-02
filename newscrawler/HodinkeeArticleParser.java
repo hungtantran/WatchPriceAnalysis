@@ -30,7 +30,7 @@ public class HodinkeeArticleParser extends BaseParser {
 	private final int numRetryDownloadPage = 2;
 
 	private String articleName = null;
-	
+
 	public HodinkeeArticleParser(
 		String articleUrl,
 		BaseCrawler crawler,
@@ -55,15 +55,16 @@ public class HodinkeeArticleParser extends BaseParser {
 			HodinkeeArticleParser.domainString,
 			HodinkeeArticleParser.typeString);
 	}
-	
+
 	// Return true if the articleUrl is a valid article page of Hodinkee, false
 	// if not
+	@Override
 	public boolean isContentLink() {
 		if (!this.isValidLink(this.link)) {
 			return false;
 		}
-		
-		return (this.link.indexOf(this.domain.getDomain() + "blog/") == 0);
+
+		return (this.link.indexOf(this.domain.getDomainString() + "/blog/") == 0);
 	}
 
 	// Get the keywords of the article
@@ -81,21 +82,25 @@ public class HodinkeeArticleParser extends BaseParser {
 
 		return keywordsArray;
 	}
-	
+
 	// Get the name of the article
 	public String getArticleName() {
 		return this.articleName;
 	}
 
+	@Override
 	public boolean parseDoc() {
 		// Download the html content into a private variable
 		this.downloadHtmlContent(this.link, this.numRetryDownloadPage);
 
 		// If the download content fails, return
-		if (this.doc == null)
+		if (this.doc == null) {
+			this.logManager.writeLog("Fails to parse doc because download HTML content fails for link " + this.link);
 			return false;
+		}
 
 		if (!this.isContentLink()) {
+			this.logManager.writeLog("Fails to parse doc because " + this.link + " is not a content link");
 			return false;
 		}
 
@@ -116,7 +121,7 @@ public class HodinkeeArticleParser extends BaseParser {
 
 	// Parse the name of the article
 	private void parseArticleName() {
-		Elements artcileNameElems = doc.select("h2");
+		Elements artcileNameElems = this.doc.select("h2");
 		if (artcileNameElems.size() == 1) {
 			String articleNameText = new String(artcileNameElems.get(0).text());
 			articleNameText = articleNameText.trim();
@@ -147,8 +152,8 @@ public class HodinkeeArticleParser extends BaseParser {
 
 	// Parse the date created the article
 	private void parseDateCreated() {
-		Elements dateCreatedElems = doc.select("meta[property=st:published_at]");
-		
+		Elements dateCreatedElems = this.doc.select("meta[property=st:published_at]");
+
 		if (dateCreatedElems.size() == 1) {
 			String dateCreatedText = new String(dateCreatedElems.get(0).attr("content").toString());
 			dateCreatedText = dateCreatedText.trim();
@@ -161,6 +166,7 @@ public class HodinkeeArticleParser extends BaseParser {
 	}
 
 	// Process link (e.g. trim, truncate bad part, etc..)
+	@Override
 	public String sanitizeLink(String url) {
 		if (url == null) {
 			return url;
@@ -172,6 +178,7 @@ public class HodinkeeArticleParser extends BaseParser {
 	}
 
 	// Check if current url is valid or not
+	@Override
 	public boolean isValidLink(String url) {
 		if (url == null) {
 			return false;
@@ -212,11 +219,19 @@ public class HodinkeeArticleParser extends BaseParser {
 		String timeCrawled = Helper.getCurrentTime();
 		String dateCrawled = Helper.getCurrentDate();
 
-		return this.crawler.addArticle(link, this.domain, articleName, this.type,
-			keywords, topics, timeCreated, dateCreated, timeCrawled,
-			dateCrawled, content);
+		boolean addArticleResult = false;
+
+		try {
+			addArticleResult = this.crawler.addArticle(link, this.domain, articleName, this.type,
+				keywords, topics, timeCreated, dateCreated, timeCrawled,
+				dateCrawled, content);
+		} catch (Exception e) {
+			this.logManager.writeLog("Can't add current content to database");
+		}
+
+		return addArticleResult;
 	}
-	
+
 	public static void main(String[] args) {
 		// HodinkeeArticleParser parser = new HodinkeeArticleParser(
 		// "http://www.hodinkee.com/blog/a-look-at-jb-champions-unique-observatory-chronometer-wristwatch-the-other-patek-with-a-chance-to-become-the-most-expensive-watch-in-the-world");

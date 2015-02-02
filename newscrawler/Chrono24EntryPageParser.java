@@ -166,10 +166,12 @@ public class Chrono24EntryPageParser extends BaseParser {
 
 		// If the download content fails, return
 		if (this.doc == null) {
+			this.logManager.writeLog("Fails to parse doc because download HTML content fails for link " + this.link);
 			return false;
 		}
 
 		if (!this.isContentLink()) {
+			this.logManager.writeLog("Fails to parse doc because " + this.link + " is not a content link");
 			return false;
 		}
 

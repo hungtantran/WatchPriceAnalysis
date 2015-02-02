@@ -95,6 +95,12 @@ public class WatchReportArticleParser extends BaseParser {
 
 		// If the download content fails, return
 		if (this.doc == null) {
+			this.logManager.writeLog("Fails to parse doc because download HTML content fails for link " + this.link);
+			return false;
+		}
+
+		if (!this.isContentLink()) {
+			this.logManager.writeLog("Fails to parse doc because " + this.link + " is not a content link");
 			return false;
 		}
 
@@ -212,9 +218,17 @@ public class WatchReportArticleParser extends BaseParser {
 		String timeCrawled = Helper.getCurrentTime();
 		String dateCrawled = Helper.getCurrentDate();
 
-		return this.crawler.addArticle(link, this.domain, articleName, this.type,
+		boolean addArticleResult = false;
+
+		try {
+			addArticleResult = this.crawler.addArticle(link, this.domain, articleName, this.type,
 			keywords, topics, timeCreated, dateCreated, timeCrawled,
 			dateCrawled, content);
+		} catch (Exception e) {
+			this.logManager.writeLog("Can't add current content to database");
+		}
+
+		return addArticleResult;
 	}
 
 	public static void main(String[] args) {

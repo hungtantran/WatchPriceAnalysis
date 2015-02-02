@@ -319,6 +319,8 @@ public class BaseCrawler extends Thread {
 			this.logManager.writeLog("Remove link " + link + " because of failure to retrieve content");
 
 			this.postProcessUrl(link, domain.getId(), null, 0, null);
+
+			return;
 		}
 
 		// If the page fails to download for reasons like 404, remove it

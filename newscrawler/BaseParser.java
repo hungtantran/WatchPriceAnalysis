@@ -13,6 +13,7 @@ import org.jsoup.select.Elements;
 import commonlib.LogManager;
 import commonlib.NetworkingFunctions;
 import commonlib.NetworkingFunctions.NetPkg;
+
 import daoconnection.Domain;
 import daoconnection.Topic;
 import daoconnection.Type;
@@ -22,18 +23,18 @@ public abstract class BaseParser implements IParser {
 			"]", ".", ";", ",", "/", "\\" };
 	protected final String invalidWords[] = { "paper", "article", "this",
 			"that", "with" };
-	
+
 	protected BaseCrawler crawler = null;
 	protected LogManager logManager = null;
 	protected Scheduler scheduler = null;
 	protected Map<String, Topic> topicStringToTopicMap = null;
-	
+
 	protected String[] topicList = null;
 	protected Set<String> typeWordList = null;
-	
+
 	protected Set<String> keywords = null;
 	protected Set<String> topics = null;
-	
+
 	protected String link = null;
 	protected Domain domain = null;
 	protected Type type = null;
@@ -43,14 +44,18 @@ public abstract class BaseParser implements IParser {
 	protected String dateCreated = null;
 
 	// All subclass of baseparser needs to implement these methods
+	@Override
 	public abstract boolean parseDoc();
-	
+
 	public abstract String sanitizeLink(String url);
 
+	@Override
 	public abstract boolean isValidLink(String link);
-	
+
+	@Override
 	public abstract boolean isContentLink();
-	
+
+	@Override
 	public abstract boolean addCurrentContentToDatabase() throws Exception;
 
 	protected BaseParser(
@@ -66,10 +71,10 @@ public abstract class BaseParser implements IParser {
 		String domainString,
 		String typeString) throws Exception
 	{
-		if (link == null || scheduler == null) {
+		if (link == null) {
 			throw new Exception("Invalid arguments");
 		}
-		
+
 		this.link = link;
 		this.crawler = crawler;
 		this.logManager = logManager;
@@ -77,21 +82,21 @@ public abstract class BaseParser implements IParser {
 		this.topicList = topicList;
 		this.typeWordList = typeWordList;
 		this.timeCreated = "00:00:00";
-		
+
 		if (domainStringToDomainMap == null || !domainStringToDomainMap.containsKey(domainString)) {
 			throw new Exception("Fail to resolve domain of parser");
 		}
-		
+
 		this.domain = domainStringToDomainMap.get(domainString);
-		
+
 		if (typeStringToTypeMap == null || !typeStringToTypeMap.containsKey(typeString)) {
 			throw new Exception("Fail to resolve type of parser");
 		}
-		
+
 		this.topicStringToTopicMap = topicStringToTopicMap;
-		
+
 		this.type = typeStringToTypeMap.get(typeString);
-		
+
 		this.keywords = new HashSet<String>();
 		this.topics = new HashSet<String>();
 	}
@@ -111,35 +116,35 @@ public abstract class BaseParser implements IParser {
 	public String getLink() {
 		return this.link;
 	}
-	
+
 	// Get the content of the page
 	@Override
 	public String getContent() {
 		if (this.doc == null) {
 			return null;
 		}
-		
+
 		return this.doc.outerHtml();
 	}
-	
+
 	// Get the domain of the page
 	@Override
 	public Domain getDomain() {
 		return this.domain;
 	}
-	
+
 	@Override
 	public String[] getLinksInContent() {
 		Set<String> linksInPage = BaseParser.parseUrls(this.doc.outerHtml(), this.domain.getDomainString());
-		
+
 		String[] links = new String[linksInPage.size()];
-		
+
 		int index = 0;
 		for (String link : linksInPage) {
 			links[index] = link;
 			++index;
 		}
-		
+
 		return links;
 	}
 
@@ -147,7 +152,7 @@ public abstract class BaseParser implements IParser {
 	public String getTimeCreated() {
 		return this.timeCreated;
 	}
-	
+
 	// Get the topics of the article
 	public int[] getTopics() {
 		if (this.topics == null) {
@@ -190,12 +195,14 @@ public abstract class BaseParser implements IParser {
 
 			int compareLength = firstForm.length() - 2;
 
-			if (firstForm.length() < 5)
+			if (firstForm.length() < 5) {
 				compareLength += 1;
+			}
 
 			for (int i = 0; i < compareLength; i++) {
-				if (firstForm.charAt(i) != secondForm.charAt(i))
+				if (firstForm.charAt(i) != secondForm.charAt(i)) {
 					return false;
+				}
 			}
 
 			return true;
@@ -203,7 +210,7 @@ public abstract class BaseParser implements IParser {
 
 		return false;
 	}
-	
+
 	// Parse the document urls
 	public static Set<String> parseUrls(String htmlDoc, String domain) {
 		Set<String> resultUrls = new HashSet<String>();
@@ -214,8 +221,9 @@ public abstract class BaseParser implements IParser {
 			String urlText = new String(urlElems.get(i).attr("href"));
 			urlText = urlText.trim();
 
-			if (urlText.length() == 0)
+			if (urlText.length() == 0) {
 				continue;
+			}
 
 			URL urlObject = null;
 			try {
@@ -227,8 +235,9 @@ public abstract class BaseParser implements IParser {
 
 			urlText = urlObject.toString();
 			// Ignore url not from the same domain or has position anchor
-			if (urlText.indexOf(domain) == -1 || urlText.indexOf("#") != -1)
+			if (urlText.indexOf(domain) == -1 || urlText.indexOf("#") != -1) {
 				continue;
+			}
 
 			resultUrls.add(urlText);
 		}

@@ -8,6 +8,7 @@ import org.jsoup.select.Elements;
 import commonlib.Globals;
 import commonlib.Helper;
 import commonlib.LogManager;
+
 import daoconnection.Domain;
 import daoconnection.Topic;
 import daoconnection.Type;
@@ -46,11 +47,12 @@ public class ABlogToWatchArticleParser extends BaseParser {
 
 	// Return true if the articleUrl is a valid article page of ABlogToWatch,
 	// false if not
+	@Override
 	public boolean isContentLink() {
 		if (!this.isValidLink(this.link)) {
 			return false;
 		}
-		
+
 		if (this.doc == null) {
 			return false;
 		}
@@ -81,17 +83,20 @@ public class ABlogToWatchArticleParser extends BaseParser {
 		return keywordsArray;
 	}
 
+	@Override
 	public boolean parseDoc() {
 		// Download the html content into a private variable
 		this.downloadHtmlContent(this.link, this.numRetryDownloadPage);
 
 		// If the download content fails, return
 		if (this.doc == null) {
+			this.logManager.writeLog("Fails to parse doc because download HTML content fails for link " + this.link);
 			return false;
 		}
 
 		// If the page is not an article page
 		if (!this.isContentLink()) {
+			this.logManager.writeLog("Fails to parse doc because " + this.link + " is not a content link");
 			return false;
 		}
 
@@ -112,7 +117,7 @@ public class ABlogToWatchArticleParser extends BaseParser {
 
 	// Parse the name of the article
 	private void parseArticleName() {
-		Elements artcileNameElems = doc.select("h1");
+		Elements artcileNameElems = this.doc.select("h1");
 		if (artcileNameElems.size() == 1) {
 			String articleNameText = new String(artcileNameElems.get(0).text());
 			articleNameText = articleNameText.trim();
@@ -143,7 +148,7 @@ public class ABlogToWatchArticleParser extends BaseParser {
 
 	// Parse the date created the article
 	private void parseDateCreated() {
-		Elements dateCreatedElems = doc
+		Elements dateCreatedElems = this.doc
 				.select("meta[property=article:published_time]");
 		if (dateCreatedElems.size() == 1) {
 			String dateCreatedText = new String(dateCreatedElems.get(0)
@@ -160,6 +165,7 @@ public class ABlogToWatchArticleParser extends BaseParser {
 	}
 
 	// Process link (e.g. trim, truncate bad part, etc..)
+	@Override
 	public String sanitizeLink(String url) {
 		if (url == null) {
 			return url;
@@ -171,6 +177,7 @@ public class ABlogToWatchArticleParser extends BaseParser {
 	}
 
 	// Check if current url is valid or not
+	@Override
 	public boolean isValidLink(String url) {
 		if (url == null) {
 			return false;
@@ -206,9 +213,9 @@ public class ABlogToWatchArticleParser extends BaseParser {
 		// Calculated the time the article is crawled
 		String timeCrawled = Helper.getCurrentTime();
 		String dateCrawled = Helper.getCurrentDate();
-		
+
 		boolean addArticleResult = false;
-		
+
 		try {
 			addArticleResult = this.crawler.addArticle(link, this.domain, articleName, this.type,
 				keywords, topics, timeCreated, dateCreated, timeCrawled,
@@ -216,10 +223,10 @@ public class ABlogToWatchArticleParser extends BaseParser {
 		} catch (Exception e) {
 			this.logManager.writeLog("Can't add current content to database");
 		}
-		
+
 		return addArticleResult;
 	}
-	
+
 	public static void main(String[] args) {
 		// ABlogToWatchArticleParser parser = new ABlogToWatchArticleParser(
 		// "http://www.ablogtowatch.com/charlie-sheen-father-debut-in-patek-philippe-watch-ad/");
